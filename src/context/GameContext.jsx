@@ -89,6 +89,10 @@ function reducer(state, action) {
       ataque.currentPP--
 
       const dano = calcularDano(ataque, progresso.atributos, enemy.stats)
+      if (dano === null) {
+        log.push(`${characters.find(c => c.id === charId).name} usou ${ataque.name}... ERROU!`)
+        return { ...state, batalha: { ...batalha, playerAttacks, log, turn: 'enemy', animating: true } }
+      }
       enemy.hpAtual = Math.max(0, enemy.hpAtual - dano)
       log.push(`${characters.find(c => c.id === charId).name} usou ${ataque.name}! -${dano} HP`)
 
@@ -142,6 +146,10 @@ function reducer(state, action) {
       }
 
       const dano = calcularDano(ataque, enemy.stats, progresso.atributos)
+      if (dano === null) {
+        log.push(`${enemy.name} usou ${ataque.name}... ERROU!`)
+        return { ...state, batalha: { ...batalha, enemy, log, turn: 'player', animating: false } }
+      }
       const hpAtual = Math.max(0, runAtiva.hpAtual - dano)
       log.push(`${enemy.name} usou ${ataque.name}! -${dano} HP`)
 

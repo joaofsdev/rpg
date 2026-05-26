@@ -88,7 +88,10 @@ export default function BattleScreen() {
             onClick={() => dispatch({ type: 'PLAYER_ATTACK', payload: { attackIndex: i } })}
             className="py-3 px-3 bg-dark-700 border border-dark-600 hover:border-gold rounded-lg text-left disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
           >
-            <span className="text-sm font-medium text-white block">{atk.name}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-white">{atk.name}</span>
+              <span className="text-xs text-gold">F:{atk.power}</span>
+            </div>
             <span className={`text-xs ${atk.currentPP <= 0 ? 'text-red-accent' : 'text-gray-400'}`}>PP: {atk.currentPP}/{atk.maxPP}</span>
           </button>
         ))}

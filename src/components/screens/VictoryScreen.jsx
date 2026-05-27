@@ -1,25 +1,37 @@
 import { useGame } from '../../context/GameContext'
-import { characters } from '../../data/characters'
+import { areas } from '../../data/areas'
 
 export default function VictoryScreen() {
   const { state, dispatch } = useGame()
-  const { runAtiva, batalha } = state
-  const charData = characters.find(c => c.id === runAtiva.personagemId)
+  const { character, areaAtual, batalha, victorySource } = state
+  const area = areas.find(a => a.id === areaAtual)
+  const isBossDefeated = batalha?.enemy?.isBoss
 
   return (
-    <div className="h-full flex flex-col items-center justify-center bg-dark-900 p-4">
-      <h2 className="text-5xl font-bold text-gold mb-4" style={{ fontFamily: 'Georgia, serif' }}>🏆 VITÓRIA!</h2>
-      <div className="bg-dark-700 rounded-xl p-6 text-center mb-8">
-        <p className="text-gray-300 mb-2">+{batalha?.xpGanho || state.levelUpData?.xpGanho || '??'} XP ganho</p>
-        <p className="text-gray-400 text-sm">HP restante: {runAtiva.hpAtual}/{state.personagens[runAtiva.personagemId].atributos.vida}</p>
-        <p className="text-gray-400 text-sm">Batalhas vencidas: {runAtiva.batalhasVencidas}</p>
+    <div className="flex flex-col items-center justify-center h-full bg-dark-900 p-3 md:p-4">
+      {isBossDefeated ? (
+        <>
+          <h2 className="text-2xl md:text-4xl font-bold text-gold mb-3 md:mb-4 animate-pulse">🏆 {victorySource === 'dungeon' ? 'Dungeon Concluída!' : 'Área Concluída!'}</h2>
+          <p className="text-gray-300 text-sm md:text-base mb-2">{victorySource === 'dungeon' ? 'Dungeon dominada!' : `${area?.name} foi dominada!`}</p>
+          <p className="text-green-accent text-sm md:text-base mb-4 md:mb-6">Boss {batalha.enemy.name} derrotado!</p>
+        </>
+      ) : (
+        <>
+          <h2 className="text-2xl md:text-3xl font-bold text-green-accent mb-3 md:mb-4">⚔️ Vitória!</h2>
+          <p className="text-gray-300 text-sm md:text-base mb-2">{batalha?.enemy?.name} derrotado!</p>
+          {batalha?.xpGanho && <p className="text-blue-accent text-sm md:text-base mb-4 md:mb-6">+{batalha.xpGanho} XP</p>}
+        </>
+      )}
+      <div className="flex gap-3 md:gap-4 flex-wrap justify-center">
+        {isBossDefeated && victorySource === 'dungeon' ? (
+          <button onClick={() => dispatch({ type: 'NEXT_DUNGEON' })} className="px-4 md:px-6 py-2.5 md:py-3 bg-purple-accent hover:bg-purple-accent/80 rounded-lg text-white font-bold text-sm md:text-base">Próxima Dungeon</button>
+        ) : isBossDefeated && victorySource === 'area' ? (
+          <button onClick={() => dispatch({ type: 'NEXT_AREA' })} className="px-4 md:px-6 py-2.5 md:py-3 bg-green-accent hover:bg-green-accent/80 rounded-lg text-white font-bold text-sm md:text-base">Próxima Área</button>
+        ) : (
+          <button onClick={() => dispatch({ type: 'NEXT_BATTLE' })} className="px-4 md:px-6 py-2.5 md:py-3 bg-red-accent hover:bg-red-accent/80 rounded-lg text-white font-bold text-sm md:text-base">Próxima Batalha</button>
+        )}
+        <button onClick={() => dispatch({ type: 'SET_SCREEN', payload: 'AREA_MAP' })} className="px-4 md:px-6 py-2.5 md:py-3 bg-dark-600 hover:bg-dark-700 rounded-lg text-gray-300 text-sm md:text-base">Voltar ao Mapa</button>
       </div>
-      <button
-        onClick={() => dispatch({ type: 'NEXT_BATTLE' })}
-        className="py-3 px-8 bg-gold/90 text-dark-900 font-bold rounded-lg hover:bg-gold transition-colors text-lg cursor-pointer"
-      >
-        Próxima Batalha →
-      </button>
     </div>
   )
 }

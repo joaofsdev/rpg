@@ -1,69 +1,45 @@
 import { useGame } from '../../context/GameContext'
-import { characters } from '../../data/characters'
-import AttributeControl from '../ui/AttributeControl'
+import { classes } from '../../data/classes'
+import { calcularAtributosFinais } from '../../utils/battleFormulas'
 
 export default function LevelUpScreen() {
   const { state, dispatch } = useGame()
-  const { levelUpData, runAtiva, personagens } = state
-  const charId = runAtiva.personagemId
-  const progresso = personagens[charId]
-  const charData = characters.find(c => c.id === charId)
-  const { nivelAnterior, nivelNovo, pontosDisponiveis, pontosDistribuidos } = levelUpData
+  const { levelUpData, character } = state
+  const classeData = classes.find(c => c.id === character.classeId)
+  const statsAtuais = calcularAtributosFinais(classeData.baseStats, character.pontosDistribuidos, character.equipamentos)
+  const d = levelUpData.pontosDistribuidos
 
-  const preview = {
-    vida: progresso.atributos.vida + pontosDistribuidos.vida * 8,
-    forca: progresso.atributos.forca + pontosDistribuidos.forca * 2,
-    defesa: progresso.atributos.defesa + pontosDistribuidos.defesa * 2,
-    velocidade: progresso.atributos.velocidade + pontosDistribuidos.velocidade * 1,
-  }
-
+  const ganhos = { vida: '+10 HP', forca: '+2', defesa: '+2', velocidade: '+1' }
   const stats = [
-    { key: 'vida', label: '❤️ Vida', gain: '+8/pt' },
-    { key: 'forca', label: '⚔️ Força', gain: '+2/pt' },
-    { key: 'defesa', label: '🛡️ Defesa', gain: '+2/pt' },
-    { key: 'velocidade', label: '💨 Velocidade', gain: '+1/pt' },
+    { key: 'vida', label: 'Vida', atual: statsAtuais.vida, bonus: d.vida * 10, color: 'text-green-accent' },
+    { key: 'forca', label: 'Força', atual: statsAtuais.forca, bonus: d.forca * 2, color: 'text-red-accent' },
+    { key: 'defesa', label: 'Defesa', atual: statsAtuais.defesa, bonus: d.defesa * 2, color: 'text-blue-accent' },
+    { key: 'velocidade', label: 'Velocidade', atual: statsAtuais.velocidade, bonus: d.velocidade * 1, color: 'text-gold' },
   ]
 
   return (
-    <div className="h-full flex flex-col items-center justify-center bg-dark-900 p-4">
-      <h2 className="text-4xl font-bold text-gold mb-1" style={{ fontFamily: 'Georgia, serif' }}>⬆️ LEVEL UP!</h2>
-      <p className="text-gray-300 mb-1">{charData.emoji} {charData.name}</p>
-      <p className="text-gray-400 mb-4">Nível {nivelAnterior} → <span className="text-gold font-bold">{nivelNovo}</span></p>
-      <p className="text-yellow-400 font-bold mb-6">Pontos disponíveis: {pontosDisponiveis}</p>
-
-      <div className="w-full max-w-sm space-y-3 mb-6">
+    <div className="flex flex-col items-center justify-center h-full bg-dark-900 p-3 md:p-4">
+      <h2 className="text-2xl md:text-3xl font-bold text-gold mb-2">🌟 Level Up!</h2>
+      <p className="text-gray-400 text-sm md:text-base mb-1">Nível {character.nivel}</p>
+      <p className="text-xs md:text-sm text-purple-accent mb-4 md:mb-6">Pontos disponíveis: {levelUpData.pontosDisponiveis}</p>
+      <div className="bg-dark-700 p-4 md:p-6 rounded-xl w-full max-w-md space-y-3 md:space-y-4">
         {stats.map(s => (
-          <div key={s.key} className="flex items-center justify-between bg-dark-800 rounded-lg px-4 py-3">
-            <div>
-              <span className="text-gray-300 text-sm">{s.label}</span>
-              <span className="text-gray-500 text-xs ml-2">({s.gain})</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-500 text-xs">{progresso.atributos[s.key]}</span>
-              <span className="text-gray-500">→</span>
-              <span className="text-gold font-bold text-sm w-8 text-center">{preview[s.key]}</span>
-              <button
-                onClick={() => dispatch({ type: 'UNDISTRIBUTE_POINT', payload: { stat: s.key } })}
-                disabled={pontosDistribuidos[s.key] <= 0}
-                className="w-7 h-7 bg-red-accent/20 text-red-accent rounded-full text-sm font-bold disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
-              >−</button>
-              <button
-                onClick={() => dispatch({ type: 'DISTRIBUTE_POINT', payload: { stat: s.key } })}
-                disabled={pontosDisponiveis <= 0}
-                className="w-7 h-7 bg-green-accent/20 text-green-accent rounded-full text-sm font-bold disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
-              >+</button>
+          <div key={s.key} className="flex items-center gap-2 md:gap-3">
+            <span className={`w-20 md:w-24 text-xs md:text-sm font-bold ${s.color}`}>{s.label}</span>
+            <span className="text-white text-xs md:text-sm w-14 md:w-16">{s.atual}{s.bonus > 0 ? ` (+${s.bonus})` : ''}</span>
+            <span className="text-gray-500 text-[10px] md:text-xs hidden sm:inline">{ganhos[s.key]}/pt</span>
+            <div className="flex gap-1 ml-auto">
+              <button onClick={() => dispatch({ type: 'UNDISTRIBUTE_POINT', payload: { stat: s.key } })} disabled={d[s.key] <= 0}
+                className="w-6 h-6 md:w-7 md:h-7 rounded bg-dark-600 text-white text-sm disabled:opacity-30">-</button>
+              <span className="w-5 md:w-6 text-center text-white text-xs md:text-sm leading-6 md:leading-7">{d[s.key]}</span>
+              <button onClick={() => dispatch({ type: 'DISTRIBUTE_POINT', payload: { stat: s.key } })} disabled={levelUpData.pontosDisponiveis <= 0}
+                className="w-6 h-6 md:w-7 md:h-7 rounded bg-dark-600 text-white text-sm disabled:opacity-30">+</button>
             </div>
           </div>
         ))}
       </div>
-
-      <button
-        onClick={() => dispatch({ type: 'CONFIRM_LEVEL_UP' })}
-        disabled={pontosDisponiveis > 0}
-        className="py-3 px-8 bg-gold/90 text-dark-900 font-bold rounded-lg hover:bg-gold transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-      >
-        Confirmar
-      </button>
+      <button onClick={() => dispatch({ type: 'CONFIRM_LEVEL_UP' })} disabled={levelUpData.pontosDisponiveis > 0}
+        className={`mt-4 md:mt-6 px-6 md:px-8 py-2.5 md:py-3 rounded-lg font-bold text-sm md:text-base ${levelUpData.pontosDisponiveis > 0 ? 'bg-dark-600 text-gray-600 cursor-not-allowed' : 'bg-red-accent hover:bg-red-accent/80 text-white'}`}>Confirmar</button>
     </div>
   )
 }

@@ -1,31 +1,36 @@
 import { useGame } from '../../context/GameContext'
-import { characters } from '../../data/characters'
+import { areas } from '../../data/areas'
 
 export default function DefeatScreen() {
   const { state, dispatch } = useGame()
-  const { runAtiva, batalha, personagens, sessaoStats } = state
-  const charId = runAtiva.personagemId
-  const charData = characters.find(c => c.id === charId)
-  const progresso = personagens[charId]
+  const { batalha, character, areaAtual } = state
+  const area = areas.find(a => a.id === areaAtual)
+  const isDungeon = batalha?.isDungeon
 
   return (
-    <div className="h-full flex flex-col items-center justify-center bg-dark-900 p-4">
-      <h2 className="text-4xl font-bold text-red-accent mb-6" style={{ fontFamily: 'Georgia, serif' }}>💀 DERROTA...</h2>
-      <div className="bg-dark-700 rounded-xl p-6 mb-8 w-full max-w-sm">
-        <div className="space-y-2 text-sm">
-          <p className="text-gray-300">🧑 Personagem: {charData.emoji} {charData.name}</p>
-          <p className="text-gray-300">📊 Nível atingido: {progresso.nivel}</p>
-          <p className="text-gray-300">⚔️ Batalhas vencidas: {runAtiva.batalhasVencidas}</p>
-          <p className="text-gray-300">☠️ Derrotado por: {batalha.defeatedBy}</p>
-          <p className="text-gray-300">📈 XP total acumulado: {progresso.xp}</p>
-        </div>
+    <div className="flex flex-col items-center justify-center h-full bg-dark-900 p-3 md:p-4">
+      <h2 className="text-2xl md:text-4xl font-bold text-red-accent mb-3 md:mb-4">DERROTA...</h2>
+      <div className="bg-dark-700 p-4 md:p-6 rounded-xl max-w-sm w-full mb-4 md:mb-6 text-sm md:text-base">
+        {isDungeon && <p className="text-gray-300 mb-2">Dungeon falhou!</p>}
+        {!isDungeon && <p className="text-gray-300 mb-2">Área: {area?.name}</p>}
+        <p className="text-gray-300 mb-2">Nível: {character.nivel}</p>
+        <p className="text-gray-300 mb-2">Derrotado por: {batalha?.enemy?.name}</p>
+        <p className="text-gray-300">Batalhas vencidas: {character.batalhasVencidas}</p>
       </div>
-      <button
-        onClick={() => dispatch({ type: 'GAME_OVER' })}
-        className="py-3 px-8 bg-red-accent/80 text-white font-bold rounded-lg hover:bg-red-accent transition-colors cursor-pointer"
-      >
-        Continuar
-      </button>
+      <div className="flex gap-3 md:gap-4 flex-wrap justify-center">
+        {isDungeon ? (
+          <>
+            <button onClick={() => dispatch({ type: 'RETRY_DUNGEON' })} className="px-4 md:px-6 py-2.5 md:py-3 bg-red-accent hover:bg-red-accent/80 rounded-lg text-white font-bold text-sm md:text-base">Tentar Novamente</button>
+            <button onClick={() => dispatch({ type: 'DUNGEON_DEFEAT' })} className="px-4 md:px-6 py-2.5 md:py-3 bg-dark-600 hover:bg-dark-700 rounded-lg text-gray-300 text-sm md:text-base">Voltar às Dungeons</button>
+          </>
+        ) : (
+          <>
+            <button onClick={() => dispatch({ type: 'RETRY_AREA' })} className="px-4 md:px-6 py-2.5 md:py-3 bg-red-accent hover:bg-red-accent/80 rounded-lg text-white font-bold text-sm md:text-base">Tentar Novamente</button>
+            <button onClick={() => dispatch({ type: 'CONTINUE_AFTER_DEFEAT' })} className="px-4 md:px-6 py-2.5 md:py-3 bg-dark-600 hover:bg-dark-700 rounded-lg text-gray-300 text-sm md:text-base">Voltar às Áreas</button>
+          </>
+        )}
+      </div>
+      <p className="text-gray-500 text-[10px] md:text-xs mt-3 md:mt-4">Seu progresso foi mantido (nível, XP e itens).</p>
     </div>
   )
 }

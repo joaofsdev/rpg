@@ -13,6 +13,7 @@ import DefeatScreen from './components/screens/DefeatScreen'
 import GameOverScreen from './components/screens/GameOverScreen'
 import DungeonSelectScreen from './components/screens/DungeonSelectScreen'
 import DungeonBattleScreen from './components/screens/DungeonBattleScreen'
+import ShopScreen from './components/screens/ShopScreen'
 
 const screens = {
   TITLE: TitleScreen,
@@ -30,6 +31,7 @@ const screens = {
   GAME_OVER: GameOverScreen,
   DUNGEON_SELECT: DungeonSelectScreen,
   DUNGEON_BATTLE: DungeonBattleScreen,
+  SHOP: ShopScreen,
 }
 
 function GameRouter() {

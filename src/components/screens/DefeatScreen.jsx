@@ -8,29 +8,37 @@ export default function DefeatScreen() {
   const isDungeon = batalha?.isDungeon
 
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-dark-900 p-3 md:p-4">
-      <h2 className="text-2xl md:text-4xl font-bold text-red-accent mb-3 md:mb-4">DERROTA...</h2>
-      <div className="bg-dark-700 p-4 md:p-6 rounded-xl max-w-sm w-full mb-4 md:mb-6 text-sm md:text-base">
-        {isDungeon && <p className="text-gray-300 mb-2">Dungeon falhou!</p>}
-        {!isDungeon && <p className="text-gray-300 mb-2">Área: {area?.name}</p>}
-        <p className="text-gray-300 mb-2">Nível: {character.nivel}</p>
-        <p className="text-gray-300 mb-2">Derrotado por: {batalha?.enemy?.name}</p>
-        <p className="text-gray-300">Batalhas vencidas: {character.batalhasVencidas}</p>
+    <div className="flex flex-col items-center justify-center h-full bg-bg-primary p-3 md:p-4 relative overflow-hidden">
+      {/* Red vignette */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,#e0555530_100%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-bg-primary/60 pointer-events-none" />
+
+      <div className="relative z-10 flex flex-col items-center animate-slide-up">
+        <h2 className="font-title text-3xl md:text-4xl font-bold text-danger mb-4 animate-defeat-shake">DERROTA</h2>
+
+        <div className="card p-5 md:p-6 max-w-sm w-full mb-6 border-danger/30">
+          {isDungeon && <p className="text-text-secondary mb-2">Dungeon falhou!</p>}
+          {!isDungeon && <p className="text-text-secondary mb-2">Área: {area?.name}</p>}
+          <p className="text-text-secondary mb-2">Nível: <span className="font-mono text-text-primary">{character.nivel}</span></p>
+          <p className="text-text-secondary mb-2">Derrotado por: <span className="text-danger">{batalha?.enemy?.name}</span></p>
+          <p className="text-text-secondary">Batalhas vencidas: <span className="font-mono text-text-primary">{character.batalhasVencidas}</span></p>
+        </div>
+
+        <div className="flex flex-col gap-3 items-center w-full max-w-xs">
+          {isDungeon ? (
+            <>
+              <button onClick={() => dispatch({ type: 'RETRY_DUNGEON' })} className="btn-gold-solid w-full py-3 text-sm">Tentar Novamente</button>
+              <button onClick={() => dispatch({ type: 'DUNGEON_DEFEAT' })} className="btn-secondary w-full py-3 text-sm">Voltar às Dungeons</button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => dispatch({ type: 'RETRY_AREA' })} className="btn-gold-solid w-full py-3 text-sm">Continuar</button>
+              <button onClick={() => dispatch({ type: 'CONTINUE_AFTER_DEFEAT' })} className="btn-secondary w-full py-3 text-sm">Voltar às Áreas</button>
+            </>
+          )}
+        </div>
+        <p className="text-text-muted text-xs mt-4">Seu progresso foi mantido (nível, XP e itens).</p>
       </div>
-      <div className="flex gap-3 md:gap-4 flex-wrap justify-center">
-        {isDungeon ? (
-          <>
-            <button onClick={() => dispatch({ type: 'RETRY_DUNGEON' })} className="px-4 md:px-6 py-2.5 md:py-3 bg-red-accent hover:bg-red-accent/80 rounded-lg text-white font-bold text-sm md:text-base">Tentar Novamente</button>
-            <button onClick={() => dispatch({ type: 'DUNGEON_DEFEAT' })} className="px-4 md:px-6 py-2.5 md:py-3 bg-dark-600 hover:bg-dark-700 rounded-lg text-gray-300 text-sm md:text-base">Voltar às Dungeons</button>
-          </>
-        ) : (
-          <>
-            <button onClick={() => dispatch({ type: 'RETRY_AREA' })} className="px-4 md:px-6 py-2.5 md:py-3 bg-red-accent hover:bg-red-accent/80 rounded-lg text-white font-bold text-sm md:text-base">Tentar Novamente</button>
-            <button onClick={() => dispatch({ type: 'CONTINUE_AFTER_DEFEAT' })} className="px-4 md:px-6 py-2.5 md:py-3 bg-dark-600 hover:bg-dark-700 rounded-lg text-gray-300 text-sm md:text-base">Voltar às Áreas</button>
-          </>
-        )}
-      </div>
-      <p className="text-gray-500 text-[10px] md:text-xs mt-3 md:mt-4">Seu progresso foi mantido (nível, XP e itens).</p>
     </div>
   )
 }

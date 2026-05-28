@@ -31,7 +31,7 @@ export const classes = [
     name: "Arqueiro",
     emoji: "🏹",
     description: "Velocidade e precisão. Elimina antes de ser atingido.",
-    baseStats: { vida: 90, forca: 22, defesa: 8, velocidade: 22, mana: 20 },
+    baseStats: { vida: 90, forca: 18, defesa: 8, velocidade: 22, mana: 20 },
     armasPermitidas: ["arco", "besta"],
     armadurasPermitidas: ["leve"],
     attacks: [
@@ -57,18 +57,18 @@ export const classes = [
     name: "Mago",
     emoji: "🔮",
     description: "Poder arcano devastador. Frágil, mas letal.",
-    baseStats: { vida: 75, forca: 30, defesa: 5, velocidade: 14, mana: 60 },
+    baseStats: { vida: 75, forca: 26, defesa: 5, velocidade: 14, mana: 60 },
     armasPermitidas: ["cajado", "varinha", "grimorio"],
     armadurasPermitidas: ["pano"],
     attacks: [
       { name: "Bola de Fogo", power: 28, maxPP: 4 },
-      { name: "Relâmpago", power: 24, maxPP: 6 },
+      { name: "Relâmpago", power: 25, maxPP: 6 },
       {
         name: "Escudo Arcano",
         power: 0,
         maxPP: 3,
         tipo: "buff",
-        buff: { stat: "defesa", valor: 10, turnos: 2 },
+        buff: { stat: "defesa", valor: 15, turnos: 2 },
       },
       { name: "Explosão", power: 45, maxPP: 1 },
     ],
@@ -84,7 +84,7 @@ export const classes = [
     name: "Assassino",
     emoji: "🗡️",
     description: "Letal nas sombras. Age antes que o inimigo perceba.",
-    baseStats: { vida: 88, forca: 24, defesa: 10, velocidade: 26, mana: 15 },
+    baseStats: { vida: 88, forca: 22, defesa: 10, velocidade: 26, mana: 15 },
     armasPermitidas: ["adaga", "katana"],
     armadurasPermitidas: ["leve"],
     attacks: [
@@ -111,7 +111,7 @@ export const classes = [
     emoji: "🎵",
     description:
       "Encanta, cura e destrói com a música. Versátil e imprevisível.",
-    baseStats: { vida: 100, forca: 18, defesa: 12, velocidade: 18, mana: 40 },
+    baseStats: { vida: 110, forca: 14, defesa: 12, velocidade: 18, mana: 40 },
     armasPermitidas: ["instrumento", "espada_leve"],
     armadurasPermitidas: ["leve", "media"],
     attacks: [
@@ -137,7 +137,7 @@ export const classes = [
     name: "Bárbaro",
     emoji: "🪓",
     description: "Fúria pura. Quanto mais machucado, mais perigoso.",
-    baseStats: { vida: 160, forca: 26, defesa: 12, velocidade: 10, mana: 0 },
+    baseStats: { vida: 160, forca: 25, defesa: 12, velocidade: 10, mana: 0 },
     armasPermitidas: ["machado_grande", "maca_pesada", "lanca"],
     armadurasPermitidas: ["media", "pesada"],
     attacks: [

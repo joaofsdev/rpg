@@ -49,6 +49,18 @@ function gerarBonusBase(nivel, raridade) {
   }
 }
 
+function gerarBonusArma(nivel, raridade) {
+  const mult = multiplicadorRaridade[raridade]
+  const base = Math.max(1, Math.floor(nivel * 0.5))
+  // Foco principal: dano (70-100% do potencial)
+  const bonusForca = Math.floor(randInt(Math.ceil(base * 0.7), base * 2) * mult)
+  // Secundário: vida pequena (30% de chance, valor baixo)
+  const bonusVida = Math.random() < 0.3 ? Math.floor(randInt(1, Math.ceil(base * 0.5)) * mult) : 0
+  // Velocidade leve
+  const bonusVelocidade = Math.floor(randInt(0, Math.ceil(base * 0.4)) * mult)
+  return { bonusVida, bonusForca, bonusDefesa: 0, bonusVelocidade }
+}
+
 export function gerarItemArma(nivel, raridade, tipoArma) {
   const prefixo = pick(prefixosPorRaridade[raridade])
   const nomeBase = pick(nomesArmas[tipoArma] || ['Arma'])
@@ -60,7 +72,7 @@ export function gerarItemArma(nivel, raridade, tipoArma) {
     tipoArma,
     raridade,
     nivel: Math.max(1, nivel + randInt(-2, 2)),
-    ...gerarBonusBase(nivel, raridade),
+    ...gerarBonusArma(nivel, raridade),
   }
 }
 

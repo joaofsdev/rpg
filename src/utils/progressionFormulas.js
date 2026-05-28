@@ -1,9 +1,9 @@
 export function xpParaProximoNivel(nivel) {
-  return Math.floor(100 * nivel * (1 + nivel * 0.05));
+  return Math.floor(150 * nivel * (1 + nivel * 0.05));
 }
 
 export function xpGanhoPorVitoria(nivelInimigo) {
-  return Math.floor(50 * nivelInimigo * (1 + nivelInimigo * 0.1));
+  return Math.floor(45 * nivelInimigo * (1 + nivelInimigo * 0.1));
 }
 
 export function calcularNivelInimigo(nivelJogador) {
@@ -16,5 +16,13 @@ export function escalarAtributoInimigo(atributoBase, nivelInimigo) {
 }
 
 export function escalarAtributoBoss(atributoBase, nivelBoss) {
-  return Math.floor(atributoBase * (1 + (nivelBoss - 1) * 0.07));
+  return Math.floor(atributoBase * (1 + (nivelBoss - 1) * 0.06));
+}
+
+export function escalarAtributoDungeon(atributoBase, nivelDungeon) {
+  return Math.floor(atributoBase * (1 + (nivelDungeon - 1) * 0.18));
+}
+
+export function escalarAtributoBossDungeon(atributoBase, nivelDungeon) {
+  return Math.floor(atributoBase * (1 + (nivelDungeon - 1) * 0.22));
 }

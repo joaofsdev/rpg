@@ -1,22 +1,38 @@
 @import "tailwindcss";
 
 @theme {
-  --color-dark-900: #0a0a0f;
-  --color-dark-800: #12121a;
-  --color-dark-700: #1a1a2e;
-  --color-dark-600: #252540;
-  --color-red-accent: #e63946;
-  --color-gold: #ffd700;
-  --color-blue-accent: #4cc9f0;
-  --color-green-accent: #06d6a0;
-  --color-purple-accent: #7b2cbf;
+  --color-bg-primary: #0a0a0f;
+  --color-bg-surface: #12121a;
+  --color-bg-elevated: #1a1a26;
+  --color-accent-gold: #f0a500;
+  --color-accent-gold-light: #ffd166;
+  --color-accent-amber: #e07b00;
+  --color-text-primary: #f0ede8;
+  --color-text-secondary: #9a9080;
+  --color-text-muted: #5a5248;
+  --color-border-subtle: #2a2820;
+  --color-border-accent: #f0a50040;
+  --color-success: #4caf7d;
+  --color-danger: #e05555;
+  --color-warning: #f0a500;
+  --color-rare-purple: #9b59b6;
+  --color-epic-blue: #3498db;
+  --color-legendary-orange: #e67e22;
+  --font-title: 'Cinzel', serif;
+  --font-body: 'Crimson Pro', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2820 #0a0a0f;
 }
 
 body {
   margin: 0;
-  background: var(--color-dark-900);
-  color: white;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
   overflow: hidden;
 }
 
@@ -25,9 +41,190 @@ body {
   height: 100dvh;
 }
 
+/* Noise texture overlay */
+.noise-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Vignette effect */
+.vignette::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, #0a0a0f 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Animations */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-4px); }
   50% { transform: translateX(4px); }
   75% { transform: translateX(-2px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes goldPulse {
+  0%, 100% { box-shadow: 0 0 8px #f0a50030; }
+  50% { box-shadow: 0 0 20px #f0a50060; }
+}
+
+@keyframes legendaryGlow {
+  0%, 100% { box-shadow: 0 0 12px #e67e2240; border-color: #e67e22; }
+  50% { box-shadow: 0 0 28px #e67e2280; border-color: #ffd166; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes flashGold {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes defeatShake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-2px); }
+  20% { transform: translateX(2px); }
+  30% { transform: translateX(-1px); }
+  40% { transform: translateX(1px); }
+  50% { transform: translateX(0); }
+}
+
+@keyframes particle {
+  0% { transform: translateY(100vh) scale(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+}
+
+.animate-breathe { animation: breathe 4s ease-in-out infinite; }
+.animate-shake { animation: shake 0.3s ease-in-out; }
+.animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
+.animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
+.animate-gold-pulse { animation: goldPulse 2s ease-in-out infinite; }
+.animate-legendary-glow { animation: legendaryGlow 2s ease-in-out infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-flash-gold { animation: flashGold 0.8s ease-out forwards; }
+.animate-defeat-shake { animation: defeatShake 2s ease-in-out infinite; }
+
+/* Gold glow on hover for interactive elements */
+.gold-hover {
+  transition: all 0.2s ease;
+}
+.gold-hover:hover {
+  box-shadow: 0 0 20px #f0a50030;
+  border-color: var(--color-accent-gold);
+}
+
+/* Button styles */
+.btn-primary {
+  width: 280px;
+  height: 52px;
+  border: 1px solid var(--color-accent-gold);
+  background: transparent;
+  color: var(--color-accent-gold);
+  font-family: var(--font-title);
+  font-weight: 700;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-primary:hover {
+  background: var(--color-accent-gold);
+  color: #0a0a0f;
+  box-shadow: 0 0 20px #f0a50040;
+}
+
+.btn-gold-solid {
+  background: var(--color-accent-gold);
+  color: #0a0a0f;
+  font-family: var(--font-title);
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.btn-gold-solid:hover {
+  background: var(--color-accent-gold-light);
+  box-shadow: 0 0 20px #f0a50040;
+}
+
+.btn-secondary {
+  border: 1px solid var(--color-border-subtle);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.btn-secondary:hover {
+  border-color: var(--color-accent-gold);
+  color: var(--color-accent-gold-light);
+}
+
+.btn-tertiary {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.btn-tertiary:hover {
+  color: var(--color-text-secondary);
+}
+
+/* Card style */
+.card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-accent);
+  border-radius: 12px;
+  box-shadow: 0 0 20px #f0a50010;
+}
+
+/* Particles container */
+.particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.particles span {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: var(--color-accent-gold);
+  border-radius: 50%;
+  animation: particle linear infinite;
+  opacity: 0;
 }

@@ -37,20 +37,61 @@ export default function AuthScreen() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-dark-900">
-      <div className="bg-dark-700 p-8 rounded-xl w-full max-w-sm">
-        <div className="flex mb-6 gap-2">
-          <button onClick={() => { setMode('login'); setError('') }} className={`flex-1 py-2 rounded-lg font-bold ${mode === 'login' ? 'bg-red-accent text-white' : 'bg-dark-600 text-gray-400'}`}>Entrar</button>
-          <button onClick={() => { setMode('register'); setError('') }} className={`flex-1 py-2 rounded-lg font-bold ${mode === 'register' ? 'bg-red-accent text-white' : 'bg-dark-600 text-gray-400'}`}>Criar Conta</button>
+    <div className="flex flex-col items-center justify-center h-full bg-bg-primary relative noise-bg vignette">
+      <div className="relative z-10 card p-6 md:p-8 w-full max-w-sm mx-4 animate-slide-up">
+        <img src="/logo.png" alt="MagiChill" className="w-20 mx-auto mb-4 object-contain" />
+
+        {/* Tabs */}
+        <div className="flex mb-6 border-b border-border-subtle">
+          <button
+            onClick={() => { setMode('login'); setError('') }}
+            className={`flex-1 py-2.5 font-title text-sm font-bold transition-all border-b-2 ${mode === 'login' ? 'border-accent-gold text-accent-gold' : 'border-transparent text-text-muted hover:text-text-secondary'}`}
+          >
+            Entrar
+          </button>
+          <button
+            onClick={() => { setMode('register'); setError('') }}
+            className={`flex-1 py-2.5 font-title text-sm font-bold transition-all border-b-2 ${mode === 'register' ? 'border-accent-gold text-accent-gold' : 'border-transparent text-text-muted hover:text-text-secondary'}`}
+          >
+            Criar Conta
+          </button>
         </div>
+
         <form onSubmit={mode === 'login' ? handleLogin : handleRegister} className="flex flex-col gap-4">
-          <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Nome de Jogador" className="px-4 py-2 bg-dark-800 rounded-lg text-white border border-dark-600 focus:border-gold outline-none" />
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Senha" className="px-4 py-2 bg-dark-800 rounded-lg text-white border border-dark-600 focus:border-gold outline-none" />
-          {mode === 'register' && <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirmar Senha" className="px-4 py-2 bg-dark-800 rounded-lg text-white border border-dark-600 focus:border-gold outline-none" />}
-          {error && <p className="text-red-accent text-sm">{error}</p>}
-          <button type="submit" className="py-3 bg-red-accent hover:bg-red-accent/80 rounded-lg text-white font-bold transition-all">{mode === 'login' ? 'Entrar' : 'Criar Conta'}</button>
+          <div>
+            <label className="font-title text-xs text-text-secondary mb-1 block">Nome de Jogador</label>
+            <input
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              className="w-full px-4 py-2.5 bg-bg-elevated rounded-lg text-text-primary border border-border-subtle focus:border-accent-gold focus:shadow-[inset_0_0_8px_#f0a50020] outline-none transition-all font-body"
+            />
+          </div>
+          <div>
+            <label className="font-title text-xs text-text-secondary mb-1 block">Senha</label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full px-4 py-2.5 bg-bg-elevated rounded-lg text-text-primary border border-border-subtle focus:border-accent-gold focus:shadow-[inset_0_0_8px_#f0a50020] outline-none transition-all font-body"
+            />
+          </div>
+          {mode === 'register' && (
+            <div>
+              <label className="font-title text-xs text-text-secondary mb-1 block">Confirmar Senha</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-2.5 bg-bg-elevated rounded-lg text-text-primary border border-border-subtle focus:border-accent-gold focus:shadow-[inset_0_0_8px_#f0a50020] outline-none transition-all font-body"
+              />
+            </div>
+          )}
+          {error && <p className="text-danger text-sm flex items-center gap-1"><span>⚠</span> {error}</p>}
+          <button type="submit" className="btn-gold-solid w-full py-3 text-sm mt-2">
+            {mode === 'login' ? 'Entrar' : 'Criar Conta'}
+          </button>
         </form>
-        <button onClick={() => dispatch({ type: 'SET_SCREEN', payload: 'TITLE' })} className="mt-4 text-gray-500 hover:text-gray-300 text-sm w-full text-center">← Voltar</button>
+        <button onClick={() => dispatch({ type: 'SET_SCREEN', payload: 'TITLE' })} className="btn-tertiary mt-4 text-sm w-full text-center">← Voltar</button>
       </div>
     </div>
   )

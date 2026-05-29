@@ -1052,6 +1052,71 @@ function reducer(state, action) {
       return { ...state, character };
     }
 
+    case "REFRESH_SHOP": {
+      const ouroAtual = state.character.ouro || 0;
+      if (ouroAtual < 5000) return state;
+      const items = Array.from({ length: 5 }, () => {
+        const nivel = Math.max(
+          1,
+          state.character.nivel + Math.floor(Math.random() * 5) - 2,
+        );
+        const raridade = sortearRaridade(false);
+        const slots = ["capacete", "peitoral", "luvas", "botas", "arma"];
+        const pesos = ["pesada", "media", "leve", "pano"];
+        const nomesArmas = [
+          "espada",
+          "arco",
+          "cajado",
+          "adaga",
+          "machado",
+          "maca",
+          "katana",
+          "lanca",
+          "besta",
+          "varinha",
+        ];
+        const slot = slots[Math.floor(Math.random() * slots.length)];
+        if (slot === "arma") {
+          const item = gerarItemArma(
+            nivel,
+            raridade,
+            nomesArmas[Math.floor(Math.random() * nomesArmas.length)],
+          );
+          item.preco =
+            Math.floor(
+              (50 + item.nivel * 8) *
+                ({ Comum: 1, Incomum: 3, Raro: 7, Épico: 15, Lendário: 35 }[
+                  item.raridade
+                ] || 1),
+            );
+          return item;
+        }
+        const item = gerarItemArmadura(
+          nivel,
+          raridade,
+          slot,
+          pesos[Math.floor(Math.random() * pesos.length)],
+        );
+        item.preco =
+          Math.floor(
+            (50 + item.nivel * 8) *
+              ({ Comum: 1, Incomum: 3, Raro: 7, Épico: 15, Lendário: 35 }[
+                item.raridade
+              ] || 1),
+          );
+        return item;
+      });
+      const newShop = {
+        items,
+        sold: [false, false, false, false, false],
+        lastRefresh: Date.now(),
+      };
+      localStorage.setItem("rpg_shop", JSON.stringify(newShop));
+      const character = { ...state.character, ouro: ouroAtual - 5000 };
+      saveCharacter(state.currentUser, character);
+      return { ...state, character };
+    }
+
     default:
       return state;
   }

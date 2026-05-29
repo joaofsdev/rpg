@@ -37,6 +37,13 @@ export default function ShopScreen() {
           </div>
           <div className="flex items-center gap-3">
             <span className="font-mono text-accent-gold text-sm md:text-base font-bold">🪙 {character.ouro || 0}</span>
+            <button
+              onClick={() => { if (confirm('Renovar loja por 🪙 5000?')) dispatch({ type: 'REFRESH_SHOP' }) }}
+              disabled={(character.ouro || 0) < 5000}
+              className={`px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold rounded ${(character.ouro || 0) >= 5000 ? 'btn-gold-solid' : 'btn-secondary opacity-50 cursor-not-allowed'}`}
+            >
+              🔄 Renovar (🪙 5000)
+            </button>
             <button onClick={() => dispatch({ type: 'SET_SCREEN', payload: 'AREA_MAP' })} className="btn-secondary px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm">← Voltar</button>
           </div>
         </div>

@@ -1031,14 +1031,13 @@ function reducer(state, action) {
     case "BUY_SHOP_ITEM": {
       const { slotIndex } = action.payload;
       const shopData = getShop(state.character.nivel);
-      if (shopData.sold[slotIndex]) return state;
       const item = shopData.items[slotIndex];
       if (!item || !item.preco) return state;
+      if (state.character.inventario.some((i) => i.id === item.id))
+        return state;
       const ouroAtual = state.character.ouro || 0;
       if (ouroAtual < item.preco) return state;
       if (state.character.inventario.length >= 30) return state;
-      shopData.sold[slotIndex] = true;
-      localStorage.setItem("rpg_shop", JSON.stringify(shopData));
       const character = {
         ...state.character,
         ouro: ouroAtual - item.preco,
@@ -1047,6 +1046,8 @@ function reducer(state, action) {
           { ...item, preco: undefined },
         ],
       };
+      shopData.sold[slotIndex] = true;
+      localStorage.setItem("rpg_shop", JSON.stringify(shopData));
       saveCharacter(state.currentUser, character);
       return { ...state, character };
     }

@@ -20,9 +20,9 @@ export function escalarAtributoBoss(atributoBase, nivelBoss) {
 }
 
 export function escalarAtributoDungeon(atributoBase, nivelDungeon) {
-  return Math.floor(atributoBase * (1 + (nivelDungeon - 1) * 0.18));
+  return Math.floor(atributoBase * (1 + (nivelDungeon - 1) * 0.14));
 }
 
 export function escalarAtributoBossDungeon(atributoBase, nivelDungeon) {
-  return Math.floor(atributoBase * (1 + (nivelDungeon - 1) * 0.22));
+  return Math.floor(atributoBase * (1 + (nivelDungeon - 1) * 0.18));
 }

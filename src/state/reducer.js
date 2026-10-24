@@ -26,6 +26,7 @@ import {
 import { relogio, registrarRelogio } from "../engine/relogio";
 import { colocarNoGrupo, tirarDoGrupo, dispensarHeroi } from "../engine/grupo";
 import { iniciarTreinoAtributo, iniciarTreinoGolpe } from "../engine/treino";
+import { iniciarExpedicao } from "../engine/expedicoes";
 import { coletarAtividade, cancelarAtividade, coletarTudo, atividadesConcluidas, concluidasDesde } from "../engine/coleta";
 import { muralEmDia, contratarRecruta } from "../engine/recrutamento";
 
@@ -179,6 +180,12 @@ function alterarSave(state, resultado) {
 
 function descreverGanho(save, ganho) {
   const nome = save.herois[ganho.heroiId]?.nome ?? "O herói";
+  if (ganho.tipo === "expedicao") {
+    const qtd = Object.values(ganho.itens).reduce((s, q) => s + q, 0);
+    const itens = qtd === 1 ? "1 item" : `${qtd} itens`;
+    const nivel = ganho.niveisGanhos > 0 ? ` Subiu para o nível ${ganho.nivelNovo}.` : "";
+    return `${nome} voltou de ${buscarZona(ganho.zonaId).nome}: ${itens}, ${ganho.ouro} ouro e ${ganho.xp} XP.${nivel}`;
+  }
   if (ganho.tipo === "treinoGolpe") {
     const golpe = golpes[ganho.golpeId].nome;
     return ganho.aprendeu ? `${nome} aprendeu ${golpe}.` : `${nome} parou de treinar ${golpe}.`;
@@ -307,6 +314,22 @@ export function reducer(state, action) {
 
     case "INICIAR_TREINO":
       return iniciarTreino(state, action);
+
+    case "INICIAR_EXPEDICAO": {
+      if (!state.save) return state;
+      const agora = relogio(state.save, action.agora);
+      const rng = criarRng(action.semente);
+      const resultado = iniciarExpedicao(state.save, {
+        id: gerarId(rng),
+        heroiId: action.heroiId,
+        zonaId: action.zonaId,
+        minutos: action.minutos,
+        agora,
+        semente: Math.floor(rng.proximo() * 4294967296),
+      });
+      if (resultado.erro) return comAviso(state, resultado.erro);
+      return { ...state, save: registrarRelogio(resultado.save, agora) };
+    }
 
     case "COLOCAR_NO_GRUPO":
       return alterarSave(state, colocarNoGrupo(state.save, action.heroiId));

@@ -235,9 +235,10 @@ function CartaoHeroi({ save, heroi, selecionado, agora, aoEscolher }) {
   const atividade = atividadeDoHeroi(save, heroi.id);
   let situacao = null;
   if (atividade) {
+    const expedicao = atividade.tipo === "expedicao";
     situacao = atividadeConcluida(atividade, agora)
-      ? "treino pronto"
-      : `treinando, faltam ${formatarDuracao(tempoRestante(atividade, agora))}`;
+      ? `${expedicao ? "expedição concluída" : "treino concluído"}: coletar`
+      : `${expedicao ? "expedição" : "treino"}, faltam ${formatarDuracao(tempoRestante(atividade, agora))}`;
   }
   return (
     <button
@@ -266,7 +267,7 @@ function LugarNoGrupo({ save, heroi, agora, acoes }) {
   let motivo = noGrupo ? motivoNaoSaiDoGrupo(save, heroi.id) : motivoNaoEntraNoGrupo(save, heroi.id);
   if (!noGrupo && atividade) {
     motivo = atividadeConcluida(atividade, agora)
-      ? "Treino pronto: colete em Atividades"
+      ? `${atividade.tipo === "expedicao" ? "Expedição concluída" : "Treino pronto"}: colete em Atividades`
       : `${motivo} (termina em ${formatarDuracao(tempoRestante(atividade, agora))})`;
   }
   return (

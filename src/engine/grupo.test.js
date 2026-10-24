@@ -63,7 +63,7 @@ describe("dispensar herói", () => {
   it("não dispensa quem está em treino, batalha ou masmorra", () => {
     const { save, reservaId, principalId } = jogoComReserva();
     const treinando = iniciarTreinoAtributo(save, { id: "t", heroiId: reservaId, atributo: "forca", horas: 1, agora: 0 }).save;
-    expect(dispensarHeroi(treinando, reservaId).erro).toBe("Está em treino. Colete ou cancele o treino antes.");
+    expect(dispensarHeroi(treinando, reservaId).erro).toBe("Em treino. Colete ou cancele o treino antes.");
 
     const junto = colocarNoGrupo(save, reservaId).save;
     const batalha = { combatentes: { c1: { lado: "herois", refId: principalId } } };

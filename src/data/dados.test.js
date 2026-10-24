@@ -15,6 +15,7 @@ import { ELEMENTOS, MAX_GOLPES_EQUIPADOS, MAX_INIMIGOS_ENCONTRO, MAX_HEROIS, TET
 import { CLASSES_RECRUTAVEIS, RECRUTAS_NO_MURAL } from "./recrutamento";
 import { DURACOES_TREINO_HORAS, ZONAS_QUE_LIBERAM_VAGA_TREINO } from "./treino";
 import { nomesHerois } from "./nomesHerois";
+import { DURACOES_EXPEDICAO_MINUTOS, MINUTOS_POR_ROLAGEM, ZONAS_QUE_LIBERAM_VAGA_EXPEDICAO } from "./expedicoes";
 
 const CATEGORIAS = ["fisico", "magico", "suporte"];
 const ALVOS = ["inimigo", "todosInimigos", "aliado", "todosAliados", "proprio"];
@@ -176,5 +177,26 @@ describe("conteúdo da Fase 7", () => {
 
   it("há nomes suficientes para o limite de heróis e o mural", () => {
     expect(new Set(nomesHerois).size).toBeGreaterThanOrEqual(MAX_HEROIS + RECRUTAS_NO_MURAL);
+  });
+});
+
+describe("conteúdo da Fase 8", () => {
+  it("durações de expedição respeitam o teto e são múltiplas da rolagem", () => {
+    for (const minutos of DURACOES_EXPEDICAO_MINUTOS) {
+      expect(minutos).toBeLessThanOrEqual(TETO_ATIVIDADE_HORAS * 60);
+      expect(minutos % MINUTOS_POR_ROLAGEM).toBe(0);
+    }
+  });
+
+  it.each(zonas)("$id tem tabela de expedição com pesos positivos", (zona) => {
+    expect(zona.tabelaExpedicao.length).toBeGreaterThan(0);
+    for (const entrada of zona.tabelaExpedicao) {
+      expect(itens[entrada.itemId]).toBeDefined();
+      expect(entrada.peso).toBeGreaterThan(0);
+    }
+  });
+
+  it("zonas que liberam vaga de expedição existem", () => {
+    for (const id of ZONAS_QUE_LIBERAM_VAGA_EXPEDICAO) expect(zonas.some((z) => z.id === id)).toBe(true);
   });
 });

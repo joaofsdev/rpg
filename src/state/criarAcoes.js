@@ -204,6 +204,10 @@ export function criarAcoes(dispatch, storage) {
       dispatch({ type: "INICIAR_TREINO", heroiId, golpeId, agora: Date.now(), semente: novaSemente() });
     },
 
+    iniciarExpedicao(heroiId, zonaId, minutos) {
+      dispatch({ type: "INICIAR_EXPEDICAO", heroiId, zonaId, minutos, agora: Date.now(), semente: novaSemente() });
+    },
+
     colocarNoGrupo(heroiId) {
       dispatch({ type: "COLOCAR_NO_GRUPO", heroiId });
     },

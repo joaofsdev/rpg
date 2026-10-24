@@ -1,12 +1,14 @@
 // Coletar, cancelar e resumo de retorno das atividades (SPEC.md §3.6, §3.8, §3.9).
-// Cada tipo de atividade registra aqui a função que a encerra; a Fase 8 acrescenta expedições.
+// Cada tipo de atividade registra aqui a função que a encerra.
 
 import { atividadeConcluida, fimDaAtividade, listarAtividades, tempoRestante } from "./atividades";
 import { encerrarTreino } from "./treino";
+import { encerrarExpedicao } from "./expedicoes";
 
 const ENCERRAR = {
   treinoAtributo: encerrarTreino,
   treinoGolpe: encerrarTreino,
+  expedicao: encerrarExpedicao,
 };
 
 // Só atividades concluídas. Coletar de novo a mesma atividade não entrega nada (ela já saiu do save).

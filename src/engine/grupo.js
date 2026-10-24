@@ -1,8 +1,15 @@
 // Grupo ativo e reserva (SPEC.md §3.2). Funções puras: retornam { save } ou { erro }.
 
 import { MAX_GRUPO, MAX_EQUIPAMENTOS_INVENTARIO } from "../data/constants";
-import { TIPOS_TREINO, atividadeDoHeroi } from "./atividades";
+import { atividadeDoHeroi } from "./atividades";
 import { heroisEmBatalha, equipamentosLivres } from "./inventario";
+
+// Como cada atividade aparece nos motivos: [rótulo curto, nome com artigo]
+const OCUPACAO = {
+  treinoAtributo: ["Em treino", "o treino"],
+  treinoGolpe: ["Em treino", "o treino"],
+  expedicao: ["Em expedição", "a expedição"],
+};
 
 export function heroisDoGrupo(save) {
   return save.grupo.map((id) => save.herois[id]);
@@ -24,7 +31,7 @@ export function motivoNaoEntraNoGrupo(save, heroiId) {
   if (!save.herois[heroiId]) return "Herói não encontrado.";
   if (save.grupo.includes(heroiId)) return "Já está no grupo.";
   const atividade = atividadeDoHeroi(save, heroiId);
-  if (atividade) return TIPOS_TREINO.includes(atividade.tipo) ? "Em treino" : "Em atividade";
+  if (atividade) return OCUPACAO[atividade.tipo][0];
   const travado = motivoGrupoTravado(save);
   if (travado) return travado;
   if (save.grupo.length >= MAX_GRUPO) return `O grupo está cheio (${MAX_GRUPO}/${MAX_GRUPO}).`;
@@ -59,7 +66,11 @@ function equipamentosDoHeroi(heroi) {
 export function motivoNaoDispensa(save, heroiId) {
   const heroi = save.herois[heroiId];
   if (!heroi) return "Herói não encontrado.";
-  if (atividadeDoHeroi(save, heroiId)) return "Está em treino. Colete ou cancele o treino antes.";
+  const atividade = atividadeDoHeroi(save, heroiId);
+  if (atividade) {
+    const [rotulo, nome] = OCUPACAO[atividade.tipo];
+    return `${rotulo}. Colete ou cancele ${nome} antes.`;
+  }
   if (heroisEmBatalha(save).includes(heroiId)) return "Está em uma batalha em andamento.";
   if (save.grupo.includes(heroiId)) {
     if (save.masmorraAtual) return "Está em uma masmorra com o grupo.";

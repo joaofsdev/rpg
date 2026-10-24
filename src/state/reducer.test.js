@@ -313,3 +313,39 @@ describe("dispensar herói", () => {
     expect(recusado.aviso).toMatch(/último herói/);
   });
 });
+
+describe("expedições", () => {
+  const HORA = 60 * 60 * 1000;
+
+  function viajando(minutos = 60) {
+    let state = jogoNovo();
+    const reservaId = state.save.grupo[1];
+    state = reducer(state, { type: "TIRAR_DO_GRUPO", heroiId: reservaId });
+    state = reducer(state, { type: "INICIAR_EXPEDICAO", heroiId: reservaId, zonaId: "cemiterio", minutos, agora: 1000, semente: 8 });
+    return { state, reservaId };
+  }
+
+  it("parte, trava o herói e mostra o resumo ao reabrir depois do fim", () => {
+    const { state, reservaId } = viajando(60);
+    expect(Object.values(state.save.atividades)[0]).toMatchObject({ tipo: "expedicao", heroiId: reservaId, duracao: HORA });
+    expect(reducer(state, { type: "COLOCAR_NO_GRUPO", heroiId: reservaId }).aviso).toBe("Em expedição");
+    const aberto = reducer(state, { type: "SAVE_ABERTO", slot: 0, save: state.save, agora: 1000 + 2 * HORA });
+    expect(aberto.retorno).toEqual({ tempoFora: 2 * HORA });
+  });
+
+  it("coletar tudo entrega itens, ouro e XP e descreve o ganho", () => {
+    const { state, reservaId } = viajando(60);
+    const ouroAntes = state.save.ouro;
+    const coletado = reducer(state, { type: "COLETAR_TUDO", agora: 1000 + HORA });
+    expect(coletado.save.ouro).toBe(ouroAntes + 4 * 5);
+    expect(coletado.save.herois[reservaId].xp + coletado.save.herois[reservaId].nivel).toBeGreaterThan(1);
+    expect(coletado.aviso).toMatch(/voltou de Cemitério Antigo: 4 itens, 20 ouro e \d+ XP/);
+  });
+
+  it("recusa zona bloqueada", () => {
+    let state = jogoNovo();
+    const reservaId = state.save.grupo[1];
+    state = reducer(state, { type: "TIRAR_DO_GRUPO", heroiId: reservaId });
+    expect(reducer(state, { type: "INICIAR_EXPEDICAO", heroiId: reservaId, zonaId: "minas", minutos: 60, agora: 1, semente: 1 }).aviso).toBe("Zona bloqueada");
+  });
+});

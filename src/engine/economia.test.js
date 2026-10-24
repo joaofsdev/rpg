@@ -8,6 +8,8 @@ import { classesHeroi } from "../data/classesHeroi";
 import { golpes } from "../data/golpes";
 import { NIVEIS_ABAIXO_DO_GRUPO } from "../data/recrutamento";
 import { NIVEIS_ANTECIPADOS_GOLPE } from "../data/treino";
+import { DURACOES_EXPEDICAO_MINUTOS, MINUTOS_POR_ROLAGEM } from "../data/expedicoes";
+import { recompensaDaExpedicao } from "./expedicoes";
 
 const SEMENTES = [1, 2, 3, 4, 5];
 
@@ -16,6 +18,7 @@ const PRIMEIRO_RECRUTA_ENCONTRO_MIN = 5; // não é imediato…
 const RECRUTA_ENCONTROS = [5, 12]; // recrutas seguintes, em qualquer zona
 const TREINO_HORA_ENCONTROS = [1, 4]; // 1 h de treino de atributo no nível médio da zona
 const TREINO_GOLPE_ENCONTROS = [4, 12]; // golpe avançado, na zona em que ele fica treinável
+const EXPEDICAO_8H_ENCONTROS = [2, 10]; // ouro de 8 h de expedição: complementa o combate, não o substitui
 
 const campanhas = SEMENTES.map((s) => simularCampanha(s));
 
@@ -67,6 +70,21 @@ describe("economia: treino", () => {
         const encontros = golpes[golpeId].treino.ouro / z.ouroPorEncontro;
         expect(encontros, golpeId).toBeGreaterThanOrEqual(TREINO_GOLPE_ENCONTROS[0]);
         expect(encontros, golpeId).toBeLessThanOrEqual(TREINO_GOLPE_ENCONTROS[1]);
+      }
+    }
+  });
+});
+
+describe("economia: expedições", () => {
+  it("8 h de expedição rendem o ouro de 2 a 10 encontros da zona", () => {
+    const minutos = Math.max(...DURACOES_EXPEDICAO_MINUTOS);
+    for (const { zonas } of campanhas) {
+      for (const z of zonas) {
+        const atividade = { parametros: { zonaId: z.zona.id }, semente: 1 };
+        const { ouro } = recompensaDaExpedicao(atividade, minutos / MINUTOS_POR_ROLAGEM);
+        const encontros = ouro / z.ouroPorEncontro;
+        expect(encontros, z.zona.id).toBeGreaterThanOrEqual(EXPEDICAO_8H_ENCONTROS[0]);
+        expect(encontros, z.zona.id).toBeLessThanOrEqual(EXPEDICAO_8H_ENCONTROS[1]);
       }
     }
   });

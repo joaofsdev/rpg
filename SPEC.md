@@ -3,7 +3,7 @@
 > Fonte da verdade do design. Mudanças de design são propostas aqui **antes** de qualquer código.
 > Valores numéricos são iniciais e serão calibrados com testes de simulação do motor (§4.9).
 
-**Status:** Fase 7 concluída — aguardando aprovação.
+**Status:** Fase 8 concluída — aguardando aprovação.
 
 ---
 
@@ -298,6 +298,13 @@ real, mesmo com o jogo fechado.
 - Concluída quando `agora ≥ inicio + duracao`. Tempo além da duração não gera nada.
 - Cancelar: o herói volta na hora com as rolagens já completas.
 - Recompensas só entram no save ao clicar "Coletar" (ou "Coletar tudo" no resumo de retorno).
+- Detalhes da Fase 8: só heróis da **reserva** viajam (como no treino) e partir não custa ouro. A
+  tela Atividades mostra, durante a viagem, as rolagens completas e o que já foi achado ("Até
+  agora: 3 Osso Antigo · 15 ouro · 234 XP"); a prévia usa a mesma semente, então bate com o que a
+  coleta entrega. Zonas bloqueadas não aparecem; zonas acima do nível do herói aparecem
+  desabilitadas com "Exige nível N". O XP pode subir o nível do herói na coleta (com os golpes
+  do novo nível). As vagas são calculadas pelo progresso. Cancelar pede confirmação ("Voltar
+  agora").
 
 **CA.**
 - Ao fechar a aba com uma expedição de 2 h ativa e voltar depois de 3 h, a expedição aparece
@@ -572,6 +579,7 @@ inimigos + venda (40%) dos equipamentos que caem; gastos não entram. Os custos 
 | Recruta no nível médio de cada zona | 5 a 12 encontros | 5,5 a 9,3 |
 | 1 h de treino de atributo no nível médio da zona | 1 a 4 encontros | 1,9 a 3,6 |
 | Golpe avançado na zona em que fica treinável (nível exigido − 5) | 4 a 12 encontros | 6,2 a 10,4 |
+| Ouro de 8 h de expedição na zona (Fase 8) | 2 a 10 encontros | dentro da faixa em todas as zonas |
 
 Recrutamento e treino de atributo já estavam dentro das metas com os valores da Fase 7. O treino de
 golpe não: custava 6, 12, 22 e 34 encontros (crescia demais nos níveis altos) e passou de
@@ -788,7 +796,8 @@ components/ (UI)  ──dispara ações──▶  state/ (store)  ──chama─
   React, sem localStorage, sem `Math.random`/`Date.now`. Módulos: `rng`, `atributos`, `dano`,
   `status`, `turnos`, `ia`, `combate`, `progressao`, `itens`, `loja`, `masmorra`, `relogio`
   (relógio que não volta e prazos), `atividades` (base de tempo), `treino`, `coleta` (coletar,
-  cancelar e resumo de retorno; cada tipo de atividade registra a função que a encerra), `grupo`,
+  cancelar e resumo de retorno; cada tipo de atividade registra a função que a encerra),
+  `expedicoes`, `grupo`,
   `recrutamento`.
 - **data/**: conteúdo (§5.1) e `constants.js`. Validação de integridade dos dados por teste
   (ids referenciados existem, pesos > 0).
@@ -1092,7 +1101,7 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
 - [x] Treino de atributo e de golpe
 
 ### Fase 8 — Expedições
-- [ ] Expedições com rolagens, vagas progressivas, cancelar e coletar
+- [x] Expedições com rolagens, vagas progressivas, cancelar e coletar
 
 ### Fase 9 — Taverna e cozinha
 - [ ] Ingredientes, receitas, preparo por tempo, refeição ativa por encontros
@@ -1105,7 +1114,7 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
 - [ ] Efeitos sonoros e música com controle de volume
 - [ ] Revisão de responsividade, acessibilidade (teclado, foco, rótulos) e textos
 
-### Pendências conhecidas (após a Fase 7)
+### Pendências conhecidas (após a Fase 8)
 - A vida dos heróis durante uma masmorra só aparece na tela da masmorra; o mapa não mostra.
 - Chefes exclusivos de masmorra não existem: o chefe da masmorra é o chefe da zona fortalecido
   (decisão da Fase 6, §3.5; ideia registrada em §9).
@@ -1120,8 +1129,10 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
   `primeiro`); recrutas e heróis vindos da reserva entram no fim.
 - Treinar exige tirar o herói do grupo; com o grupo inicial de 2, isso deixa 1 herói lutando até
   contratar alguém. Reavaliar se ficar incômodo.
-- A calibração da economia (§4.9) mede só a renda; gastos com consumíveis, loja e treino ao mesmo
-  tempo não entram. Reavaliar quando expedições (Fase 8) e cozinha (Fase 9) mudarem a renda.
+- A calibração da economia (§4.9) mede só a renda dos encontros; gastos e o ouro das expedições
+  não entram na campanha simulada. Reavaliar quando a cozinha (Fase 9) mudar a renda.
+- O limite de pilha dos itens (`empilhaAte`) não é aplicado a drops de batalha nem a expedições;
+  os materiais empilham até 999 e ainda não há uso para eles (ferraria na Fase 10).
 
 ---
 

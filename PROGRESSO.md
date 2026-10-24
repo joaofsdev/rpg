@@ -3,7 +3,7 @@
 Situação do projeto fase a fase. O design completo está no [SPEC.md](SPEC.md) e as regras de
 trabalho no [CLAUDE.md](CLAUDE.md); este arquivo resume o que já foi feito e o que vem a seguir.
 
-**Última atualização:** 24/10/2026, ao fim da Fase 7.
+**Última atualização:** 24/10/2026, ao fim da Fase 8.
 
 ## Fases concluídas
 
@@ -17,8 +17,9 @@ trabalho no [CLAUDE.md](CLAUDE.md); este arquivo resume o que já foi feito e o 
 | 5 | As 10 zonas, golpes por nível e troca de golpes, bestiário, loja, Erva Revigorante, remoção do código legado | testes + navegador |
 | 6 | Masmorras por andares (10), fogueiras, ganhos por andar, save v3 | testes + navegador |
 | 7 | Grupo e reserva, mural de recrutas, dispensar herói, atividades por tempo, treino de atributo e de golpe, resumo "Bem-vindo de volta", save v4, calibração da economia de ouro | testes + navegador |
+| 8 | Expedições com rolagens de 15 min, vagas progressivas, prévia do que foi achado, cancelar e coletar, resumo por categoria | testes + navegador |
 
-Estado ao fim da Fase 7: 566 testes passando (28 arquivos), `npm run lint` sem erros nem
+Estado ao fim da Fase 8: 596 testes passando (29 arquivos), `npm run lint` sem erros nem
 avisos, `npm run build` ok.
 
 ## Decisões tomadas
@@ -65,6 +66,11 @@ registradas no SPEC.md.
   metas em "encontros de ouro": primeiro recruta na zona 1 a partir do 5º encontro (resultado: 9º
   a 15º); recruta 5–12 encontros (5,5–9,3); 1 h de treino 1–4 (1,9–3,6); golpe avançado 4–12
   (6,2–10,4). Só o treino de golpe precisou mudar (antes ia de 6 a 34 encontros). (§4.9)
+- **Fase 8, expedições:** só heróis da reserva viajam; partir é grátis; a tela mostra as rolagens
+  completas e o que já foi achado (mesma semente da coleta); o XP pode subir o nível na coleta.
+  Meta nova na economia: 8 h de expedição rendem o ouro de 2 a 10 encontros da zona, para
+  complementar o combate sem substituí-lo. O save continua na v4. (§3.6, §4.9)
+- **Fase 8, resumo de retorno:** separado por categoria (Expedições, Treino), como pede §3.9.
 - **Fase 7, recrutas:** custo `100 + 25 × nível`; Cavaleiro, Arqueiro e Mago desde o início, Bardo,
   Assassino e Bárbaro após os chefes das zonas 1, 2 e 3 (e classes que o jogador já tem); recruta
   chega com os pontos livres do nível e entra no grupo se houver espaço. (§3.2)
@@ -85,14 +91,15 @@ A lista oficial está no SPEC.md, seção "Pendências conhecidas (após a Fase 
 - 9 vulnerabilidades do `npm audit` em dependências de desenvolvimento;
 - sem como reordenar o grupo;
 - treinar exige tirar o herói do grupo (com 2 heróis, sobra 1 lutando até contratar alguém);
-- a calibração da economia mede só a renda (gastos não entram); reavaliar com expedições e cozinha.
+- a calibração da economia mede só a renda dos encontros (gastos e expedições não entram);
+- limite de pilha dos itens (`empilhaAte`) não aplicado a drops nem a expedições.
 
 ## Como testar
 
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm test         # 566 testes (a simulação de balanceamento leva ~20 s)
+npm test         # 596 testes (a simulação de balanceamento leva ~20 s)
 npm run lint
 npm run build
 ```
@@ -156,20 +163,36 @@ location.reload();
    quantos equipamentos voltaram ao inventário. Com um herói só no grupo, o botão dele fica
    desabilitado com "O último herói do grupo não pode ser dispensado."
 
-## Escopo da Fase 8 — Expedições
+### Expedições (Fase 8)
+1. Com um herói na reserva, **Atividades → Nova expedição**: escolha o herói, a zona (as acima do
+   nível dele aparecem com "exige nível N") e "2h · 8 rolagens".
+2. Na tela Grupo, "Colocar no grupo" fica desabilitado com "Em expedição (termina em 2h)" e
+   "Dispensar" com "Em expedição. Colete ou cancele a expedição antes."
+3. Volte aos espaços de save e recue 50 min no console:
+   ```js
+   const s = JSON.parse(localStorage.getItem("magichill:slot:0"));
+   const a = Object.values(s.atividades)[0]; a.inicio -= 50 * 60000; s.ultimaVisita -= 50 * 60000;
+   localStorage.setItem("magichill:slot:0", JSON.stringify(s)); location.reload();
+   ```
+   O cartão mostra "3/8 rolagens" e "Até agora: … · 15 ouro · … XP". "Cancelar" → "Voltar agora"
+   entrega exatamente isso.
+4. Com uma expedição de 1 h e um treino de 4 h, recue 1 h (mesmo comando, `60 * 60000` em todas
+   as atividades): "Continuar" abre o resumo com "Expedições: pronto para coletar" e "Treino de
+   …: faltam 3h" em andamento.
 
-Roadmap do SPEC.md §8; regras em §3.6 e §4.10.
+## Escopo da Fase 9 — Taverna e cozinha
 
-- **Expedições:** heróis da reserva viajam para uma zona desbloqueada (nível ≥ `zona.nivelMin`) por
-  30 min, 1 h, 2 h, 4 h ou 8 h; recompensas por rolagens de 15 min com semente fixada no início
-  (`tabelaExpedicao` da zona, ouro e XP de §4.10).
-- **Vagas:** 1 no início, +1 após o chefe da zona 3 e +1 após o da zona 6 (máx. 3), calculadas pelo
-  progresso como as de treino.
-- **Coletar e cancelar:** recompensas só entram ao coletar; cancelar entrega as rolagens completas.
-  A infraestrutura da Fase 7 já cobre isso: basta registrar o tipo `expedicao` em
-  `engine/coleta.js` e acrescentar a seção na tela Atividades e no resumo de retorno.
-- **Fora da Fase 8:** cozinha (Fase 9), ferraria (Fase 10).
+Roadmap do SPEC.md §8; regras em §3.7 e §4.10.
 
-Critérios de aceite a cumprir (SPEC §3.6): expedição de 2 h vista depois de 3 h entrega 8 rolagens;
-cancelar uma de 2 h após 50 min entrega 3 rolagens; coletar duas vezes entrega uma vez só; relógio
-voltando não regride o progresso.
+- **Receitas:** 3 conhecidas desde o início; novas por drops de chefe e na loja (rotação semanal).
+- **Preparo:** receita e porções (1–5); tempo = `receita.minutos × porções`; 1 panela. Porções
+  prontas vão para o inventário. É mais um tipo de atividade (sem herói) a registrar em
+  `engine/coleta.js`, como as expedições.
+- **Refeição ativa:** comer fora de batalha ativa a refeição para o grupo; 1 por vez (trocar pede
+  confirmação); dura em encontros, não em tempo. O motor já desconta encontros em
+  `aplicarResultadoBatalha`; falta aplicar os efeitos (vida máx., XP, recurso inicial).
+- **Fora da Fase 9:** ferraria e relíquias (Fase 10).
+
+Critérios de aceite a cumprir (SPEC §3.7): 3 porções de uma receita de 10 min, vistas depois de
+40 min, aparecem prontas no resumo de retorno; com "Ensopado do Coveiro" ativo, a vida máxima na
+batalha é 10% maior e o contador desce 1 por encontro concluído (vitória, derrota ou fuga).

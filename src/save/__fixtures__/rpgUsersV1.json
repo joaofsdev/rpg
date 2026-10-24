@@ -1,0 +1,133 @@
+{
+  "aldric": {
+    "passwordHash": "MTIzNA==",
+    "createdAt": "2026-03-10T12:00:00.000Z",
+    "classesSorteadas": ["cavaleiro", "mago", "bardo"],
+    "character": {
+      "classeId": "cavaleiro",
+      "nivel": 14,
+      "xp": 1500,
+      "xpProximoNivel": 4760,
+      "pontosDistribuidos": { "vida": 15, "forca": 18, "defesa": 6, "velocidade": 0 },
+      "hpAtual": 0,
+      "areasDesbloqueadas": ["cemiterio", "minas"],
+      "areasConcluidas": ["cemiterio"],
+      "batalhasVencidas": 87,
+      "bossesDerotados": ["guardiao_cripta"],
+      "inventario": [
+        {
+          "id": "a1b2c3d4-0000-4000-8000-000000000003",
+          "nome": "Elmo Polido de Aço",
+          "tipo": "capacete",
+          "pesoArmadura": "pesada",
+          "raridade": "Incomum",
+          "nivel": 12,
+          "bonusVida": 18,
+          "bonusForca": 3,
+          "bonusDefesa": 6,
+          "bonusVelocidade": 0
+        },
+        {
+          "id": "a1b2c3d4-0000-4000-8000-000000000004",
+          "nome": "Cajado Místico de Cristal",
+          "tipo": "arma",
+          "tipoArma": "cajado",
+          "raridade": "Raro",
+          "nivel": 13,
+          "bonusVida": 0,
+          "bonusForca": 22,
+          "bonusDefesa": 0,
+          "bonusVelocidade": 2
+        },
+        {
+          "id": "a1b2c3d4-0000-4000-8000-000000000005",
+          "nome": "Botas Leves Gastas de Couro",
+          "tipo": "botas",
+          "pesoArmadura": "leve",
+          "raridade": "Comum",
+          "nivel": 9,
+          "bonusVida": 4,
+          "bonusForca": 1,
+          "bonusDefesa": 2,
+          "bonusVelocidade": 3
+        },
+        {
+          "id": "a1b2c3d4-0000-4000-8000-000000000006",
+          "nome": "Luvas de Malha Sólido de Ferro",
+          "tipo": "luvas",
+          "pesoArmadura": "media",
+          "raridade": "Incomum",
+          "nivel": 14,
+          "bonusVida": 10,
+          "bonusForca": 4,
+          "bonusDefesa": 3,
+          "bonusVelocidade": 1
+        }
+      ],
+      "equipamentos": {
+        "capacete": null,
+        "peitoral": {
+          "id": "a1b2c3d4-0000-4000-8000-000000000002",
+          "nome": "Couraça Forjado de Mithril",
+          "tipo": "peitoral",
+          "pesoArmadura": "pesada",
+          "raridade": "Raro",
+          "nivel": 13,
+          "bonusVida": 30,
+          "bonusForca": 2,
+          "bonusDefesa": 12,
+          "bonusVelocidade": 1
+        },
+        "luvas": null,
+        "botas": null,
+        "arma": {
+          "id": "a1b2c3d4-0000-4000-8000-000000000001",
+          "nome": "Espada Afiado de Aço",
+          "tipo": "arma",
+          "tipoArma": "espada",
+          "raridade": "Incomum",
+          "nivel": 12,
+          "bonusVida": 0,
+          "bonusForca": 14,
+          "bonusDefesa": 0,
+          "bonusVelocidade": 1
+        }
+      },
+      "dungeonsDesbloqueadas": [1, 2],
+      "dungeonsConcluidas": [1],
+      "ouro": 1234
+    }
+  },
+  "mira": {
+    "passwordHash": "YWJjZA==",
+    "createdAt": "2026-05-02T08:30:00.000Z",
+    "classesSorteadas": ["mago", "arqueiro", "barbaro"],
+    "character": {
+      "classeId": "mago",
+      "nivel": 3,
+      "xp": 100,
+      "xpProximoNivel": 690,
+      "pontosDistribuidos": { "vida": 2, "forca": 4, "defesa": 0, "velocidade": 0 },
+      "hpAtual": 75,
+      "areasDesbloqueadas": ["cemiterio"],
+      "areasConcluidas": [],
+      "batalhasVencidas": 9,
+      "bossesDerotados": [],
+      "inventario": [],
+      "equipamentos": {
+        "capacete": null,
+        "peitoral": null,
+        "luvas": null,
+        "botas": null,
+        "arma": null
+      },
+      "ouro": 50
+    }
+  },
+  "novato": {
+    "passwordHash": "eHl6dw==",
+    "createdAt": "2026-06-01T10:00:00.000Z",
+    "classesSorteadas": ["assassino", "bardo", "cavaleiro"],
+    "character": null
+  }
+}

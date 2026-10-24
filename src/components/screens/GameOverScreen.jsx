@@ -1,7 +1,7 @@
 import { useGame } from '../../context/GameContext'
 
 export default function GameOverScreen() {
-  const { state, dispatch } = useGame()
+  const { dispatch } = useGame()
   return (
     <div className="flex flex-col items-center justify-center h-full bg-bg-primary p-4 relative overflow-hidden">
       {/* Red vignette */}

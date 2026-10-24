@@ -3,7 +3,7 @@ import { areas } from '../../data/areas'
 
 export default function VictoryScreen() {
   const { state, dispatch } = useGame()
-  const { character, areaAtual, batalha, victorySource } = state
+  const { areaAtual, batalha, victorySource } = state
   const area = areas.find(a => a.id === areaAtual)
   const isBossDefeated = batalha?.enemy?.isBoss
 

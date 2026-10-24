@@ -4,14 +4,12 @@ import { classes } from '../../data/classes'
 import { corRaridade } from '../../data/itemGeneration'
 import { podeEquipar } from '../../utils/itemRestrictions'
 import { calcularPrecoVenda } from '../../data/shop'
-import { calcularAtributosFinais } from '../../utils/battleFormulas'
 
 export default function InventoryScreen() {
   const { state, dispatch } = useGame()
   const { character } = state
   const classeData = classes.find(c => c.id === character.classeId)
   const [selectedItem, setSelectedItem] = useState(null)
-  const stats = calcularAtributosFinais(classeData.baseStats, character.pontosDistribuidos, character.equipamentos)
 
   const slots = ['capacete', 'peitoral', 'luvas', 'botas', 'arma']
 

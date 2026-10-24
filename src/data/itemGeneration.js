@@ -107,7 +107,7 @@ export function sortearRaridade(isBoss = false) {
   return 'Comum'
 }
 
-export function gerarDrop(nivelInimigo, isBoss = false, areaId = null) {
+export function gerarDrop(nivelInimigo, isBoss = false) {
   if (!isBoss && Math.random() > 0.25) return null
 
   const quantidade = isBoss ? randInt(2, 3) : 1

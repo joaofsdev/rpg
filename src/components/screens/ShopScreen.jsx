@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useGame } from '../../context/GameContext'
-import { getShop, getTimeUntilRefresh, calcularPrecoVenda } from '../../data/shop'
+import { getShop, getTimeUntilRefresh } from '../../data/shop'
 import { corRaridade } from '../../data/itemGeneration'
 import { classes } from '../../data/classes'
 import { podeEquipar } from '../../utils/itemRestrictions'

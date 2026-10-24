@@ -1,11 +1,10 @@
-import { createContext, useContext, useReducer, useEffect } from "react";
+import { createContext, useContext, useReducer } from "react";
 import { classes } from "../data/classes";
 import { areas } from "../data/areas";
 import { dungeons, getDungeonEnemies, getDungeonBoss } from "../data/dungeons";
 import {
   xpParaProximoNivel,
   xpGanhoPorVitoria,
-  calcularNivelInimigo,
   escalarAtributoInimigo,
   escalarAtributoBoss,
   escalarAtributoDungeon,
@@ -24,7 +23,7 @@ import {
   gerarItemArmadura,
   sortearRaridade,
 } from "../data/itemGeneration";
-import { getShop, buyItem, calcularPrecoVenda } from "../data/shop";
+import { getShop, calcularPrecoVenda } from "../data/shop";
 
 const GameContext = createContext();
 const USERS_KEY = "rpg_users";
@@ -56,7 +55,7 @@ function criarEstadoInicial() {
   };
 }
 
-function gerarInimigo(areaId, nivelJogador) {
+function gerarInimigo(areaId) {
   const area = areas.find((a) => a.id === areaId);
   const nivelInimigo =
     Math.floor(Math.random() * (area.nivelMax - area.nivelMin + 1)) +
@@ -449,7 +448,6 @@ function reducer(state, action) {
 
         if (enemy.isBoss) {
           character.bossesDerotados.push(enemy.id);
-          const area = areas.find((a) => a.id === state.areaAtual);
           if (!character.areasConcluidas.includes(state.areaAtual)) {
             character.areasConcluidas.push(state.areaAtual);
           }
@@ -1125,7 +1123,7 @@ function reducer(state, action) {
 function iniciarBatalha(character, areaId) {
   const stats = getCharStats(character);
   const classeData = classes.find((c) => c.id === character.classeId);
-  const enemy = gerarInimigo(areaId, character.nivel);
+  const enemy = gerarInimigo(areaId);
   const playerAttacks = classeData.attacks.map((a) => ({
     ...a,
     currentPP: a.maxPP,

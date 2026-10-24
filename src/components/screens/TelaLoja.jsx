@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useEstado, useAcoes } from "../../state/contextos";
 import { heroisDoGrupo } from "../../state/seletores";
 import { itens } from "../../data/itens";
@@ -11,24 +10,7 @@ import { podeEquipar } from "../../engine/itens";
 import { classeRaridade } from "../common/cores";
 import { tipoDoEquipamento } from "../common/descricoes";
 import Botao from "../common/Botao";
-
-function formatarTempo(ms) {
-  const minutos = Math.ceil(ms / 60000);
-  const h = Math.floor(minutos / 60);
-  const m = minutos % 60;
-  return h > 0 ? `${h} h ${m} min` : `${m} min`;
-}
-
-// Atualiza o relógio exibido; o conteúdo da loja só muda pelo reducer
-function useAgora(intervaloMs) {
-  const [agora, setAgora] = useState(() => Date.now());
-  useEffect(() => {
-    const timer = setInterval(() => setAgora(Date.now()), intervaloMs);
-    return () => clearInterval(timer);
-  }, [intervaloMs]);
-  return agora;
-}
-
+import { formatarDuracao, useAgora } from "../common/tempo";
 
 export default function TelaLoja() {
   const { save } = useEstado();
@@ -53,7 +35,7 @@ export default function TelaLoja() {
           <h2 id="titulo-equip" className="titulo text-lg">
             Equipamentos do dia
           </h2>
-          <span className="text-sm text-texto-2">Novos itens em {formatarTempo(tempoAteRenovar(loja, agora))}.</span>
+          <span className="text-sm text-texto-2">Novos itens em {formatarDuracao(tempoAteRenovar(loja, agora))}.</span>
           <Botao className="ml-auto" disabled={save.ouro < custo} onClick={acoes.renovarLoja}>
             Trocar agora por {custo} ouro
           </Botao>

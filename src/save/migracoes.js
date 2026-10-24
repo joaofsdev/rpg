@@ -7,6 +7,19 @@ export const MIGRACOES = {
   // v2 → v3 (Fase 6): masmorraAtual ganhou vida, ganhos e fogueira. Nenhum save v2 tinha
   // masmorra em andamento, então basta normalizar o campo.
   2: (save) => ({ ...save, versao: 3, masmorraAtual: null }),
+
+  // v3 → v4 (Fase 7): vagas de atividade passam a ser calculadas pelo progresso e a atividade
+  // de cada herói passa a ser lida de save.atividades. Nenhum save v3 tinha atividades nem
+  // recrutas, então os dois campos são normalizados.
+  3: (save) => {
+    const migrado = { ...save, versao: 4, herois: {}, atividades: {}, recrutas: null };
+    delete migrado.vagas;
+    for (const [id, heroi] of Object.entries(save.herois)) {
+      migrado.herois[id] = { ...heroi };
+      delete migrado.herois[id].atividade;
+    }
+    return migrado;
+  },
 };
 
 export function migrarSave(save) {

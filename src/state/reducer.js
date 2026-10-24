@@ -3,10 +3,12 @@
 
 import { classesHeroi } from "../data/classesHeroi";
 import { TAMANHO_NOME_MAX } from "../data/constants";
+import { golpes } from "../data/golpes";
+import { NOMES_ATRIBUTO } from "../data/textos";
 import { buscarZona } from "../data/zonas";
 import { CONFIG_PADRAO } from "../save/armazenamento";
 import { criarNovoJogo } from "../save/novoJogo";
-import { criarRng } from "../engine/rng";
+import { criarRng, gerarId } from "../engine/rng";
 import { criarBatalha, aplicarAcao } from "../engine/combate";
 import { gerarEncontro, encontroDeChefe, nivelMedio } from "../engine/encontros";
 import { aplicarResultadoBatalha } from "../engine/progressao";
@@ -21,9 +23,14 @@ import {
   origemDoAndar,
   concluirAndar,
 } from "../engine/masmorra";
+import { relogio, registrarRelogio } from "../engine/relogio";
+import { colocarNoGrupo, tirarDoGrupo, dispensarHeroi } from "../engine/grupo";
+import { iniciarTreinoAtributo, iniciarTreinoGolpe } from "../engine/treino";
+import { coletarAtividade, cancelarAtividade, coletarTudo, atividadesConcluidas, concluidasDesde } from "../engine/coleta";
+import { muralEmDia, contratarRecruta } from "../engine/recrutamento";
 
 const CLASSES_SORTEADAS = 3;
-const TELAS_DE_JOGO = ["mapa", "grupo", "inventario", "bestiario", "mais"];
+const TELAS_DE_JOGO = ["mapa", "grupo", "atividades", "inventario", "bestiario", "mais"];
 
 const UI_BATALHA_VAZIA = { inicial: null, eventos: [], encerrada: null };
 
@@ -38,6 +45,7 @@ export function criarEstadoInicial() {
     novoJogo: null,
     batalhaUi: UI_BATALHA_VAZIA,
     resumoBatalha: null,
+    retorno: null, // { tempoFora } enquanto o modal "Bem-vindo de volta" estiver aberto
     aviso: null,
   };
 }
@@ -169,6 +177,49 @@ function alterarSave(state, resultado) {
   return { ...state, save: resultado.save };
 }
 
+function descreverGanho(save, ganho) {
+  const nome = save.herois[ganho.heroiId]?.nome ?? "O herói";
+  if (ganho.tipo === "treinoGolpe") {
+    const golpe = golpes[ganho.golpeId].nome;
+    return ganho.aprendeu ? `${nome} aprendeu ${golpe}.` : `${nome} parou de treinar ${golpe}.`;
+  }
+  if (ganho.pontos === 0) return `${nome} voltou do treino sem pontos novos.`;
+  const pontos = ganho.pontos === 1 ? "1 ponto" : `${ganho.pontos} pontos`;
+  return `${nome} ganhou ${pontos} de ${NOMES_ATRIBUTO[ganho.atributo]}.`;
+}
+
+// Coleta, cancelamento ou "Coletar tudo": aplica no save e avisa o que cada herói ganhou
+function encerrarAtividades(state, resultado, agora) {
+  if (resultado.erro) return comAviso(state, resultado.erro);
+  const ganhos = resultado.ganhos ?? [resultado.ganho];
+  const save = registrarRelogio(resultado.save, agora);
+  const texto = ganhos.map((g) => descreverGanho(save, g)).join(" ");
+  return { ...state, save, retorno: null, aviso: texto || state.aviso };
+}
+
+function iniciarTreino(state, action) {
+  const { save } = state;
+  if (!save) return state;
+  const agora = relogio(save, action.agora);
+  const id = gerarId(criarRng(action.semente));
+  const parametros = { id, heroiId: action.heroiId, agora };
+  const resultado = action.golpeId
+    ? iniciarTreinoGolpe(save, { ...parametros, golpeId: action.golpeId })
+    : iniciarTreinoAtributo(save, { ...parametros, atributo: action.atributo, horas: action.horas });
+  if (resultado.erro) return comAviso(state, resultado.erro);
+  return { ...state, save: registrarRelogio(resultado.save, agora) };
+}
+
+// Ao voltar para a aba: mostra o resumo só se algo terminou enquanto o jogador estava fora
+function voltouAoJogo(state, action) {
+  const { save } = state;
+  if (!save) return state;
+  const agora = relogio(save, action.agora);
+  const novas = concluidasDesde(save, save.ultimaVisita, agora);
+  const retorno = novas.length > 0 ? { tempoFora: agora - save.ultimaVisita } : state.retorno;
+  return { ...state, save: registrarRelogio(save, agora), retorno };
+}
+
 export function reducer(state, action) {
   switch (action.type) {
     case "INICIADO":
@@ -212,15 +263,80 @@ export function reducer(state, action) {
       return { ...state, tela: "mapa", slotAtivo: state.novoJogo.slot, novoJogo: null, save };
     }
 
-    case "SAVE_ABERTO":
+    case "SAVE_ABERTO": {
+      const agora = relogio(action.save, action.agora);
+      const prontas = atividadesConcluidas(action.save, agora);
       return {
         ...state,
         tela: "mapa",
         slotAtivo: action.slot,
-        save: sincronizarGolpes({ ...action.save, ultimaVisita: action.agora }),
+        save: sincronizarGolpes(registrarRelogio(action.save, agora)),
         batalhaUi: UI_BATALHA_VAZIA,
         resumoBatalha: null,
+        retorno: prontas.length > 0 ? { tempoFora: agora - action.save.ultimaVisita } : null,
       };
+    }
+
+    case "RELOGIO":
+      if (!state.save) return state;
+      return { ...state, save: registrarRelogio(state.save, action.agora) };
+
+    case "VOLTOU_AO_JOGO":
+      return voltouAoJogo(state, action);
+
+    case "FECHAR_RETORNO":
+      return { ...state, retorno: null };
+
+    case "COLETAR_ATIVIDADE": {
+      if (!state.save) return state;
+      const agora = relogio(state.save, action.agora);
+      return encerrarAtividades(state, coletarAtividade(state.save, action.atividadeId, agora), agora);
+    }
+
+    case "CANCELAR_ATIVIDADE": {
+      if (!state.save) return state;
+      const agora = relogio(state.save, action.agora);
+      return encerrarAtividades(state, cancelarAtividade(state.save, action.atividadeId, agora), agora);
+    }
+
+    case "COLETAR_TUDO": {
+      if (!state.save) return state;
+      const agora = relogio(state.save, action.agora);
+      return encerrarAtividades(state, coletarTudo(state.save, agora), agora);
+    }
+
+    case "INICIAR_TREINO":
+      return iniciarTreino(state, action);
+
+    case "COLOCAR_NO_GRUPO":
+      return alterarSave(state, colocarNoGrupo(state.save, action.heroiId));
+
+    case "TIRAR_DO_GRUPO":
+      return alterarSave(state, tirarDoGrupo(state.save, action.heroiId));
+
+    case "DISPENSAR_HEROI": {
+      if (!state.save) return state;
+      const resultado = dispensarHeroi(state.save, action.heroiId);
+      if (resultado.erro) return comAviso(state, resultado.erro);
+      const itens = resultado.equipamentos === 1 ? "1 equipamento voltou" : `${resultado.equipamentos} equipamentos voltaram`;
+      return comAviso({ ...state, save: resultado.save }, `${resultado.heroi.nome} deixou a companhia. ${itens} ao inventário.`);
+    }
+
+    case "ABRIR_TAVERNA":
+      if (!state.save) return state;
+      return {
+        ...state,
+        tela: "taverna",
+        save: muralEmDia(state.save, relogio(state.save, action.agora), criarRng(action.semente)),
+      };
+
+    case "CONTRATAR_RECRUTA": {
+      if (!state.save) return state;
+      const resultado = contratarRecruta(state.save, action.indice, criarRng(action.semente));
+      if (resultado.erro) return comAviso(state, resultado.erro);
+      const onde = resultado.noGrupo ? "entrou no grupo" : "foi para a reserva";
+      return comAviso({ ...state, save: resultado.save }, `${resultado.heroi.nome} ${onde}.`);
+    }
 
     case "FECHAR_SLOT":
       return {

@@ -193,3 +193,123 @@ describe("masmorra", () => {
     expect(reducer(noMapa, { type: "NAVEGAR", tela: "masmorra" }).tela).toBe("masmorra");
   });
 });
+
+describe("Fase 7: grupo, treino, retorno e taverna", () => {
+  const HORA = 60 * 60 * 1000;
+
+  // Jogo novo com o companheiro (nível 12) na reserva e ouro de sobra
+  function comReserva() {
+    let state = jogoNovo();
+    const reservaId = state.save.grupo[1];
+    state = reducer(state, { type: "TIRAR_DO_GRUPO", heroiId: reservaId });
+    const herois = { ...state.save.herois, [reservaId]: { ...state.save.herois[reservaId], nivel: 12 } };
+    return { state: { ...state, save: { ...state.save, ouro: 100000, herois } }, reservaId };
+  }
+
+  function treinando(horas = 2) {
+    const { state, reservaId } = comReserva();
+    return {
+      state: reducer(state, { type: "INICIAR_TREINO", heroiId: reservaId, atributo: "forca", horas, agora: 1000, semente: 1 }),
+      reservaId,
+    };
+  }
+
+  // Simula fechar o jogo e abrir o mesmo save mais tarde
+  function reabrir(state, agora) {
+    return reducer(state, { type: "SAVE_ABERTO", slot: 0, save: state.save, agora });
+  }
+
+  it("tira e põe heróis no grupo, sem deixar o grupo vazio", () => {
+    const { state, reservaId } = comReserva();
+    expect(state.save.grupo).toHaveLength(1);
+    expect(reducer(state, { type: "TIRAR_DO_GRUPO", heroiId: state.save.grupo[0] }).aviso).toMatch(/pelo menos 1/);
+    expect(reducer(state, { type: "COLOCAR_NO_GRUPO", heroiId: reservaId }).save.grupo).toHaveLength(2);
+  });
+
+  it("inicia treino, cobra o ouro e trava o herói fora do grupo", () => {
+    const { state, reservaId } = treinando();
+    expect(Object.values(state.save.atividades)).toHaveLength(1);
+    expect(state.save.ouro).toBeLessThan(100000);
+    expect(reducer(state, { type: "COLOCAR_NO_GRUPO", heroiId: reservaId }).aviso).toBe("Em treino");
+  });
+
+  it("abrir o jogo com treino concluído mostra o resumo de retorno com o tempo fora", () => {
+    const { state } = treinando(2);
+    const aberto = reabrir(state, 1000 + 3 * HORA);
+    expect(aberto.retorno).toEqual({ tempoFora: 3 * HORA });
+    expect(aberto.save.ultimaVisita).toBe(1000 + 3 * HORA);
+  });
+
+  it("abrir o jogo com treino em andamento não mostra o resumo", () => {
+    const { state } = treinando(2);
+    expect(reabrir(state, 1000 + HORA).retorno).toBeNull();
+  });
+
+  it("voltar para a aba mostra o resumo só se algo terminou enquanto estava fora", () => {
+    const { state } = treinando(2);
+    const cedo = reducer(state, { type: "VOLTOU_AO_JOGO", agora: 1000 + HORA });
+    expect(cedo.retorno).toBeNull();
+    const depois = reducer(cedo, { type: "VOLTOU_AO_JOGO", agora: 1000 + 2 * HORA });
+    expect(depois.retorno).toEqual({ tempoFora: HORA });
+    const fechado = reducer(depois, { type: "FECHAR_RETORNO" });
+    expect(reducer(fechado, { type: "VOLTOU_AO_JOGO", agora: 1000 + 3 * HORA }).retorno).toBeNull();
+  });
+
+  it("coletar tudo entrega os pontos, fecha o resumo e avisa o ganho; repetir não entrega de novo", () => {
+    const { state, reservaId } = treinando(2);
+    const aberto = reabrir(state, 1000 + 3 * HORA);
+    const coletado = reducer(aberto, { type: "COLETAR_TUDO", agora: 1000 + 3 * HORA });
+    expect(coletado.save.herois[reservaId].pontosTreino.forca).toBe(2);
+    expect(coletado.retorno).toBeNull();
+    expect(coletado.aviso).toMatch(/2 pontos de Força/);
+    const denovo = reducer(coletado, { type: "COLETAR_TUDO", agora: 1000 + 3 * HORA });
+    expect(denovo.save.herois[reservaId].pontosTreino.forca).toBe(2);
+  });
+
+  it("coletar a mesma atividade duas vezes (duplo clique) entrega uma vez só", () => {
+    const { state, reservaId } = treinando(2);
+    const id = Object.keys(state.save.atividades)[0];
+    const acao = { type: "COLETAR_ATIVIDADE", atividadeId: id, agora: 1000 + 2 * HORA };
+    const duas = aplicar(state, acao, acao);
+    expect(duas.save.herois[reservaId].pontosTreino.forca).toBe(2);
+  });
+
+  it("relógio do sistema voltando não regride o treino", () => {
+    const { state, reservaId } = treinando(2);
+    const id = Object.keys(state.save.atividades)[0];
+    let atual = reducer(state, { type: "RELOGIO", agora: 1000 + 2 * HORA });
+    atual = reducer(atual, { type: "COLETAR_ATIVIDADE", atividadeId: id, agora: 0 });
+    expect(atual.save.herois[reservaId].pontosTreino.forca).toBe(2);
+  });
+
+  it("taverna gera o mural e contrata um recruta para o grupo", () => {
+    const { state } = comReserva();
+    const taverna = reducer(state, { type: "ABRIR_TAVERNA", agora: 1000, semente: 3 });
+    expect(taverna.tela).toBe("taverna");
+    expect(taverna.save.recrutas.opcoes).toHaveLength(3);
+    const contratado = reducer(taverna, { type: "CONTRATAR_RECRUTA", indice: 0, semente: 4 });
+    expect(Object.keys(contratado.save.herois)).toHaveLength(3);
+    expect(contratado.save.grupo).toHaveLength(2);
+    expect(contratado.aviso).toMatch(/entrou no grupo/);
+    expect(reducer(contratado, { type: "CONTRATAR_RECRUTA", indice: 0, semente: 4 }).aviso).toMatch(/foi embora/);
+  });
+
+  it("navega para Atividades", () => {
+    expect(reducer(jogoNovo(), { type: "NAVEGAR", tela: "atividades" }).tela).toBe("atividades");
+  });
+});
+
+describe("dispensar herói", () => {
+  it("dispensa com aviso e recusa o último herói do grupo", () => {
+    let state = jogoNovo();
+    const [principalId, companheiroId] = state.save.grupo;
+    const nome = state.save.herois[companheiroId].nome;
+    state = reducer(state, { type: "DISPENSAR_HEROI", heroiId: companheiroId });
+    expect(state.save.herois[companheiroId]).toBeUndefined();
+    expect(state.save.grupo).toEqual([principalId]);
+    expect(state.aviso).toBe(`${nome} deixou a companhia. 5 equipamentos voltaram ao inventário.`);
+    const recusado = reducer(state, { type: "DISPENSAR_HEROI", heroiId: principalId });
+    expect(recusado.save).toBe(state.save);
+    expect(recusado.aviso).toMatch(/último herói/);
+  });
+});

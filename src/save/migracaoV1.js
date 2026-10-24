@@ -4,10 +4,10 @@ import { zonas } from "../data/zonas";
 import { NIVEL_COMPANHEIRO_MIGRACAO_OFFSET, SLOTS_EQUIPAMENTO } from "../data/constants";
 import { TIPOS_ARMA_MAGICA } from "../data/equipamentos";
 import { gerarId } from "../engine/rng";
-import { criarHeroi } from "../engine/herois";
+import { criarHeroi, adicionarHeroi } from "../engine/herois";
 import { xpParaProximoNivel } from "../engine/progressao";
 import { criarSaveVazio } from "./formato";
-import { adicionarHeroi, adicionarCompanheiro, adicionarConsumiveisIniciais } from "./novoJogo";
+import { adicionarCompanheiro, adicionarConsumiveisIniciais } from "./novoJogo";
 
 export const CHAVE_LEGADO = "rpg_users";
 

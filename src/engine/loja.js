@@ -11,10 +11,8 @@ import {
 import { sortearEquipamento, precoCompra } from "./itens";
 import { nivelMedio } from "./encontros";
 import { equipamentosLivres } from "./inventario";
-
-function heroisDoGrupo(save) {
-  return save.grupo.map((id) => save.herois[id]);
-}
+import { prazoVencido, tempoAtePrazo } from "./relogio";
+import { heroisDoGrupo } from "./grupo";
 
 export function gerarLoja(rng, { nivel, classeIds, agora }) {
   const equipamentos = Array.from({ length: EQUIPAMENTOS_NA_LOJA }, () => {
@@ -30,12 +28,12 @@ export function gerarLoja(rng, { nivel, classeIds, agora }) {
 
 // Relógio que voltou no tempo não renova a loja (evita trocar itens mexendo no relógio)
 export function lojaVencida(loja, agora) {
-  return !loja || agora - loja.renovadaEm >= DURACAO_LOJA_MS;
+  return !loja || prazoVencido(loja.renovadaEm, DURACAO_LOJA_MS, agora);
 }
 
 export function tempoAteRenovar(loja, agora) {
   if (!loja) return 0;
-  return Math.max(0, Math.min(DURACAO_LOJA_MS, loja.renovadaEm + DURACAO_LOJA_MS - agora));
+  return tempoAtePrazo(loja.renovadaEm, DURACAO_LOJA_MS, agora);
 }
 
 function novaLoja(save, rng, agora) {

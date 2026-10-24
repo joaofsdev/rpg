@@ -3,9 +3,19 @@ import { zonas } from "../data/zonas";
 import { itens } from "../data/itens";
 import { calcularAtributosHeroi } from "../engine/atributos";
 import { heroisEmBatalha } from "../engine/inventario";
+import { heroisDoGrupo, heroisDaReserva } from "../engine/grupo";
+import { relogio } from "../engine/relogio";
 
-export function heroisDoGrupo(save) {
-  return save.grupo.map((id) => save.herois[id]);
+export { heroisDoGrupo, heroisDaReserva };
+
+// Grupo primeiro, depois a reserva
+export function todosOsHerois(save) {
+  return [...heroisDoGrupo(save), ...heroisDaReserva(save)];
+}
+
+// Instante usado para exibir tempos restantes: o mesmo relógio que nunca volta do motor
+export function agoraDoJogo(save, agora) {
+  return relogio(save, agora);
 }
 
 export function atributosDoHeroi(save, heroi) {

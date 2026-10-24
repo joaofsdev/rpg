@@ -1,17 +1,21 @@
 import { useState } from "react";
 import { useEstado, useAcoes } from "../../state/contextos";
-import { heroisDoGrupo, atributosDoHeroi, heroiTravado } from "../../state/seletores";
+import { heroisDoGrupo, heroisDaReserva, atributosDoHeroi, heroiTravado } from "../../state/seletores";
 import { classesHeroi } from "../../data/classesHeroi";
 import { golpes } from "../../data/golpes";
 import { spritesHerois } from "../../data/sprites";
-import { TAXA_PONTO, SLOTS_EQUIPAMENTO, MAX_GOLPES_EQUIPADOS } from "../../data/constants";
+import { TAXA_PONTO, SLOTS_EQUIPAMENTO, MAX_GOLPES_EQUIPADOS, MAX_GRUPO, MAX_HEROIS } from "../../data/constants";
 import { NOMES_ATRIBUTO, NOMES_SLOT, NOMES_ELEMENTO, DESCRICAO_ALVO } from "../../data/textos";
 import { atributosDistribuiveis } from "../../engine/herois";
 import { xpParaProximoNivel } from "../../engine/progressao";
+import { atividadeDoHeroi, atividadeConcluida, tempoRestante } from "../../engine/atividades";
+import { motivoNaoEntraNoGrupo, motivoNaoSaiDoGrupo, motivoNaoDispensa } from "../../engine/grupo";
 import { classeRaridade, corRecurso } from "../common/cores";
 import BarraValor from "../common/BarraValor";
 import Botao from "../common/Botao";
 import Sprite from "../battle/Sprite";
+import Modal from "../common/Modal";
+import { formatarDuracao, useAgoraDoJogo } from "../common/tempo";
 
 function Atributos({ save, heroi, acoes }) {
   const [planejados, setPlanejados] = useState({});
@@ -227,38 +231,150 @@ function Golpes({ save, heroi, acoes }) {
   );
 }
 
+function CartaoHeroi({ save, heroi, selecionado, agora, aoEscolher }) {
+  const atividade = atividadeDoHeroi(save, heroi.id);
+  let situacao = null;
+  if (atividade) {
+    situacao = atividadeConcluida(atividade, agora)
+      ? "treino pronto"
+      : `treinando, faltam ${formatarDuracao(tempoRestante(atividade, agora))}`;
+  }
+  return (
+    <button
+      role="tab"
+      aria-selected={selecionado}
+      onClick={() => aoEscolher(heroi.id)}
+      className={`painel flex items-end gap-2 px-3 py-2 ${selecionado ? "border-destaque" : "hover:border-borda-forte"}`}
+    >
+      <Sprite sprite={spritesHerois[heroi.classeId]} escala={2} rotulo="" />
+      <span className="text-left">
+        <span className="titulo block">{heroi.nome}</span>
+        <span className="text-sm text-texto-2">
+          {classesHeroi[heroi.classeId].nome}, nível {heroi.nivel}
+          {heroi.pontosLivres > 0 && <span className="text-destaque"> (+{heroi.pontosLivres})</span>}
+        </span>
+        {situacao && <span className="block text-xs text-texto-3">{situacao}</span>}
+      </span>
+    </button>
+  );
+}
+
+// Botão de entrar/sair do grupo com o motivo quando está desabilitado (SPEC.md §3.2)
+function LugarNoGrupo({ save, heroi, agora, acoes }) {
+  const noGrupo = save.grupo.includes(heroi.id);
+  const atividade = atividadeDoHeroi(save, heroi.id);
+  let motivo = noGrupo ? motivoNaoSaiDoGrupo(save, heroi.id) : motivoNaoEntraNoGrupo(save, heroi.id);
+  if (!noGrupo && atividade) {
+    motivo = atividadeConcluida(atividade, agora)
+      ? "Treino pronto: colete em Atividades"
+      : `${motivo} (termina em ${formatarDuracao(tempoRestante(atividade, agora))})`;
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Botao
+        disabled={Boolean(motivo)}
+        onClick={() => (noGrupo ? acoes.tirarDoGrupo(heroi.id) : acoes.colocarNoGrupo(heroi.id))}
+      >
+        {noGrupo ? "Mover para a reserva" : "Colocar no grupo"}
+      </Botao>
+      {motivo && <span className="text-sm text-texto-3">{motivo}</span>}
+      {atividade && (
+        <Botao variante="discreto" onClick={() => acoes.navegar("atividades")}>
+          Ver em Atividades
+        </Botao>
+      )}
+    </div>
+  );
+}
+
+// Dispensar com confirmação; o motivo aparece quando não é possível (SPEC.md §3.2)
+function Dispensar({ save, heroi, acoes }) {
+  const [confirmando, setConfirmando] = useState(false);
+  const motivo = motivoNaoDispensa(save, heroi.id);
+  const itens = Object.values(heroi.equipamento).filter(Boolean).length;
+  const dispensar = () => {
+    setConfirmando(false);
+    acoes.dispensarHeroi(heroi.id);
+  };
+  return (
+    <section className="mt-6 border-t border-borda pt-3" aria-labelledby="titulo-dispensar">
+      <h3 id="titulo-dispensar" className="sr-only">
+        Dispensar
+      </h3>
+      <div className="flex flex-wrap items-center gap-2">
+        <Botao variante="perigo" disabled={Boolean(motivo)} onClick={() => setConfirmando(true)}>
+          Dispensar {heroi.nome}
+        </Botao>
+        {motivo && <span className="text-sm text-texto-3">{motivo}</span>}
+      </div>
+      {confirmando && (
+        <Modal
+          titulo={`Dispensar ${heroi.nome}?`}
+          aoFechar={() => setConfirmando(false)}
+          acoes={
+            <>
+              <Botao variante="discreto" onClick={() => setConfirmando(false)}>
+                Manter
+              </Botao>
+              <Botao variante="perigo" onClick={dispensar}>
+                Dispensar
+              </Botao>
+            </>
+          }
+        >
+          <p>
+            {heroi.nome} ({classesHeroi[heroi.classeId].nome}, nível {heroi.nivel}) deixa a companhia para sempre, com o nível
+            e os pontos. {itens > 0 ? `O equipamento (${itens} ${itens === 1 ? "item" : "itens"}) volta ao inventário.` : ""} Não dá
+            para desfazer.
+          </p>
+        </Modal>
+      )}
+    </section>
+  );
+}
+
 export default function TelaGrupo() {
   const { save } = useEstado();
   const acoes = useAcoes();
-  const herois = heroisDoGrupo(save);
-  const [heroiId, setHeroiId] = useState(herois.find((h) => h.pontosLivres > 0)?.id ?? herois[0].id);
-  const heroi = save.herois[heroiId];
+  const agora = useAgoraDoJogo(save);
+  const grupo = heroisDoGrupo(save);
+  const reserva = heroisDaReserva(save);
+  const todos = [...grupo, ...reserva];
+  const [escolhido, setEscolhido] = useState(todos.find((h) => h.pontosLivres > 0)?.id ?? grupo[0].id);
+  const heroi = save.herois[escolhido] ?? grupo[0];
   const necessario = xpParaProximoNivel(heroi.nivel);
 
   return (
     <main className="mx-auto max-w-5xl px-3 py-4 pb-24 sm:pb-6">
+      <h2 className="titulo mb-2 text-sm text-texto-2">
+        Grupo ({grupo.length}/{MAX_GRUPO})
+      </h2>
       <div role="tablist" aria-label="Heróis do grupo" className="mb-4 flex flex-wrap gap-2">
-        {herois.map((h) => (
-          <button
-            key={h.id}
-            role="tab"
-            aria-selected={h.id === heroiId}
-            onClick={() => setHeroiId(h.id)}
-            className={`painel flex items-end gap-2 px-3 py-2 ${h.id === heroiId ? "border-destaque" : "hover:border-borda-forte"}`}
-          >
-            <Sprite sprite={spritesHerois[h.classeId]} escala={2} rotulo="" />
-            <span className="text-left">
-              <span className="titulo block">{h.nome}</span>
-              <span className="text-sm text-texto-2">
-                {classesHeroi[h.classeId].nome}, nível {h.nivel}
-                {h.pontosLivres > 0 && <span className="text-destaque"> (+{h.pontosLivres})</span>}
-              </span>
-            </span>
-          </button>
+        {grupo.map((h) => (
+          <CartaoHeroi key={h.id} save={save} heroi={h} selecionado={h.id === heroi.id} agora={agora} aoEscolher={setEscolhido} />
         ))}
       </div>
 
+      <h2 className="titulo mb-2 text-sm text-texto-2">
+        Reserva ({reserva.length}) · {todos.length}/{MAX_HEROIS} heróis
+      </h2>
+      {reserva.length === 0 ? (
+        <p className="mb-4 text-sm text-texto-3">
+          Ninguém na reserva. Heróis da reserva podem treinar em Atividades; contrate mais na Taverna.
+        </p>
+      ) : (
+        <div role="tablist" aria-label="Heróis da reserva" className="mb-4 flex flex-wrap gap-2">
+          {reserva.map((h) => (
+            <CartaoHeroi key={h.id} save={save} heroi={h} selecionado={h.id === heroi.id} agora={agora} aoEscolher={setEscolhido} />
+          ))}
+        </div>
+      )}
+
       <div className="painel p-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="titulo text-lg text-destaque">{heroi.nome}</h2>
+          <LugarNoGrupo save={save} heroi={heroi} agora={agora} acoes={acoes} />
+        </div>
         <div className="mb-4">
           <div className="mb-1 flex justify-between text-sm">
             <span className="titulo">Experiência</span>
@@ -273,6 +389,7 @@ export default function TelaGrupo() {
           <Golpes key={`golpes-${heroi.id}`} save={save} heroi={heroi} acoes={acoes} />
           <Equipamento save={save} heroi={heroi} acoes={acoes} />
         </div>
+        <Dispensar key={`dispensar-${heroi.id}`} save={save} heroi={heroi} acoes={acoes} />
       </div>
     </main>
   );

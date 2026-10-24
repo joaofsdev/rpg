@@ -4,7 +4,7 @@ import { zonas } from "../data/zonas";
 import { classesHeroi } from "../data/classesHeroi";
 import { MAX_GRUPO, SLOTS_EQUIPAMENTO } from "../data/constants";
 
-export const VERSAO_SAVE = 3;
+export const VERSAO_SAVE = 4;
 
 function progressoInicial() {
   const progresso = { zonas: {}, masmorras: {} };
@@ -38,7 +38,6 @@ export function criarSaveVazio(agora) {
     batalha: null,
     masmorraAtual: null,
     atividades: {},
-    vagas: { expedicao: 1, treino: 1, cozinha: 1 },
     refeicaoAtiva: null,
     loja: null,
     recrutas: null,
@@ -66,6 +65,13 @@ export function validarSave(save) {
     erros.push("Grupo inválido.");
   } else if (save.grupo.some((id) => !save.herois?.[id])) {
     erros.push("Grupo referencia herói inexistente.");
+  } else if (new Set(save.grupo).size !== save.grupo.length) {
+    erros.push("Grupo com herói repetido.");
+  }
+  if (!ehObjeto(save.atividades)) {
+    erros.push("Atividades inválidas.");
+  } else if (Object.values(save.atividades).some((a) => !save.herois?.[a.heroiId])) {
+    erros.push("Atividade de herói inexistente.");
   }
   if (!ehObjeto(save.inventario?.equipamentos) || !ehObjeto(save.inventario?.itens)) {
     erros.push("Inventário inválido.");

@@ -6,6 +6,7 @@
 // alvoIa (só inimigos): aleatorio | menorHp | maiorHp | primeiro
 // efeitos: status (statusId, chance?, turnos?), modificador (atributo, valor, turnos),
 //          cura (percentual), recurso (recurso, valor), autoDano (percentual)
+// treino (só golpes avançados): { horas, ouro } para aprender antes do nível no quartel (§3.8)
 
 import { golpesInimigos } from "./golpesInimigos";
 
@@ -302,6 +303,7 @@ const golpesHerois = {
     elemento: "impacto",
     poder: 20,
     custo: 20,
+    treino: { horas: 2, ouro: 200 },
     alvo: "inimigo",
     efeitos: [{ tipo: "status", statusId: "atordoado", chance: 0.35 }],
   },
@@ -313,6 +315,7 @@ const golpesHerois = {
     elemento: "luz",
     poder: 30,
     custo: 35,
+    treino: { horas: 4, ouro: 400 },
     alvo: "inimigo",
   },
   muralha: {
@@ -321,6 +324,7 @@ const golpesHerois = {
     descricao: "Protege todo o grupo por 2 turnos.",
     categoria: "suporte",
     custo: 40,
+    treino: { horas: 6, ouro: 700 },
     alvo: "todosAliados",
     efeitos: [{ tipo: "status", statusId: "protecao", turnos: 2 }],
   },
@@ -332,6 +336,7 @@ const golpesHerois = {
     elemento: "impacto",
     poder: 48,
     custo: 55,
+    treino: { horas: 8, ouro: 1000 },
     alvo: "inimigo",
     efeitos: [{ tipo: "status", statusId: "atordoado", chance: 0.3 }],
   },
@@ -344,6 +349,7 @@ const golpesHerois = {
     elemento: "fogo",
     poder: 22,
     custo: 18,
+    treino: { horas: 2, ouro: 200 },
     alvo: "inimigo",
     efeitos: [{ tipo: "status", statusId: "queimadura", chance: 0.3 }],
   },
@@ -355,6 +361,7 @@ const golpesHerois = {
     elemento: "perfuracao",
     poder: 16,
     custo: 15,
+    treino: { horas: 4, ouro: 400 },
     alvo: "inimigo",
     efeitos: [{ tipo: "status", statusId: "veneno", chance: 0.8 }],
   },
@@ -364,6 +371,7 @@ const golpesHerois = {
     descricao: "Concentra a mira: mais força por 3 turnos.",
     categoria: "suporte",
     custo: 20,
+    treino: { horas: 6, ouro: 700 },
     alvo: "proprio",
     efeitos: [{ tipo: "modificador", atributo: "forca", valor: 12, turnos: 3 }],
   },
@@ -376,6 +384,7 @@ const golpesHerois = {
     poder: 12,
     acertos: 4,
     custo: 55,
+    treino: { horas: 8, ouro: 1000 },
     alvo: "inimigo",
   },
 
@@ -387,6 +396,7 @@ const golpesHerois = {
     elemento: "gelo",
     poder: 30,
     custo: 14,
+    treino: { horas: 2, ouro: 200 },
     alvo: "inimigo",
     efeitos: [{ tipo: "status", statusId: "lentidao", chance: 0.3 }],
   },
@@ -398,6 +408,7 @@ const golpesHerois = {
     elemento: "raio",
     poder: 24,
     custo: 22,
+    treino: { horas: 4, ouro: 400 },
     alvo: "todosInimigos",
   },
   barreira_arcana: {
@@ -406,6 +417,7 @@ const golpesHerois = {
     descricao: "Protege todo o grupo por 2 turnos.",
     categoria: "suporte",
     custo: 30,
+    treino: { horas: 6, ouro: 700 },
     alvo: "todosAliados",
     efeitos: [{ tipo: "status", statusId: "protecao", turnos: 2 }],
   },
@@ -417,6 +429,7 @@ const golpesHerois = {
     elemento: "fogo",
     poder: 60,
     custo: 45,
+    treino: { horas: 8, ouro: 1000 },
     alvo: "todosInimigos",
   },
 
@@ -428,6 +441,7 @@ const golpesHerois = {
     elemento: "sombra",
     poder: 24,
     custo: 25,
+    treino: { horas: 2, ouro: 200 },
     bonusCritico: 0.2,
     alvo: "inimigo",
   },
@@ -437,6 +451,7 @@ const golpesHerois = {
     descricao: "O alvo causa menos dano por 3 turnos.",
     categoria: "suporte",
     custo: 15,
+    treino: { horas: 4, ouro: 400 },
     alvo: "inimigo",
     efeitos: [{ tipo: "status", statusId: "fraqueza", turnos: 3 }],
   },
@@ -449,6 +464,7 @@ const golpesHerois = {
     poder: 14,
     acertos: 3,
     custo: 40,
+    treino: { horas: 6, ouro: 700 },
     alvo: "inimigo",
   },
   golpe_fatal: {
@@ -459,6 +475,7 @@ const golpesHerois = {
     elemento: "corte",
     poder: 55,
     custo: 60,
+    treino: { horas: 8, ouro: 1000 },
     bonusCritico: 0.35,
     alvo: "inimigo",
   },
@@ -469,6 +486,7 @@ const golpesHerois = {
     descricao: "Mais força para todo o grupo por 3 turnos.",
     categoria: "suporte",
     custo: 16,
+    treino: { horas: 2, ouro: 200 },
     alvo: "todosAliados",
     efeitos: [{ tipo: "modificador", atributo: "forca", valor: 8, turnos: 3 }],
   },
@@ -478,6 +496,7 @@ const golpesHerois = {
     descricao: "Regeneração para todo o grupo por 3 turnos.",
     categoria: "suporte",
     custo: 18,
+    treino: { horas: 4, ouro: 400 },
     alvo: "todosAliados",
     efeitos: [{ tipo: "status", statusId: "regeneracao" }],
   },
@@ -489,6 +508,7 @@ const golpesHerois = {
     elemento: "sombra",
     poder: 30,
     custo: 24,
+    treino: { horas: 6, ouro: 700 },
     alvo: "todosInimigos",
     efeitos: [{ tipo: "status", statusId: "fraqueza", chance: 0.3 }],
   },
@@ -500,6 +520,7 @@ const golpesHerois = {
     elemento: "luz",
     poder: 52,
     custo: 35,
+    treino: { horas: 8, ouro: 1000 },
     alvo: "inimigo",
   },
 
@@ -509,6 +530,7 @@ const golpesHerois = {
     descricao: "Todos os inimigos causam menos dano por 2 turnos.",
     categoria: "suporte",
     custo: 20,
+    treino: { horas: 2, ouro: 200 },
     alvo: "todosInimigos",
     efeitos: [{ tipo: "status", statusId: "fraqueza", turnos: 2 }],
   },
@@ -521,6 +543,7 @@ const golpesHerois = {
     poder: 20,
     acertos: 2,
     custo: 30,
+    treino: { horas: 4, ouro: 400 },
     alvo: "inimigo",
   },
   pele_de_ferro: {
@@ -529,6 +552,7 @@ const golpesHerois = {
     descricao: "Proteção e defesa extra por 3 turnos.",
     categoria: "suporte",
     custo: 25,
+    treino: { horas: 6, ouro: 700 },
     alvo: "proprio",
     efeitos: [
       { tipo: "status", statusId: "protecao", turnos: 3 },
@@ -543,6 +567,7 @@ const golpesHerois = {
     elemento: "impacto",
     poder: 45,
     custo: 70,
+    treino: { horas: 8, ouro: 1000 },
     alvo: "todosInimigos",
   },
 };

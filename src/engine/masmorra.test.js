@@ -2,12 +2,14 @@ import { describe, it, expect } from "vitest";
 import { entrarNaMasmorra, inimigosDoAndar, origemDoAndar, concluirAndar, sairDaMasmorra } from "./masmorra";
 import { criarBatalha, aplicarAcao } from "./combate";
 import { aplicarResultadoBatalha } from "./progressao";
-import { podeEquipar } from "./itens";
+import { podeEquipar, precoVenda } from "./itens";
+import { equipamentosLivres, precoVendaItem } from "./inventario";
+import { itens } from "../data/itens";
 import { criarRng } from "./rng";
 import { ajustar, golpeQualquer } from "./__fixtures__/batalhas";
 import { criarNovoJogo } from "../save/novoJogo";
 import { buscarZona } from "../data/zonas";
-import { CURA_FOGUEIRA, DESCANSO_ENTRE_ANDARES } from "../data/constants";
+import { CURA_FOGUEIRA, DESCANSO_ENTRE_ANDARES, MAX_EQUIPAMENTOS_INVENTARIO } from "../data/constants";
 
 const cemiterio = buscarZona("cemiterio");
 
@@ -58,6 +60,26 @@ function jogarAndar(save, { vencer = true, ferir } = {}) {
 }
 
 describe("masmorra", () => {
+  it("com inventário e pilhas cheios, os drops do andar são vendidos e o ouro entra nos ganhos", () => {
+    let save = jogoComMasmorra();
+    const cheias = { ...save.inventario.itens };
+    for (const id of Object.keys(itens)) cheias[id] = itens[id].empilhaAte;
+    const lixo = {};
+    for (let i = equipamentosLivres(save).length; i < MAX_EQUIPAMENTOS_INVENTARIO; i++) {
+      lixo[`x${i}`] = { id: `x${i}`, slot: "botas", pesoArmadura: "leve", raridade: "Comum", nivel: 1, bonus: {}, aprimoramento: 0 };
+    }
+    save = { ...save, inventario: { itens: cheias, equipamentos: { ...save.inventario.equipamentos, ...lixo } } };
+    save = entrarNaMasmorra(save, "cemiterio").save;
+    const { save: depois, batalha } = jogarAndar(save);
+    const r = batalha.recompensas;
+    const vendas =
+      Object.entries(r.itens).reduce((s, [id, q]) => s + q * precoVendaItem(id), 0) +
+      r.equipamentos.reduce((s, e) => s + precoVenda(e), 0);
+    expect(depois.inventario.itens).toEqual(cheias);
+    expect(equipamentosLivres(depois)).toHaveLength(MAX_EQUIPAMENTOS_INVENTARIO);
+    expect(depois.masmorraAtual.ganhos.ouro).toBe(r.ouro + vendas);
+  });
+
   it("só entra com a masmorra desbloqueada e sem outra em andamento", () => {
     const fechado = criarNovoJogo({ nomeHeroi: "A", classeId: "mago", agora: 1, rng: criarRng(1) });
     expect(entrarNaMasmorra(fechado, "cemiterio").erro).toBeTruthy();

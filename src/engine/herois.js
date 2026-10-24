@@ -31,27 +31,39 @@ export function criarHeroi({ id, nome, classeId, nivel = 1 }) {
     golpesAprendidos: golpesAteONivel(classeId, nivel),
     golpesEquipados: [...classe.golpesIniciais],
     equipamento: Object.fromEntries(SLOTS_EQUIPAMENTO.map((slot) => [slot, null])),
-    atividade: null,
   };
 }
 
-// Companheiro de classe diferente, já equipado com um conjunto Comum do nível.
+// Herói novo já equipado com um conjunto Comum do nível (companheiro, recruta).
 // Retorna { heroi, equipamentos }.
+export function criarHeroiEquipado(rng, { classeId, nome, nivel }) {
+  const heroi = criarHeroi({ id: gerarId(rng), nome, classeId, nivel });
+  const equipamentos = conjuntoComum(rng, classeId, nivel);
+  for (const item of equipamentos) heroi.equipamento[item.slot] = item.id;
+  return { heroi, equipamentos };
+}
+
+// Companheiro de classe diferente. Retorna { heroi, equipamentos }.
 export function criarCompanheiro(rng, { excluirClasseId, nivel, nomesEmUso = [] }) {
   const classeId = escolher(
     rng,
     Object.keys(classesHeroi).filter((id) => id !== excluirClasseId),
   );
   const nomesLivres = nomesHerois.filter((n) => !nomesEmUso.includes(n));
-  const heroi = criarHeroi({
-    id: gerarId(rng),
-    nome: escolher(rng, nomesLivres.length ? nomesLivres : nomesHerois),
-    classeId,
-    nivel,
-  });
-  const equipamentos = conjuntoComum(rng, classeId, nivel);
-  for (const item of equipamentos) heroi.equipamento[item.slot] = item.id;
-  return { heroi, equipamentos };
+  const nome = escolher(rng, nomesLivres.length ? nomesLivres : nomesHerois);
+  return criarHeroiEquipado(rng, { classeId, nome, nivel });
+}
+
+// Adiciona um herói e seus equipamentos ao save, no fim do grupo ou na reserva
+export function adicionarHeroi(save, heroi, equipamentos = [], { noGrupo = true } = {}) {
+  const novosEquipamentos = { ...save.inventario.equipamentos };
+  for (const item of equipamentos) novosEquipamentos[item.id] = item;
+  return {
+    ...save,
+    herois: { ...save.herois, [heroi.id]: heroi },
+    grupo: noGrupo ? [...save.grupo, heroi.id] : save.grupo,
+    inventario: { ...save.inventario, equipamentos: novosEquipamentos },
+  };
 }
 
 // Atributos em que o herói pode colocar pontos (manaMax só para classes de mana)

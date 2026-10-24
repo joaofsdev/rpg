@@ -5,6 +5,7 @@ import { EstadoContext, AcoesContext } from "./contextos";
 import { gravarSlot, gravarConfig } from "../save/armazenamento";
 
 const ATRASO_GRAVACAO_MS = 300;
+const INTERVALO_RELOGIO_MS = 30000;
 
 export default function GameProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, undefined, criarEstadoInicial);
@@ -41,6 +42,22 @@ export default function GameProvider({ children }) {
       document.removeEventListener("visibilitychange", aoMudarVisibilidade);
     };
   }, []);
+
+  // Relógio das atividades (SPEC.md §3.9, §6.6): só registra o instante atual no save, para o
+  // resumo de retorno e o relógio que não volta. O progresso é sempre calculado por timestamps.
+  const slotAberto = state.slotAtivo !== null && Boolean(state.save);
+  useEffect(() => {
+    if (!slotAberto) return;
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") acoes.marcarRelogio();
+    }, INTERVALO_RELOGIO_MS);
+    const aoMudarVisibilidade = () => document.visibilityState === "visible" && acoes.voltouAoJogo();
+    document.addEventListener("visibilitychange", aoMudarVisibilidade);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", aoMudarVisibilidade);
+    };
+  }, [slotAberto, acoes]);
 
   useEffect(() => {
     if (state.tela === "carregando") return;

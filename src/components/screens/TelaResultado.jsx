@@ -3,6 +3,7 @@ import { itens } from "../../data/itens";
 import { golpes } from "../../data/golpes";
 import { NOMES_SLOT } from "../../data/textos";
 import { PONTOS_POR_NIVEL } from "../../data/constants";
+import { descreverItens } from "../common/descricoes";
 import { classeRaridade } from "../common/cores";
 import Botao from "../common/Botao";
 
@@ -96,6 +97,12 @@ export default function TelaResultado() {
               <div className="text-sm text-texto-2">
                 Inventário cheio: {r.equipamentosVendidos.length} equipamento(s) vendido(s) por{" "}
                 {r.equipamentosVendidos.reduce((s, v) => s + v.valor, 0)} ouro.
+              </div>
+            )}
+            {r.itensVendidos?.length > 0 && (
+              <div className="text-sm text-texto-2">
+                Pilha cheia: {descreverItens(Object.fromEntries(r.itensVendidos.map((v) => [v.itemId, v.qtd])))} vendido(s)
+                por {r.itensVendidos.reduce((s, v) => s + v.valor, 0)} ouro.
               </div>
             )}
           </dl>

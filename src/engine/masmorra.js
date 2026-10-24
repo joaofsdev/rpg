@@ -64,7 +64,10 @@ function somarGanhos(ganhos, resumo) {
   for (const [id, qtd] of Object.entries(resumo.itens)) itens[id] = (itens[id] || 0) + qtd;
   return {
     xp: ganhos.xp + resumo.xp,
-    ouro: ganhos.ouro + resumo.ouro + resumo.equipamentosVendidos.reduce((s, v) => s + v.valor, 0),
+    ouro:
+      ganhos.ouro +
+      resumo.ouro +
+      [...resumo.equipamentosVendidos, ...resumo.itensVendidos].reduce((s, v) => s + v.valor, 0),
     itens,
     equipamentos: ganhos.equipamentos + resumo.equipamentos.length + resumo.equipamentosVendidos.length,
   };

@@ -1,5 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { equipar, desequipar, venderEquipamento, equipamentosLivres, heroisEmBatalha } from "./inventario";
+import {
+  equipar,
+  desequipar,
+  venderEquipamento,
+  equipamentosLivres,
+  heroisEmBatalha,
+  guardarNoInventario,
+  precoVendaItem,
+} from "./inventario";
 import { distribuirPontos, criarHeroi, sincronizarGolpes, equiparGolpes } from "./herois";
 import { precoVenda } from "./itens";
 import { criarRng } from "./rng";
@@ -122,5 +130,54 @@ describe("golpes por nível", () => {
     expect(equiparGolpes(heroi, ["meteoro"]).erro).toBeTruthy();
     expect(equiparGolpes(heroi, ["bola_de_fogo", "bola_de_fogo"]).erro).toBeTruthy();
     expect(equiparGolpes(heroi, []).erro).toBeTruthy();
+  });
+});
+
+describe("entrada de itens no inventário (SPEC §4.8)", () => {
+  const botas = (id) => ({ id, slot: "botas", pesoArmadura: "leve", raridade: "Comum", nivel: 1, bonus: {}, aprimoramento: 0 });
+
+  function lotado(save) {
+    const extras = {};
+    for (let i = equipamentosLivres(save).length; i < MAX_EQUIPAMENTOS_INVENTARIO; i++) extras[`x${i}`] = botas(`x${i}`);
+    return { ...save, inventario: { ...save.inventario, equipamentos: { ...save.inventario.equipamentos, ...extras } } };
+  }
+
+  it("guarda tudo quando há espaço, sem vender nada", () => {
+    const save = jogo();
+    const r = guardarNoInventario(save, { itens: { osso_antigo: 3 }, equipamentos: [botas("n1")] });
+    expect(r.save.inventario.itens.osso_antigo).toBe(3);
+    expect(r.save.inventario.equipamentos.n1).toBeDefined();
+    expect(r.ouroDasVendas).toBe(0);
+    expect(r.save.ouro).toBe(save.ouro);
+  });
+
+  it("equipamento além dos 50 espaços livres é vendido pelo preço de venda", () => {
+    const save = lotado(jogo());
+    const novo = botas("n1");
+    const r = guardarNoInventario(save, { equipamentos: [novo] });
+    expect(r.save.inventario.equipamentos.n1).toBeUndefined();
+    expect(r.vendidos.equipamentos).toEqual([{ item: novo, valor: precoVenda(novo) }]);
+    expect(r.save.ouro).toBe(save.ouro + precoVenda(novo));
+    expect(equipamentosLivres(r.save)).toHaveLength(MAX_EQUIPAMENTOS_INVENTARIO);
+  });
+
+  it("empilhável além do limite da pilha é vendido; o que cabe é guardado", () => {
+    const base = jogo();
+    const save = { ...base, inventario: { ...base.inventario, itens: { ...base.inventario.itens, osso_antigo: 997, pocao_pequena: 99 } } };
+    const r = guardarNoInventario(save, { itens: { osso_antigo: 5, pocao_pequena: 2 } });
+    expect(r.save.inventario.itens.osso_antigo).toBe(999);
+    expect(r.save.inventario.itens.pocao_pequena).toBe(99);
+    expect(r.guardados.itens).toEqual({ osso_antigo: 2 });
+    expect(r.vendidos.itens).toEqual([
+      { itemId: "osso_antigo", qtd: 3, valor: 3 * precoVendaItem("osso_antigo") },
+      { itemId: "pocao_pequena", qtd: 2, valor: 2 * precoVendaItem("pocao_pequena") },
+    ]);
+    expect(r.save.ouro).toBe(save.ouro + r.ouroDasVendas);
+  });
+
+  it("todo material e consumível tem preço de venda de pelo menos 1", () => {
+    for (const id of ["osso_antigo", "minerio_de_ferro", "pocao_pequena", "erva_revigorante"]) {
+      expect(precoVendaItem(id)).toBeGreaterThanOrEqual(1);
+    }
   });
 });

@@ -88,3 +88,7 @@ export const DESCANSO_ENTRE_ANDARES = 0.3; // cura (fração da vida máx.) depo
 export const VIDA_AO_REVIVER_NA_FOGUEIRA = 0.25;
 export const NIVEIS_EXTRA_CHEFE_MASMORRA = 1;
 export const NIVEIS_POR_ANDAR = 0.25; // nível dos inimigos: zona.nivelMax + floor((andar − 1) × este valor)
+
+// Atividades por tempo (SPEC.md §3.8, §3.9, §4.10)
+export const HORA_MS = 60 * 60 * 1000;
+export const TETO_ATIVIDADE_HORAS = 8; // nenhuma atividade dura (nem produz) mais que isso

@@ -171,6 +171,63 @@ export function criarAcoes(dispatch, storage) {
       dispatch({ type: "VENDER_EQUIPAMENTO", equipamentoId });
     },
 
+    // Relógio do jogo: chamado pelo Provider a cada 30 s com a aba visível e ao voltar para ela
+    marcarRelogio() {
+      dispatch({ type: "RELOGIO", agora: Date.now() });
+    },
+
+    voltouAoJogo() {
+      dispatch({ type: "VOLTOU_AO_JOGO", agora: Date.now() });
+    },
+
+    fecharRetorno() {
+      dispatch({ type: "FECHAR_RETORNO" });
+    },
+
+    coletarAtividade(atividadeId) {
+      dispatch({ type: "COLETAR_ATIVIDADE", atividadeId, agora: Date.now() });
+    },
+
+    cancelarAtividade(atividadeId) {
+      dispatch({ type: "CANCELAR_ATIVIDADE", atividadeId, agora: Date.now() });
+    },
+
+    coletarTudo() {
+      dispatch({ type: "COLETAR_TUDO", agora: Date.now() });
+    },
+
+    treinarAtributo(heroiId, atributo, horas) {
+      dispatch({ type: "INICIAR_TREINO", heroiId, atributo, horas, agora: Date.now(), semente: novaSemente() });
+    },
+
+    treinarGolpe(heroiId, golpeId) {
+      dispatch({ type: "INICIAR_TREINO", heroiId, golpeId, agora: Date.now(), semente: novaSemente() });
+    },
+
+    iniciarExpedicao(heroiId, zonaId, minutos) {
+      dispatch({ type: "INICIAR_EXPEDICAO", heroiId, zonaId, minutos, agora: Date.now(), semente: novaSemente() });
+    },
+
+    colocarNoGrupo(heroiId) {
+      dispatch({ type: "COLOCAR_NO_GRUPO", heroiId });
+    },
+
+    tirarDoGrupo(heroiId) {
+      dispatch({ type: "TIRAR_DO_GRUPO", heroiId });
+    },
+
+    dispensarHeroi(heroiId) {
+      dispatch({ type: "DISPENSAR_HEROI", heroiId });
+    },
+
+    abrirTaverna() {
+      dispatch({ type: "ABRIR_TAVERNA", agora: Date.now(), semente: novaSemente() });
+    },
+
+    contratarRecruta(indice) {
+      dispatch({ type: "CONTRATAR_RECRUTA", indice, semente: novaSemente() });
+    },
+
     alterarConfig(mudancas) {
       dispatch({ type: "CONFIG_ALTERADA", mudancas });
     },

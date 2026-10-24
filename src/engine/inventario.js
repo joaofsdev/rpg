@@ -1,6 +1,7 @@
-// Operações de equipamento sobre o save. Funções puras: retornam { save } ou { erro }.
+// Inventário: equipamentos e entrada de itens. Funções puras: retornam { save } ou { erro }.
 
-import { MAX_EQUIPAMENTOS_INVENTARIO } from "../data/constants";
+import { MAX_EQUIPAMENTOS_INVENTARIO, FRACAO_PRECO_VENDA } from "../data/constants";
+import { itens as dadosItens } from "../data/itens";
 import { podeEquipar, precoVenda } from "./itens";
 
 export function heroisEmBatalha(save) {
@@ -86,5 +87,50 @@ export function venderEquipamento(save, equipamentoId) {
       ouro: save.ouro + precoVenda(item),
       inventario: { ...save.inventario, equipamentos },
     },
+  };
+}
+
+export function precoVendaItem(itemId) {
+  return Math.max(1, Math.floor((dadosItens[itemId]?.preco || 0) * FRACAO_PRECO_VENDA));
+}
+
+// Único caminho de entrada de itens no inventário (SPEC.md §4.8). Equipamentos ocupam 1 dos
+// MAX_EQUIPAMENTOS_INVENTARIO espaços livres; empilháveis respeitam o limite da pilha (empilhaAte).
+// O que não couber é vendido na hora pelo preço de venda.
+// Retorna { save, guardados: { itens, equipamentos }, vendidos: { itens: [{ itemId, qtd, valor }],
+// equipamentos: [{ item, valor }] }, ouroDasVendas }.
+export function guardarNoInventario(save, { itens: novosItens = {}, equipamentos: novosEquipamentos = [] }) {
+  const itens = { ...save.inventario.itens };
+  const equipamentos = { ...save.inventario.equipamentos };
+  const guardados = { itens: {}, equipamentos: [] };
+  const vendidos = { itens: [], equipamentos: [] };
+
+  for (const [itemId, qtd] of Object.entries(novosItens)) {
+    const atual = itens[itemId] || 0;
+    const cabe = Math.max(0, Math.min(qtd, (dadosItens[itemId]?.empilhaAte ?? Infinity) - atual));
+    if (cabe > 0) {
+      itens[itemId] = atual + cabe;
+      guardados.itens[itemId] = cabe;
+    }
+    if (qtd > cabe) vendidos.itens.push({ itemId, qtd: qtd - cabe, valor: (qtd - cabe) * precoVendaItem(itemId) });
+  }
+
+  let livres = equipamentosLivres(save).length;
+  for (const item of novosEquipamentos) {
+    if (livres < MAX_EQUIPAMENTOS_INVENTARIO) {
+      equipamentos[item.id] = item;
+      guardados.equipamentos.push(item);
+      livres += 1;
+    } else {
+      vendidos.equipamentos.push({ item, valor: precoVenda(item) });
+    }
+  }
+
+  const ouroDasVendas = [...vendidos.itens, ...vendidos.equipamentos].reduce((s, v) => s + v.valor, 0);
+  return {
+    save: { ...save, ouro: save.ouro + ouroDasVendas, inventario: { ...save.inventario, itens, equipamentos } },
+    guardados,
+    vendidos,
+    ouroDasVendas,
   };
 }

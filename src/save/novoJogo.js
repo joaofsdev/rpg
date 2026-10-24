@@ -1,20 +1,8 @@
 import { CONSUMIVEIS_INICIAIS } from "../data/constants";
 import { gerarId } from "../engine/rng";
-import { criarHeroi, criarCompanheiro } from "../engine/herois";
+import { criarHeroi, criarCompanheiro, adicionarHeroi } from "../engine/herois";
 import { conjuntoComum } from "../engine/itens";
 import { criarSaveVazio } from "./formato";
-
-// Adiciona um herói e seus equipamentos ao save, colocando-o no fim do grupo
-export function adicionarHeroi(save, heroi, equipamentos = []) {
-  const novosEquipamentos = { ...save.inventario.equipamentos };
-  for (const item of equipamentos) novosEquipamentos[item.id] = item;
-  return {
-    ...save,
-    herois: { ...save.herois, [heroi.id]: heroi },
-    grupo: [...save.grupo, heroi.id],
-    inventario: { ...save.inventario, equipamentos: novosEquipamentos },
-  };
-}
 
 export function adicionarCompanheiro(save, rng, { excluirClasseId, nivel }) {
   const { heroi, equipamentos } = criarCompanheiro(rng, {

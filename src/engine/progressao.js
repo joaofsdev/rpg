@@ -5,10 +5,9 @@ import {
   PONTOS_POR_NIVEL,
   NIVEL_MAXIMO,
   MULT_OURO_CHEFE,
-  MAX_EQUIPAMENTOS_INVENTARIO,
   ELEMENTOS,
 } from "../data/constants";
-import { precoVenda } from "./itens";
+import { guardarNoInventario } from "./inventario";
 import { aprenderGolpesDoNivel } from "./herois";
 
 // Marcos do bestiário (SPEC.md §3.10)
@@ -44,13 +43,6 @@ export function ganharXp(heroi, xp) {
   resultado.pontosLivres += niveisGanhos * PONTOS_POR_NIVEL;
   const { heroi: comGolpes, novos } = aprenderGolpesDoNivel(resultado);
   return { heroi: comGolpes, niveisGanhos, golpesNovos: novos };
-}
-
-function contarEquipamentosLivres(save) {
-  const equipados = new Set(
-    Object.values(save.herois).flatMap((h) => Object.values(h.equipamento).filter(Boolean)),
-  );
-  return Object.keys(save.inventario.equipamentos).filter((id) => !equipados.has(id)).length;
 }
 
 function atualizarBestiario(bestiario, batalha) {
@@ -114,6 +106,7 @@ export function aplicarResultadoBatalha(save, batalha) {
     itens: { ...recompensas.itens },
     equipamentos: [],
     equipamentosVendidos: [],
+    itensVendidos: [],
     niveis: [],
   };
 
@@ -129,26 +122,15 @@ export function aplicarResultadoBatalha(save, batalha) {
     }
   }
 
-  const itensInventario = { ...save.inventario.itens };
-  for (const [itemId, qtd] of Object.entries(recompensas.itens)) {
-    itensInventario[itemId] = (itensInventario[itemId] || 0) + qtd;
-  }
-
-  // Inventário cheio: o equipamento excedente é vendido automaticamente (SPEC.md §4.8)
-  const equipamentos = { ...save.inventario.equipamentos };
-  let ouro = save.ouro + recompensas.ouro;
-  let livres = contarEquipamentosLivres(save);
-  for (const item of recompensas.equipamentos) {
-    if (livres < MAX_EQUIPAMENTOS_INVENTARIO) {
-      equipamentos[item.id] = item;
-      livres += 1;
-      resumo.equipamentos.push(item);
-    } else {
-      const valor = precoVenda(item);
-      ouro += valor;
-      resumo.equipamentosVendidos.push({ item, valor });
-    }
-  }
+  // Inventário cheio ou pilha no limite: o excedente é vendido automaticamente (SPEC.md §4.8)
+  const guardado = guardarNoInventario(
+    { ...save, ouro: save.ouro + recompensas.ouro },
+    { itens: recompensas.itens, equipamentos: recompensas.equipamentos },
+  );
+  resumo.itens = guardado.guardados.itens;
+  resumo.equipamentos = guardado.guardados.equipamentos;
+  resumo.itensVendidos = guardado.vendidos.itens;
+  resumo.equipamentosVendidos = guardado.vendidos.equipamentos;
 
   const estatisticas = { ...save.estatisticas };
   const chave = { vitoria: "encontrosVencidos", derrota: "derrotas", fuga: "fugas" }[
@@ -164,10 +146,8 @@ export function aplicarResultadoBatalha(save, batalha) {
 
   return {
     save: {
-      ...save,
-      ouro,
+      ...guardado.save,
       herois,
-      inventario: { ...save.inventario, itens: itensInventario, equipamentos },
       progresso: atualizarProgressoZona(save.progresso, batalha.origem, batalha.resultado),
       bestiario: atualizarBestiario(save.bestiario, batalha),
       estatisticas,

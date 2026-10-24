@@ -3,7 +3,7 @@
 > Fonte da verdade do design. Mudanças de design são propostas aqui **antes** de qualquer código.
 > Valores numéricos são iniciais e serão calibrados com testes de simulação do motor (§4.9).
 
-**Status:** Fase 6 concluída — aguardando aprovação.
+**Status:** Fase 8 concluída — aguardando aprovação.
 
 ---
 
@@ -128,8 +128,25 @@ Simples, previsível e definida nos dados de cada inimigo:
 - Recrutamento (Fase 7): mural da taverna oferece 3 recrutas, renovados a cada 24 h; custo em ouro;
   novas classes de recruta desbloqueiam com chefes de zona. Recruta chega com nível =
   `max(1, nivelMedioDoGrupo − 3)` e equipamento Comum do nível.
+  - Custo: `100 + 35 × nívelDoRecruta` ouro (135 no nível 1, 1.045 no nível 27; calibrado em §4.9).
+  - Classes no mural: Cavaleiro, Arqueiro e Mago desde o início; Bardo após o chefe da zona 1,
+    Assassino após o da zona 2 e Bárbaro após o da zona 3. Classes que o jogador já tem no save
+    também aparecem. O mural sorteia 3 classes diferentes e nomes que não estão em uso.
+  - Nível e custo são calculados na hora (acompanham o grupo enquanto o mural está no ar).
+  - O recruta chega com os pontos livres do nível (`3 × (nível − 1)`) para distribuir.
+  - Entra no grupo se houver espaço e o grupo não estiver travado; senão vai para a reserva.
+  - Recruta contratado fica marcado no mural até a próxima renovação. Não há renovação paga.
 - Máximo de heróis no save: 12 (constante).
-- Herói ocupado (atividade em andamento) não pode estar no grupo; o grupo precisa de ≥ 1 herói.
+- Herói ocupado (atividade em andamento ou concluída e não coletada) não pode estar no grupo; o
+  grupo precisa de ≥ 1 herói.
+- O grupo fica travado (ninguém entra nem sai) enquanto houver batalha salva ou masmorra em
+  andamento, porque a vida guardada da masmorra é por herói.
+- Reserva: todos os heróis fora do grupo. Heróis da reserva distribuem pontos, trocam golpes e
+  equipamento normalmente (o inventário lista o grupo e depois a reserva).
+- **Dispensar herói** (tela Grupo, com confirmação): o herói sai do save para sempre e o
+  equipamento dele volta ao inventário. Não pode dispensar quem está em treino (ou outra
+  atividade), em batalha salva, no grupo durante uma masmorra, o último herói do grupo, nem quando
+  o equipamento dele não cabe no inventário (50 itens livres).
 - Cada herói tem: classe, nível, XP, pontos livres, pontos distribuídos, pontos de treino,
   golpes aprendidos, 4 golpes equipados, equipamento em 5 slots.
 - Pontos livres (3 por nível) podem ser distribuídos a qualquer momento na tela Grupo — não há
@@ -137,8 +154,10 @@ Simples, previsível e definida nos dados de cada inimigo:
 
 **CA.**
 - Tentar colocar no grupo um herói em expedição mostra o botão desabilitado com "Em expedição
-  (termina em 1h12)".
+  (termina em 1h12)" (Fase 7: o mesmo vale para treino, "Em treino (termina em 1h12)").
 - Distribuir 1 ponto em força atualiza imediatamente o atributo exibido em +2.
+- Dispensar um herói com 5 itens equipados deixa os 5 itens livres no inventário; o último herói
+  do grupo mostra "Dispensar" desabilitado com "O último herói do grupo não pode ser dispensado."
 
 ### 3.3 Classes
 
@@ -279,6 +298,13 @@ real, mesmo com o jogo fechado.
 - Concluída quando `agora ≥ inicio + duracao`. Tempo além da duração não gera nada.
 - Cancelar: o herói volta na hora com as rolagens já completas.
 - Recompensas só entram no save ao clicar "Coletar" (ou "Coletar tudo" no resumo de retorno).
+- Detalhes da Fase 8: só heróis da **reserva** viajam (como no treino) e partir não custa ouro. A
+  tela Atividades mostra, durante a viagem, as rolagens completas e o que já foi achado ("Até
+  agora: 3 Osso Antigo · 9 ouro · 234 XP"); a prévia usa a mesma semente, então bate com o que a
+  coleta entrega. Zonas bloqueadas não aparecem; zonas acima do nível do herói aparecem
+  desabilitadas com "Exige nível N". O XP pode subir o nível do herói na coleta (com os golpes
+  do novo nível). As vagas são calculadas pelo progresso. Cancelar pede confirmação ("Voltar
+  agora").
 
 **CA.**
 - Ao fechar a aba com uma expedição de 2 h ativa e voltar depois de 3 h, a expedição aparece
@@ -320,11 +346,17 @@ Exemplos de receita:
 
 **Regras.**
 - **Treino de atributo:** escolher atributo e duração (1, 2, 4 ou 8 h). Ganho: 1 ponto de treino
-  por hora completa, na mesma taxa dos pontos de nível (§4.1). Custo: `10 × nível × horas` ouro,
+  por hora completa, na mesma taxa dos pontos de nível (§4.1). Custo: `7 × nível × horas` ouro (§4.9),
   pago no início. **Limite:** pontos de treino por atributo ≤ nível do herói.
 - **Treino de golpe:** aprende antecipadamente um golpe avançado da classe cujo nível exigido seja
-  ≤ nível do herói + 5. Duração e custo definidos no golpe (`treino: { horas, ouro }`).
-- 1 vaga de treino no início; +1 após o chefe da zona 4.
+  ≤ nível do herói + 5. Duração e custo definidos no golpe (`treino: { horas, ouro }`). Valores por
+  nível exigido (calibrados em §4.9): 8 → 2 h / 200 ouro; 16 → 4 h / 400; 30 → 6 h / 700;
+  45 → 8 h / 1.000. O golpe só é aprendido com o treino completo.
+- 1 vaga de treino no início; +1 após o chefe da zona 4. As vagas são calculadas pelo progresso
+  (não ficam guardadas no save).
+- Só heróis da **reserva** treinam, um treino por herói. manaMax é treinável pelas classes de mana.
+- Durações de atributo que passariam do limite ficam desabilitadas ("Passa do limite (faltam 2)").
+- Pontos e golpe entram no herói ao **coletar** (como nas expedições); até lá o herói segue ocupado.
 - Cancelar devolve o herói, entrega pontos das horas completas e não devolve ouro.
 
 **CA.**
@@ -337,6 +369,13 @@ Exemplos de receita:
   base em timestamps (`inicio + duracao` vs. `agora`). Nada depende da aba ficar aberta.
 - Se houver atividades concluídas não coletadas, aparece o modal "Bem-vindo de volta" com o tempo
   fora (`agora − ultimaVisita`), a lista por categoria e "Coletar tudo".
+- Ao abrir o slot, o modal aparece se houver qualquer atividade concluída e não coletada. Ao voltar
+  para a aba, só se alguma terminou enquanto o jogador estava fora (`fim > ultimaVisita`). O modal
+  não aparece por cima da batalha nem da tela de resultados: espera a próxima tela com navegação.
+- **Relógio que não volta:** `ultimaVisita` guarda o maior instante já visto e é atualizado ao abrir
+  o slot, a cada 30 s com a aba visível, ao voltar para a aba e em toda ação com tempo. O motor usa
+  `max(agora, ultimaVisita)`: se o relógio do sistema for atrasado, as atividades param até o
+  relógio alcançar esse instante. Nada regride nem fica negativo.
 - Teto: nenhuma atividade produz além da própria duração (máx. 8 h).
 
 **CA.** Abrir o jogo após 1 h com 1 expedição concluída e 1 treino em andamento mostra a
@@ -367,6 +406,7 @@ consumíveis, materiais e relíquias. Mostra percentual de conclusão.
 - Vender: 40% do preço de compra (fórmula atual mantida).
 
 **Materiais:** 2–3 por zona (ex.: Cemitério — Osso Antigo, Pano Mortuário). Empilham até 999.
+Têm preço de referência `10 × número da zona` (venda a 40%), usado quando a pilha transborda (§4.8).
 
 **Ferraria (Fase 10):**
 - **Forjar:** receita de equipamento (slot + tipo) com materiais da zona + ouro → item do nível da
@@ -515,7 +555,13 @@ equipamento: 8% por inimigo comum; chefe garante 2 (o 1º com raridade ≥ Raro)
 raridade (comum / chefe): tabela atual de sortearRaridade mantida
 compatibilidade: 60% dos equipamentos sorteados são de tipo usável por algum herói do grupo
 materiais/ingredientes/consumíveis: tabela de drops do inimigo (chance individual por item)
-inventário cheio (50 não equipados): equipamento excedente é vendido na hora (40%) e o resumo avisa
+entrada de itens (engine/inventario.guardarNoInventario, único caminho):
+  equipamento ocupa 1 dos 50 espaços livres (equipados não contam); empilhável respeita a pilha
+  (empilhaAte: 99 consumíveis, 999 materiais/ingredientes) e não ocupa espaço dos 50.
+  O que não couber é vendido na hora pelo preço de venda (40%) e a tela avisa: resultado da batalha
+  (inclusive andares de masmorra), aviso da coleta da expedição. Recruta chega com o conjunto
+  equipado, então não ocupa espaço livre. Ações do jogador (comprar, desequipar, dispensar) são
+  recusadas quando não cabe, em vez de vender.
 ```
 
 ### 4.9 Calibração
@@ -527,6 +573,41 @@ média de 3 a 6 rodadas por encontro; chefe com vitória entre 60% e 85% sem usa
 Masmorra (Fase 6): grupo de 2 heróis no nível máximo da zona, do andar 1 ao chefe, sem itens:
 conclusão entre 40% e 80%. A primeira versão (inimigos +1 nível por andar, chefe +5, fogueira 50%)
 concluía só 7% a 21%; com os valores atuais de §3.5 a conclusão fica entre 43% e 58%.
+
+**Economia de ouro:** teste `engine/economia.test.js`, 5 sementes. Campanha simulada: grupo de 2
+heróis começando no nível 1; em cada zona, encontros (todos vencidos) até o nível médio chegar ao
+nível máximo da zona (mínimo 10 encontros) e então o chefe. Ouro dos encontros = ouro dos inimigos
++ venda (40%) dos equipamentos que caem.
+
+Desde a Fase 8 a campanha também tem **dias de jogo** (hipótese: 15 encontros por dia, 2 a 3
+sessões curtas, §2). No fim de cada dia: contrata recrutas até a reserva cobrir todas as vagas
+(expedição + treino), se o ouro der; cada vaga de expedição faz 1 expedição de 8 h na zona mais
+avançada que o herói da reserva alcança; cada vaga de treino restante faz 8 h de treino de atributo,
+se o ouro der. Heróis da reserva ficam no nível dos recrutas (média do grupo − 3); os materiais das
+expedições não são vendidos. **Renda** = ouro dos encontros + ouro das expedições; os custos são
+medidos em "encontros de renda" (custo ÷ renda média por encontro da zona).
+
+| Meta | Faixa | Resultado |
+|---|---|---|
+| Primeiro recruta acessível na zona 1, não antes do 5º encontro | zona 1, ≥ 5º encontro | 9º a 16º encontro (de 50–59) |
+| Recruta no nível da reserva, em cada zona | 5 a 12 encontros de renda | 5,5 a 9,2 |
+| 1 h de treino de atributo no nível médio da zona | 1 a 4 encontros de renda | 1,1 a 1,9 |
+| Golpe avançado na zona em que fica treinável (nível exigido − 5) | 4 a 12 encontros de renda | 5,3 a 8,7 |
+| Ouro de 8 h de expedição | 2 a 10 encontros de ouro da zona | 2,5 a 5,0 |
+| Ouro das expedições (todas as vagas, 1 por dia) ÷ ouro dos encontros | ≤ 75% | 15% a 68% |
+| 1 treino de 8 h por dia ÷ renda de um dia | 20% a 90% | 30% a 86% |
+| Reserva para todas as vagas (3 de expedição + 2 de treino) | 5 contratações | 5 em todas as sementes |
+
+Histórico da calibração:
+- Fase 7 (só encontros): recrutamento e treino de atributo já estavam nas metas; o treino de golpe
+  custava 6, 12, 22 e 34 encontros e passou de 200/600/1.800/4.000 para 200/400/700/1.000 ouro (a
+  renda do Cemitério varia de 19 a 32 ouro por encontro, por isso o golpe de nível 8 ficou em 200).
+- Fase 8 (com expedições e gastos): com 5 ouro por rolagem as expedições chegavam a 108% do ouro dos
+  encontros e o recruta caía para 3,4 encontros de renda (meta 5). Manter 1 treino de 8 h por dia
+  custava 70% a 130% da renda do dia. Mudanças: ouro por rolagem `5 → 3 × (zona + 1)`, recruta
+  `100 + 25 → 100 + 35 × nível`, treino de atributo `10 → 7 × nível × hora`.
+- Com todas as vagas ocupadas todo dia, os gastos chegam a ~100% da renda a partir da zona 5 (2 vagas
+  de treino): o treino é o principal destino do ouro e o jogador escolhe o que manter ocupado.
 
 Heróis da simulação: nível sorteado na faixa da zona, pontos divididos entre vida, atributo
 principal e defesa, conjunto Comum do nível. Resultado da calibração do Cemitério (Fase 3):
@@ -540,7 +621,7 @@ decorrido      = clamp(agora − inicio, 0, duracao)
 Expedição:
   rolagens     = floor(decorrido / 15 min)
   cada rolagem = 1 item da tabelaExpedicao da zona (pesos), semente = sementeDaExpedicao + i
-  ouro         = 5 × (índiceZona + 1) por rolagem
+  ouro         = 3 × (índiceZona + 1) por rolagem   (calibrado em §4.9)
   XP do herói  = floor(xpPorInimigo(floor((nivelMin + nivelMax) / 2)) × 0,5) por rolagem
 Treino:
   pontos       = floor(decorrido / 1 h)
@@ -549,7 +630,7 @@ Cozinha:
 ```
 
 Ex.: expedição de 2 h no Cemitério = 8 rolagens → ~5 Osso Antigo, ~2 Erva da Névoa,
-~1 Pano Mortuário; 40 ouro; 8 × 78 = 624 XP (≈ 44% de um nível para um herói nv 5).
+~1 Pano Mortuário; 24 ouro; 8 × 78 = 624 XP (≈ 44% de um nível para um herói nv 5).
 
 ---
 
@@ -595,7 +676,7 @@ Zona {
 
 ItemBase {            // consumíveis, materiais, ingredientes, relíquias, refeições
   id, nome, descricao, categoria: 'consumivel' | 'material' | 'ingrediente' | 'reliquia' | 'refeicao',
-  efeito?, preco?, empilhaAte, icone
+  efeito?, preco? (materiais: referência 10 × zona), empilhaAte, icone
 }
 
 Receita { id, nome, ingredientes: [{ itemId, qtd }], minutos, resultado: itemId,
@@ -611,8 +692,7 @@ Heroi {
   pontosTreino: { mesmos campos },
   golpesAprendidos: [golpeId], golpesEquipados: [golpeId ×≤4],
   equipamento: { capacete, peitoral, luvas, botas, arma }   // equipamentoId | null
-  atividade: null | atividadeId
-}
+}   // a atividade do herói é lida de save.atividades (heroiId); a v4 tirou o campo "atividade"
 
 Equipamento {
   id, nome, slot, tipoArma?, pesoArmadura?, raridade, nivel,
@@ -622,9 +702,9 @@ Equipamento {
 
 Atividade {
   id, tipo: 'expedicao' | 'treinoAtributo' | 'treinoGolpe' | 'cozinha',
-  heroiId?, inicio, duracao, semente, parametros: { zonaId? | atributo? | golpeId? |
-  receitaId?, porcoes? }, custoPago, coletada: false
-}
+  heroiId?, inicio, duracao (ms), semente? (expedições), parametros: { zonaId? | atributo? |
+  golpeId? | receitaId?, porcoes? }, custoPago
+}   // coletar ou cancelar remove a atividade do save: coletar de novo não entrega nada
 ```
 
 ### 5.3 Estado de batalha (salvo para sair e voltar)
@@ -667,7 +747,7 @@ localStorage:
 ResumoSlot { nome, criadoEm, atualizadoEm, nivelMaisAlto, classePrincipal, tempoJogado }
 
 Save {
-  versao: 3, criadoEm, atualizadoEm, ultimaVisita, tempoJogado,
+  versao: 4, criadoEm, atualizadoEm, ultimaVisita (maior instante já visto), tempoJogado,
   ouro,
   herois: { [heroiId]: Heroi }, grupo: [heroiId ×≤4],
   inventario: { equipamentos: { [id]: Equipamento } (máx. 50),
@@ -677,10 +757,10 @@ Save {
   batalha: Batalha | null,
   masmorraAtual: { zonaId, andar, vida: { [heroiId]: hpAtual }, ganhos: { xp, ouro, itens,
                    equipamentos }, fogueira: { andar } | null } | null,   // v3
-  atividades: { [atividadeId]: Atividade }, vagas: { expedicao, treino, cozinha },
+  atividades: { [atividadeId]: Atividade },        // vagas calculadas pelo progresso (v4)
   refeicaoAtiva: { itemId, encontrosRestantes } | null,
   loja: { itens: [Equipamento & { preco }], vendidos: [bool], renovadaEm },
-  recrutas: { opcoes: [...], renovadaEm },
+  recrutas: { opcoes: [{ classeId, nome, contratado }], renovadaEm } | null,
   bestiario: { [inimigoId]: { visto, derrotas, afinidadesReveladas: [elemento], dropsVistos: [] } },
   colecao: { equipamentos: { [chave]: [raridade] }, itens: [itemId], reliquias: [itemId] },
   receitasConhecidas: [receitaId],
@@ -711,6 +791,9 @@ Fonte: chave `rpg_users` (§ formato v1 documentado na Fase 0).
 4. Migrações futuras: cadeia `v2 → v3 → …`, uma função pura por versão, cada uma com teste e fixture.
    - **v2 → v3** (Fase 6): `masmorraAtual` ganha `vida`, `ganhos` e `fogueira`. Saves v2 nunca
      tiveram masmorra em andamento, então a migração só normaliza o campo para `null`.
+   - **v3 → v4** (Fase 7): remove `vagas` (agora calculadas pelo progresso) e `heroi.atividade`
+     (lida de `save.atividades`); normaliza `atividades` para `{}` e `recrutas` para `null`
+     (nenhum save v3 tinha atividades nem mural).
 
 **CA.**
 - Um `rpg_users` com 2 contas (Cavaleiro nv 14 com 6 itens; Mago nv 3 sem itens) vira 2 slots com
@@ -734,7 +817,11 @@ components/ (UI)  ──dispara ações──▶  state/ (store)  ──chama─
 
 - **engine/**: funções puras `(estado, entrada, rng?, agora?) → novoEstado (+ eventos)`. Sem
   React, sem localStorage, sem `Math.random`/`Date.now`. Módulos: `rng`, `atributos`, `dano`,
-  `status`, `turnos`, `ia`, `combate`, `progressao`, `itens`, `atividades`, `loja`, `bestiario`.
+  `status`, `turnos`, `ia`, `combate`, `progressao`, `itens`, `loja`, `masmorra`, `relogio`
+  (relógio que não volta e prazos), `atividades` (base de tempo), `treino`, `coleta` (coletar,
+  cancelar e resumo de retorno; cada tipo de atividade registra a função que a encerra),
+  `expedicoes`, `grupo`,
+  `recrutamento`.
 - **data/**: conteúdo (§5.1) e `constants.js`. Validação de integridade dos dados por teste
   (ids referenciados existem, pesos > 0).
 - **state/**: store global, criadores de ação (que injetam `agora`), seletores.
@@ -793,8 +880,10 @@ Todo conteúdo (classes, golpes, inimigos, zonas, itens, receitas, textos de con
 ### 6.6 Atividades por tempo
 
 Timestamps (`inicio`, `duracao`) e `engine/atividades` calculando `decorrido` com `agora` injetado
-(§4.10). Recalcula ao abrir o slot, ao voltar a aba e a cada 30 s com a tela de atividades aberta
-(só para atualizar o texto "faltam …" — o resultado não depende disso).
+(§4.10). Recalcula ao abrir o slot, ao voltar a aba e a cada 30 s com a aba visível (só para
+atualizar o texto "faltam …" e `ultimaVisita`; o resultado não depende disso). O relógio de 30 s
+fica no Provider e só despacha a ação `RELOGIO`; os criadores de ação continuam sendo os únicos
+que leem `Date.now()`.
 
 ### 6.7 Save
 
@@ -1030,12 +1119,12 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
 - [x] 10 masmorras, fogueiras, recompensas por andar, melhor andar
 
 ### Fase 7 — Recrutamento, reserva e treino
-- [ ] Mural de recrutas, grupo de até 4, reserva até 12
-- [ ] Infra de atividades por tempo + resumo "Bem-vindo de volta"
-- [ ] Treino de atributo e de golpe
+- [x] Mural de recrutas, grupo de até 4, reserva até 12
+- [x] Infra de atividades por tempo + resumo "Bem-vindo de volta"
+- [x] Treino de atributo e de golpe
 
 ### Fase 8 — Expedições
-- [ ] Expedições com rolagens, vagas progressivas, cancelar e coletar
+- [x] Expedições com rolagens, vagas progressivas, cancelar e coletar
 
 ### Fase 9 — Taverna e cozinha
 - [ ] Ingredientes, receitas, preparo por tempo, refeição ativa por encontros
@@ -1048,7 +1137,7 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
 - [ ] Efeitos sonoros e música com controle de volume
 - [ ] Revisão de responsividade, acessibilidade (teclado, foco, rótulos) e textos
 
-### Pendências conhecidas (após a Fase 6)
+### Pendências conhecidas (após a Fase 8)
 - A vida dos heróis durante uma masmorra só aparece na tela da masmorra; o mapa não mostra.
 - Chefes exclusivos de masmorra não existem: o chefe da masmorra é o chefe da zona fortalecido
   (decisão da Fase 6, §3.5; ideia registrada em §9).
@@ -1059,6 +1148,14 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
   itens Comuns do dia; reavaliar quando houver mais fontes de ouro.
 - As 9 vulnerabilidades apontadas pelo `npm audit` (dependências de desenvolvimento) não foram
   tratadas.
+- Não há como reordenar o grupo (a posição só pesa no desempate da ordem de turnos e na IA
+  `primeiro`); recrutas e heróis vindos da reserva entram no fim.
+- Treinar exige tirar o herói do grupo; com o grupo inicial de 2, isso deixa 1 herói lutando até
+  contratar alguém. Reavaliar se ficar incômodo.
+- Empilháveis não ocupam os 50 espaços do inventário (só o limite da pilha, 99 ou 999). Se a ideia
+  for "1 espaço por tipo", é uma mudança de modelo e de save ainda não feita.
+- A campanha da economia (§4.9) não inclui consumíveis, loja nem cozinha; os 15 encontros por dia
+  são uma hipótese. Reavaliar quando a cozinha (Fase 9) e a ferraria (Fase 10) gastarem materiais.
 
 ---
 

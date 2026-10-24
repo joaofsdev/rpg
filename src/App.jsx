@@ -11,8 +11,11 @@ import TelaLoja from "./components/screens/TelaLoja";
 import TelaBestiario from "./components/screens/TelaBestiario";
 import TelaMais from "./components/screens/TelaMais";
 import TelaMasmorra from "./components/screens/TelaMasmorra";
+import TelaAtividades from "./components/screens/TelaAtividades";
+import TelaTaverna from "./components/screens/TelaTaverna";
 import Navegacao from "./components/common/Navegacao";
 import Aviso from "./components/common/Aviso";
+import ResumoRetorno from "./components/common/ResumoRetorno";
 
 const TELAS = {
   slots: TelaSlots,
@@ -26,20 +29,25 @@ const TELAS = {
   bestiario: TelaBestiario,
   mais: TelaMais,
   masmorra: TelaMasmorra,
+  atividades: TelaAtividades,
+  taverna: TelaTaverna,
 };
 
-const TELAS_COM_NAVEGACAO = ["mapa", "grupo", "inventario", "loja", "bestiario", "mais", "masmorra"];
+const TELAS_COM_NAVEGACAO = ["mapa", "grupo", "atividades", "taverna", "inventario", "loja", "bestiario", "mais", "masmorra"];
 
 function Roteador() {
-  const { tela } = useEstado();
+  const { tela, retorno } = useEstado();
   if (tela === "carregando") {
     return <p className="p-6 text-texto-2">Abrindo o livro de registros…</p>;
   }
   const Tela = TELAS[tela];
+  const comNavegacao = TELAS_COM_NAVEGACAO.includes(tela);
   return (
     <>
-      {TELAS_COM_NAVEGACAO.includes(tela) && <Navegacao />}
+      {comNavegacao && <Navegacao />}
       <Tela />
+      {/* Fora da batalha e dos resultados, para não interromper uma animação */}
+      {comNavegacao && retorno && <ResumoRetorno />}
       <Aviso />
     </>
   );

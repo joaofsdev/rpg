@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useEstado, useAcoes } from "../../state/contextos";
-import { heroisDoGrupo, itensEmpilhaveis, heroiTravado } from "../../state/seletores";
+import { todosOsHerois, itensEmpilhaveis, heroiTravado } from "../../state/seletores";
 import { classesHeroi } from "../../data/classesHeroi";
 import { iconesItens } from "../../data/sprites";
 import { ATRIBUTOS, MAX_EQUIPAMENTOS_INVENTARIO } from "../../data/constants";
@@ -45,7 +45,7 @@ function Bonus({ item, comparado }) {
 }
 
 function DetalheEquipamento({ save, item, acoes }) {
-  const herois = heroisDoGrupo(save);
+  const herois = todosOsHerois(save);
   const dono = donoDoEquipamento(save, item.id);
   const [heroiId, setHeroiId] = useState(
     herois.find((h) => podeEquipar(h.classeId, item) && h.id !== dono?.id)?.id ?? herois[0].id,

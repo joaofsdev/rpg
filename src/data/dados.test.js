@@ -11,7 +11,11 @@ import { zonas } from "./zonas";
 import { itens } from "./itens";
 import { status } from "./status";
 import { nomesArmas, PESOS_ARMADURA, TIPOS_ARMA, elementoPorArma } from "./equipamentos";
-import { ELEMENTOS, MAX_GOLPES_EQUIPADOS, MAX_INIMIGOS_ENCONTRO } from "./constants";
+import { ELEMENTOS, MAX_GOLPES_EQUIPADOS, MAX_INIMIGOS_ENCONTRO, MAX_HEROIS, TETO_ATIVIDADE_HORAS } from "./constants";
+import { CLASSES_RECRUTAVEIS, RECRUTAS_NO_MURAL } from "./recrutamento";
+import { DURACOES_TREINO_HORAS, ZONAS_QUE_LIBERAM_VAGA_TREINO } from "./treino";
+import { nomesHerois } from "./nomesHerois";
+import { DURACOES_EXPEDICAO_MINUTOS, MINUTOS_POR_ROLAGEM, ZONAS_QUE_LIBERAM_VAGA_EXPEDICAO } from "./expedicoes";
 
 const CATEGORIAS = ["fisico", "magico", "suporte"];
 const ALVOS = ["inimigo", "todosInimigos", "aliado", "todosAliados", "proprio"];
@@ -142,5 +146,57 @@ describe("conteúdo da Fase 5", () => {
 
   it("consumíveis à venda existem e têm preço", () => {
     for (const id of CONSUMIVEIS_A_VENDA) expect(itens[id]?.preco).toBeGreaterThan(0);
+  });
+});
+
+describe("conteúdo da Fase 7", () => {
+  it.each(Object.values(classesHeroi))("$id: golpes avançados têm treino dentro do teto", (classe) => {
+    for (const { golpeId } of classe.golpesPorNivel) {
+      const { treino } = golpesHerois[golpeId];
+      expect(treino, golpeId).toBeDefined();
+      expect(Number.isInteger(treino.horas)).toBe(true);
+      expect(treino.horas).toBeGreaterThan(0);
+      expect(treino.horas).toBeLessThanOrEqual(TETO_ATIVIDADE_HORAS);
+      expect(treino.ouro).toBeGreaterThan(0);
+    }
+  });
+
+  it("durações de treino de atributo respeitam o teto", () => {
+    for (const horas of DURACOES_TREINO_HORAS) expect(horas).toBeLessThanOrEqual(TETO_ATIVIDADE_HORAS);
+  });
+
+  it("toda classe aparece uma vez no recrutamento, liberada por uma zona que existe", () => {
+    expect(CLASSES_RECRUTAVEIS.map((c) => c.classeId).sort()).toEqual(Object.keys(classesHeroi).sort());
+    expect(CLASSES_RECRUTAVEIS.filter((c) => c.zonaId === null).length).toBeGreaterThanOrEqual(RECRUTAS_NO_MURAL);
+    for (const { zonaId } of CLASSES_RECRUTAVEIS) if (zonaId) expect(zonas.some((z) => z.id === zonaId)).toBe(true);
+  });
+
+  it("zonas que liberam vaga de treino existem", () => {
+    for (const id of ZONAS_QUE_LIBERAM_VAGA_TREINO) expect(zonas.some((z) => z.id === id)).toBe(true);
+  });
+
+  it("há nomes suficientes para o limite de heróis e o mural", () => {
+    expect(new Set(nomesHerois).size).toBeGreaterThanOrEqual(MAX_HEROIS + RECRUTAS_NO_MURAL);
+  });
+});
+
+describe("conteúdo da Fase 8", () => {
+  it("durações de expedição respeitam o teto e são múltiplas da rolagem", () => {
+    for (const minutos of DURACOES_EXPEDICAO_MINUTOS) {
+      expect(minutos).toBeLessThanOrEqual(TETO_ATIVIDADE_HORAS * 60);
+      expect(minutos % MINUTOS_POR_ROLAGEM).toBe(0);
+    }
+  });
+
+  it.each(zonas)("$id tem tabela de expedição com pesos positivos", (zona) => {
+    expect(zona.tabelaExpedicao.length).toBeGreaterThan(0);
+    for (const entrada of zona.tabelaExpedicao) {
+      expect(itens[entrada.itemId]).toBeDefined();
+      expect(entrada.peso).toBeGreaterThan(0);
+    }
+  });
+
+  it("zonas que liberam vaga de expedição existem", () => {
+    for (const id of ZONAS_QUE_LIBERAM_VAGA_EXPEDICAO) expect(zonas.some((z) => z.id === id)).toBe(true);
   });
 });

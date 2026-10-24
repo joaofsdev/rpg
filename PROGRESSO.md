@@ -3,7 +3,7 @@
 Situação do projeto fase a fase. O design completo está no [SPEC.md](SPEC.md) e as regras de
 trabalho no [CLAUDE.md](CLAUDE.md); este arquivo resume o que já foi feito e o que vem a seguir.
 
-**Última atualização:** 24/10/2026, ao fim da Fase 6.
+**Última atualização:** 24/10/2026, ao fim da Fase 8.
 
 ## Fases concluídas
 
@@ -16,8 +16,10 @@ trabalho no [CLAUDE.md](CLAUDE.md); este arquivo resume o que já foi feito e o 
 | 4 | MVP jogável: slots, novo jogo, mapa, grupo, inventário, batalha com sprites e animações no Cemitério | testes + navegador |
 | 5 | As 10 zonas, golpes por nível e troca de golpes, bestiário, loja, Erva Revigorante, remoção do código legado | testes + navegador |
 | 6 | Masmorras por andares (10), fogueiras, ganhos por andar, save v3 | testes + navegador |
+| 7 | Grupo e reserva, mural de recrutas, dispensar herói, atividades por tempo, treino de atributo e de golpe, resumo "Bem-vindo de volta", save v4, calibração da economia de ouro | testes + navegador |
+| 8 | Expedições com rolagens de 15 min, vagas progressivas, prévia do que foi achado, cancelar e coletar, resumo por categoria | testes + navegador |
 
-Estado ao fim da Fase 6: 489 testes passando (22 arquivos), `npm run lint` sem erros nem
+Estado ao fim da Fase 8: 607 testes passando (29 arquivos), `npm run lint` sem erros nem
 avisos, `npm run build` ok.
 
 ## Decisões tomadas
@@ -41,31 +43,74 @@ registradas no SPEC.md.
   chefes 60–85% em cerca de 8 rodadas).
 - **Sprites:** heróis do Puny Characters, inimigos e cenário do 0x72 DungeonTilesetII, todos CC0;
   inimigos reaproveitam bases com filtro de cor em CSS. (§7.6, CREDITS.md)
-- **Inventário cheio** vende automaticamente o equipamento excedente por 40%. (§4.8)
+- **Inventário cheio** vende automaticamente o excedente por 40%: equipamentos além dos 50 espaços
+  livres e empilháveis além do limite da pilha, em batalha, masmorra e expedição. (§4.8)
 - **Fase 6, chefe da masmorra:** é o chefe da própria zona fortalecido; chefes exclusivos ficaram
   fora de escopo. (§3.5, §9)
 - **Fase 6, recalibração das masmorras:** a primeira versão concluía só 7–21% das descidas.
   Valores atuais: inimigos `nivelMax + floor((andar − 1) × 0,25)`, chefe `+1`, descanso de 30%
   entre andares, fogueira cura tudo. Meta 40–80% de conclusão sem itens; resultado 43–58%. (§3.5, §4.9)
 - **Save v3:** a masmorra em andamento guarda vida e ganhos; migração v2 → v3 testada. (§5.5)
+- **Fase 7, save v4:** `vagas` saiu do save (vagas de treino vêm do progresso: 1 + chefe da zona 4)
+  e `heroi.atividade` também (a atividade do herói é lida de `save.atividades`, uma fonte só).
+  Coletar ou cancelar remove a atividade, então coletar duas vezes não entrega nada. (§5.2, §5.5)
+- **Fase 7, relógio que não volta:** `ultimaVisita` guarda o maior instante já visto; o motor usa
+  `max(agora, ultimaVisita)`. O Provider despacha `RELOGIO` a cada 30 s com a aba visível e
+  `VOLTOU_AO_JOGO` ao voltar para a aba. (§3.9, §6.6)
+- **Fase 7, treino:** só heróis da reserva treinam; pontos e golpe entram ao coletar; manaMax é
+  treinável por classes de mana; golpe avançado custa 2 h/200, 4 h/400, 6 h/700 ou 8 h/1.000
+  ouro conforme o nível exigido (8, 16, 30, 45). (§3.8)
+- **Fase 7, dispensar herói:** com confirmação; o equipamento volta ao inventário. Bloqueado para
+  quem está em treino, em batalha, no grupo durante masmorra, para o último herói do grupo e
+  quando o equipamento não cabe no inventário. (§3.2)
+- **Fase 7, economia de ouro:** campanha simulada (2 heróis do nível 1 ao 100, zona a zona) com
+  metas em "encontros de ouro": primeiro recruta na zona 1 a partir do 5º encontro (resultado: 9º
+  a 15º); recruta 5–12 encontros (5,5–9,3); 1 h de treino 1–4 (1,9–3,6); golpe avançado 4–12
+  (6,2–10,4). Só o treino de golpe precisou mudar (antes ia de 6 a 34 encontros). (§4.9)
+- **Fase 8, expedições:** só heróis da reserva viajam; partir é grátis; a tela mostra as rolagens
+  completas e o que já foi achado (mesma semente da coleta); o XP pode subir o nível na coleta.
+  Meta nova na economia: 8 h de expedição rendem o ouro de 2 a 10 encontros da zona, para
+  complementar o combate sem substituí-lo. O save continua na v4. (§3.6, §4.9)
+- **Fase 8, resumo de retorno:** separado por categoria (Expedições, Treino), como pede §3.9.
+- **Após a Fase 8, entrada de itens:** uma função só (`guardarNoInventario`) para batalha, masmorra e
+  expedição; excedente vendido com aviso. Empilháveis **não** ocupam os 50 espaços (o modelo é por
+  pilha); recruta chega equipado e não ocupa espaço livre. Materiais ganharam preço de referência
+  (10 × número da zona). (§3.11, §4.8)
+- **Após a Fase 8, economia com expedições e gastos:** dias de 15 encontros, 1 expedição de 8 h por
+  vaga por dia, reserva contratada para todas as vagas e 8 h de treino por vaga quando o ouro dá.
+  A meta do recruta estourou (3,4 encontros; meta 5–12) porque as expedições quase dobravam a
+  renda. Recalibrado: ouro por rolagem 5 → 3, recruta 25 → 35 por nível, treino 10 → 7 por nível
+  e hora. Metas novas: expedições ≤ 75% do ouro dos encontros; 1 treino de 8 h por dia entre 20% e
+  90% da renda do dia. Todas as metas passam. (§4.9)
+- **Fase 7, recrutas:** custo `100 + 35 × nível` (era 25, recalibrado na Fase 8); Cavaleiro, Arqueiro e Mago desde o início, Bardo,
+  Assassino e Bárbaro após os chefes das zonas 1, 2 e 3 (e classes que o jogador já tem); recruta
+  chega com os pontos livres do nível e entra no grupo se houver espaço. (§3.2)
+- **Fase 7, grupo travado:** ninguém entra nem sai do grupo com batalha salva ou masmorra em
+  andamento. (§3.2)
+- **Fase 7, navegação:** abas novas Atividades (treino; expedições na Fase 8) e Taverna (mural;
+  cozinha na Fase 9). No celular, "Atividades" e "Inventário" aparecem como "Ativ." e "Itens".
 
 ## Pendências conhecidas
 
-A lista oficial está no SPEC.md, seção "Pendências conhecidas (após a Fase 6)":
+A lista oficial está no SPEC.md, seção "Pendências conhecidas (após a Fase 7)":
 
 - vida dos heróis da masmorra visível só na tela da masmorra;
 - sem chefes exclusivos de masmorra;
 - sprites aproximados (rato, fantasma, morcego, corvo, aranhas) e bases repetidas com cor;
 - origem e licença de `public/logo.png` a confirmar;
 - custo de renovar a loja alto em relação aos itens Comuns;
-- 9 vulnerabilidades do `npm audit` em dependências de desenvolvimento.
+- 9 vulnerabilidades do `npm audit` em dependências de desenvolvimento;
+- sem como reordenar o grupo;
+- treinar exige tirar o herói do grupo (com 2 heróis, sobra 1 lutando até contratar alguém);
+- empilháveis não ocupam os 50 espaços do inventário (mudança de modelo pendente de decisão);
+- a economia simulada não inclui consumíveis, loja nem cozinha; 15 encontros por dia é hipótese.
 
 ## Como testar
 
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm test         # 489 testes (a simulação de balanceamento leva ~20 s)
+npm test         # 607 testes (a simulação de balanceamento leva ~20 s)
 npm run lint
 npm run build
 ```
@@ -97,22 +142,68 @@ Mapa → Cemitério Antigo → "Entrar na masmorra" → "Descer para o andar 1".
 volte para a masmorra, recarregue a página e use "Continuar a descida": o andar e a vida são os
 mesmos. Loja e Bestiário ficam em **Mais**.
 
-## Escopo da Fase 7 — Recrutamento, reserva e treino
+### Grupo, treino e taverna (Fase 7)
+Para ter ouro e um herói de nível alto, edite o save no console (com o jogo aberto no slot 0,
+volte aos espaços de save antes, para não ser sobrescrito):
 
-Roadmap do SPEC.md §8; regras em §3.2, §3.8, §3.9 e §4.10.
+```js
+const s = JSON.parse(localStorage.getItem("magichill:slot:0"));
+s.ouro = 50000;
+Object.values(s.herois)[1].nivel = 12;
+localStorage.setItem("magichill:slot:0", JSON.stringify(s));
+location.reload();
+```
 
-- **Recrutamento:** mural de 3 recrutas renovado a cada 24 h, custo em ouro, novas classes
-  liberadas pelos chefes; recruta chega com nível `max(1, nívelMédioDoGrupo − 3)` e conjunto Comum.
-- **Grupo e reserva:** grupo de até 4 heróis, reserva até 12; herói ocupado em atividade não
-  entra no grupo; o grupo precisa de pelo menos 1 herói.
-- **Atividades por tempo:** infraestrutura baseada em timestamps (`inicio + duracao`, relógio
-  injetado, sem depender da aba aberta, sem regredir se o relógio voltar), com o resumo
-  "Bem-vindo de volta" e "Coletar tudo".
-- **Treino:** de atributo (1 ponto por hora, limite = nível do herói por atributo, custo em ouro) e
-  de golpe (aprender antes um golpe avançado), 1 vaga inicial e +1 depois do chefe da zona 4.
-- **Fora da Fase 7:** expedições (Fase 8), cozinha (Fase 9), ferraria (Fase 10).
+1. **Grupo:** escolha o 2º herói e "Mover para a reserva". Tentar tirar o último herói mostra
+   "O grupo precisa de pelo menos 1 herói."
+2. **Atividades:** em "Novo treino", Força → "4h · 480 ouro". O cartão mostra "Faltam 4h"; na tela
+   Grupo, "Colocar no grupo" fica desabilitado com "Em treino (termina em 4h)".
+3. **Bem-vindo de volta:** volte aos espaços de save e, no console, recue o início do treino:
+   ```js
+   const s = JSON.parse(localStorage.getItem("magichill:slot:0"));
+   const a = Object.values(s.atividades)[0]; a.inicio -= 5 * 3600000; s.ultimaVisita -= 5 * 3600000;
+   localStorage.setItem("magichill:slot:0", JSON.stringify(s)); location.reload();
+   ```
+   "Continuar" abre o modal com "Você ficou fora por 5h" e "4 pontos de Força (+8)".
+   "Coletar tudo" entrega os pontos (Força +8 na tela Grupo).
+4. **Limite:** com `pontosTreino.forca = 12` num herói nível 12, Força aparece com "Limite 12/12" e
+   os botões desabilitados. A aba "Golpe" lista os golpes avançados com o nível exigido.
+5. **Taverna:** 3 recrutas de classes diferentes; contratar cobra o ouro e o recruta entra no
+   grupo (ou na reserva, se o grupo estiver cheio ou em masmorra).
+6. **Dispensar:** na tela Grupo, escolha um herói e "Dispensar …" → confirmação → o aviso diz
+   quantos equipamentos voltaram ao inventário. Com um herói só no grupo, o botão dele fica
+   desabilitado com "O último herói do grupo não pode ser dispensado."
 
-Critérios de aceite a cumprir (SPEC): colocar no grupo um herói em atividade aparece desabilitado
-com o tempo restante; herói nível 12 treinando força por 4 h ganha +4 pontos; força de treino no
-limite aparece desabilitada com "Limite 12/12"; abrir o jogo com atividades concluídas mostra o
-resumo de retorno.
+### Expedições (Fase 8)
+1. Com um herói na reserva, **Atividades → Nova expedição**: escolha o herói, a zona (as acima do
+   nível dele aparecem com "exige nível N") e "2h · 8 rolagens".
+2. Na tela Grupo, "Colocar no grupo" fica desabilitado com "Em expedição (termina em 2h)" e
+   "Dispensar" com "Em expedição. Colete ou cancele a expedição antes."
+3. Volte aos espaços de save e recue 50 min no console:
+   ```js
+   const s = JSON.parse(localStorage.getItem("magichill:slot:0"));
+   const a = Object.values(s.atividades)[0]; a.inicio -= 50 * 60000; s.ultimaVisita -= 50 * 60000;
+   localStorage.setItem("magichill:slot:0", JSON.stringify(s)); location.reload();
+   ```
+   O cartão mostra "3/8 rolagens" e "Até agora: … · 9 ouro · … XP". "Cancelar" → "Voltar agora"
+   entrega exatamente isso.
+4. Com uma expedição de 1 h e um treino de 4 h, recue 1 h (mesmo comando, `60 * 60000` em todas
+   as atividades): "Continuar" abre o resumo com "Expedições: pronto para coletar" e "Treino de
+   …: faltam 3h" em andamento.
+
+## Escopo da Fase 9 — Taverna e cozinha
+
+Roadmap do SPEC.md §8; regras em §3.7 e §4.10.
+
+- **Receitas:** 3 conhecidas desde o início; novas por drops de chefe e na loja (rotação semanal).
+- **Preparo:** receita e porções (1–5); tempo = `receita.minutos × porções`; 1 panela. Porções
+  prontas vão para o inventário. É mais um tipo de atividade (sem herói) a registrar em
+  `engine/coleta.js`, como as expedições.
+- **Refeição ativa:** comer fora de batalha ativa a refeição para o grupo; 1 por vez (trocar pede
+  confirmação); dura em encontros, não em tempo. O motor já desconta encontros em
+  `aplicarResultadoBatalha`; falta aplicar os efeitos (vida máx., XP, recurso inicial).
+- **Fora da Fase 9:** ferraria e relíquias (Fase 10).
+
+Critérios de aceite a cumprir (SPEC §3.7): 3 porções de uma receita de 10 min, vistas depois de
+40 min, aparecem prontas no resumo de retorno; com "Ensopado do Coveiro" ativo, a vida máxima na
+batalha é 10% maior e o contador desce 1 por encontro concluído (vitória, derrota ou fuga).

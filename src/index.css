@@ -1,230 +1,285 @@
 @import "tailwindcss";
 
+/* Tema Taverna (SPEC.md §7.5). Outros temas sobrescrevem estas variáveis na Fase 11. */
 @theme {
-  --color-bg-primary: #0a0a0f;
-  --color-bg-surface: #12121a;
-  --color-bg-elevated: #1a1a26;
-  --color-accent-gold: #f0a500;
-  --color-accent-gold-light: #ffd166;
-  --color-accent-amber: #e07b00;
-  --color-text-primary: #f0ede8;
-  --color-text-secondary: #9a9080;
-  --color-text-muted: #5a5248;
-  --color-border-subtle: #2a2820;
-  --color-border-accent: #f0a50040;
-  --color-success: #4caf7d;
-  --color-danger: #e05555;
-  --color-warning: #f0a500;
-  --color-rare-purple: #9b59b6;
-  --color-epic-blue: #3498db;
-  --color-legendary-orange: #e67e22;
-  --font-title: 'Cinzel', serif;
-  --font-body: 'Crimson Pro', serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --color-fundo: #1c1814;
+  --color-superficie: #26201a;
+  --color-elevado: #2f281f;
+  --color-borda: #3d3428;
+  --color-borda-forte: #5c4a35;
+  --color-texto: #ece3d3;
+  --color-texto-2: #b5a68e;
+  --color-texto-3: #968871;
+  --color-destaque: #d9a441;
+  --color-destaque-claro: #ecc271;
+  --color-sucesso: #7fb069;
+  --color-perigo: #d0675b;
+  --color-mana: #6c8fd4;
+  --color-vigor: #d99a4a;
+  --color-info: #6c9bc4;
+
+  --color-raridade-comum: #b0a696;
+  --color-raridade-incomum: #8cbf73;
+  --color-raridade-raro: #7aa6dc;
+  --color-raridade-epico: #b98fd8;
+  --color-raridade-lendario: #e3a94f;
+
+  --font-titulo: "Cinzel", serif;
+  --font-texto: "Crimson Pro", serif;
 }
 
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #2a2820 #0a0a0f;
+html,
+body,
+#root {
+  height: 100%;
 }
 
 body {
   margin: 0;
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  font-family: var(--font-body);
-  overflow: hidden;
+  background: var(--color-fundo);
+  color: var(--color-texto);
+  font-family: var(--font-texto);
+  font-size: 18px;
+  line-height: 1.45;
+  font-variant-numeric: lining-nums tabular-nums;
+  -webkit-font-smoothing: antialiased;
 }
 
-#root {
-  width: 100vw;
-  height: 100dvh;
+:focus-visible {
+  outline: 2px solid var(--color-destaque);
+  outline-offset: 2px;
 }
 
-/* Noise texture overlay */
-.noise-bg::before {
-  content: '';
+@layer components {
+  /* ---------- Molduras e botões ---------- */
+
+  .painel {
+    background: var(--color-superficie);
+    border: 2px solid var(--color-borda);
+    border-radius: 6px;
+    box-shadow:
+      inset 0 0 0 1px #0000004d,
+      inset 0 1px 0 #ffffff0a;
+  }
+
+  .botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.5rem;
+    padding: 0.35rem 1rem;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    font-family: var(--font-titulo);
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease;
+  }
+  .botao:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .botao-primario {
+    background: var(--color-destaque);
+    color: #241a0c;
+    border-color: #f0c66f40;
+    box-shadow: inset 0 -2px 0 #00000033;
+  }
+  .botao-primario:not(:disabled):hover {
+    background: var(--color-destaque-claro);
+  }
+  .botao-secundario {
+    background: var(--color-elevado);
+    color: var(--color-texto);
+    border-color: var(--color-borda-forte);
+  }
+  .botao-secundario:not(:disabled):hover {
+    border-color: var(--color-destaque);
+  }
+  .botao-discreto {
+    background: transparent;
+    color: var(--color-texto-2);
+  }
+  .botao-discreto:not(:disabled):hover {
+    color: var(--color-texto);
+  }
+  .botao-perigo {
+    background: transparent;
+    color: var(--color-perigo);
+    border-color: #d0675b66;
+  }
+  .botao-perigo:not(:disabled):hover {
+    background: #d0675b1a;
+  }
+
+  .titulo {
+    font-family: var(--font-titulo);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+}
+
+/* ---------- Sprites (SPEC.md §7.2) ---------- */
+
+.sprite {
+  width: calc(var(--l) * var(--escala) * 1px);
+  height: calc(var(--a) * var(--escala) * 1px);
+  background-image: var(--imagem);
+  background-repeat: no-repeat;
+  background-size: calc(var(--total) * var(--l) * var(--escala) * 1px) calc(var(--a) * var(--escala) * 1px);
+  background-position-x: calc(var(--inicio) * var(--l) * var(--escala) * -1px);
+  image-rendering: pixelated;
+}
+.sprite-animado {
+  animation: sprite-quadros var(--duracao) steps(var(--quadros), jump-none) var(--repeticoes) both;
+}
+@keyframes sprite-quadros {
+  from {
+    background-position-x: calc(var(--inicio) * var(--l) * var(--escala) * -1px);
+  }
+  to {
+    background-position-x: calc((var(--inicio) + var(--quadros) - 1) * var(--l) * var(--escala) * -1px);
+  }
+}
+
+/* Efeitos de corpo para quem não tem quadros próprios (e reforço para quem tem) */
+.efeito-ataque {
+  animation: avanco var(--duracao) ease-in-out both;
+}
+@keyframes avanco {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(calc(var(--direcao) * 14px));
+  }
+}
+.efeito-dano {
+  animation: golpe-sofrido var(--duracao) linear both;
+}
+@keyframes golpe-sofrido {
+  0% {
+    filter: brightness(3) saturate(0);
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  50% {
+    filter: brightness(1.6);
+    transform: translateX(3px);
+  }
+  100% {
+    filter: none;
+    transform: translateX(0);
+  }
+}
+.efeito-queda {
+  animation: queda var(--duracao) ease-in both;
+}
+@keyframes queda {
+  to {
+    transform: translateY(8px);
+    opacity: 0.2;
+  }
+}
+.caido {
+  opacity: 0.2;
+  transform: translateY(8px);
+}
+
+/* Números flutuantes */
+.numero-flutuante {
   position: absolute;
-  inset: 0;
-  opacity: 0.03;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  left: 50%;
+  top: 0;
   pointer-events: none;
-  z-index: 0;
+  white-space: nowrap;
+  font-family: var(--font-titulo);
+  font-weight: 900;
+  font-size: 1.1rem;
+  text-shadow:
+    0 2px 0 #000,
+    0 0 6px #000;
+  animation: subir var(--duracao) ease-out forwards;
+}
+@keyframes subir {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 6px) scale(0.9);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -30px) scale(1);
+  }
 }
 
-/* Vignette effect */
-.vignette::after {
-  content: '';
+/* Partículas de impacto */
+.particula {
   position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 50%, #0a0a0f 100%);
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  background: var(--cor);
   pointer-events: none;
-  z-index: 1;
+  animation: espalhar var(--duracao) ease-out forwards;
+}
+@keyframes espalhar {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  to {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy)));
+  }
 }
 
-/* Animations */
-@keyframes breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.02); }
+/* Barras: a da frente pula, a "fantasma" desce devagar */
+.barra-fantasma {
+  transition: width 420ms ease-out 140ms;
 }
 
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  50% { transform: translateX(4px); }
-  75% { transform: translateX(-2px); }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes goldPulse {
-  0%, 100% { box-shadow: 0 0 8px #f0a50030; }
-  50% { box-shadow: 0 0 20px #f0a50060; }
-}
-
-@keyframes legendaryGlow {
-  0%, 100% { box-shadow: 0 0 12px #e67e2240; border-color: #e67e22; }
-  50% { box-shadow: 0 0 28px #e67e2280; border-color: #ffd166; }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-
-@keyframes flashGold {
-  0% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-@keyframes defeatShake {
-  0%, 100% { transform: translateX(0); }
-  10% { transform: translateX(-2px); }
-  20% { transform: translateX(2px); }
-  30% { transform: translateX(-1px); }
-  40% { transform: translateX(1px); }
-  50% { transform: translateX(0); }
-}
-
-@keyframes particle {
-  0% { transform: translateY(100vh) scale(0); opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { transform: translateY(-10vh) scale(1); opacity: 0; }
-}
-
-.animate-breathe { animation: breathe 4s ease-in-out infinite; }
-.animate-shake { animation: shake 0.3s ease-in-out; }
-.animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
-.animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
-.animate-gold-pulse { animation: goldPulse 2s ease-in-out infinite; }
-.animate-legendary-glow { animation: legendaryGlow 2s ease-in-out infinite; }
-.animate-float { animation: float 3s ease-in-out infinite; }
-.animate-flash-gold { animation: flashGold 0.8s ease-out forwards; }
-.animate-defeat-shake { animation: defeatShake 2s ease-in-out infinite; }
-
-/* Gold glow on hover for interactive elements */
-.gold-hover {
-  transition: all 0.2s ease;
-}
-.gold-hover:hover {
-  box-shadow: 0 0 20px #f0a50030;
-  border-color: var(--color-accent-gold);
-}
-
-/* Button styles */
-.btn-primary {
-  width: 280px;
-  height: 52px;
-  border: 1px solid var(--color-accent-gold);
-  background: transparent;
-  color: var(--color-accent-gold);
-  font-family: var(--font-title);
-  font-weight: 700;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+/* Alvo selecionável */
+.alvo-valido {
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  outline: 2px dashed #d9a44199;
+  outline-offset: 4px;
+  border-radius: 6px;
 }
-.btn-primary:hover {
-  background: var(--color-accent-gold);
-  color: #0a0a0f;
-  box-shadow: 0 0 20px #f0a50040;
-}
-
-.btn-gold-solid {
-  background: var(--color-accent-gold);
-  color: #0a0a0f;
-  font-family: var(--font-title);
-  font-weight: 700;
-  border: none;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-.btn-gold-solid:hover {
-  background: var(--color-accent-gold-light);
-  box-shadow: 0 0 20px #f0a50040;
+.alvo-valido:hover,
+.alvo-escolhido {
+  outline-style: solid;
+  outline-color: var(--color-destaque);
 }
 
-.btn-secondary {
-  border: 1px solid var(--color-border-subtle);
-  background: transparent;
-  color: var(--color-text-secondary);
-  font-family: var(--font-body);
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  cursor: pointer;
+/* Movimento reduzido: sem tremidas, avanços e partículas; só fades curtos */
+@media (prefers-reduced-motion: reduce) {
+  .efeito-ataque,
+  .efeito-dano,
+  .particula {
+    animation: none;
+  }
+  .particula {
+    display: none;
+  }
 }
-.btn-secondary:hover {
-  border-color: var(--color-accent-gold);
-  color: var(--color-accent-gold-light);
+[data-movimento="reduzido"] .efeito-ataque,
+[data-movimento="reduzido"] .efeito-dano {
+  animation: none;
 }
-
-.btn-tertiary {
-  background: none;
-  border: none;
-  color: var(--color-text-muted);
-  font-family: var(--font-body);
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-.btn-tertiary:hover {
-  color: var(--color-text-secondary);
-}
-
-/* Card style */
-.card {
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-accent);
-  border-radius: 12px;
-  box-shadow: 0 0 20px #f0a50010;
-}
-
-/* Particles container */
-.particles {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-.particles span {
-  position: absolute;
-  width: 3px;
-  height: 3px;
-  background: var(--color-accent-gold);
-  border-radius: 50%;
-  animation: particle linear infinite;
-  opacity: 0;
+[data-movimento="reduzido"] .particula {
+  display: none;
 }

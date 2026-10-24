@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Packs de assets baixados (só os PNGs usados vão para src/assets)
+_downloads

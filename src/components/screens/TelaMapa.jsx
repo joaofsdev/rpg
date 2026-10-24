@@ -4,6 +4,7 @@ import { situacaoDasZonas, heroisDoGrupo } from "../../state/seletores";
 import { buscarZona } from "../../data/zonas";
 import { inimigos } from "../../data/inimigos";
 import { spritesInimigos, spritesHerois } from "../../data/sprites";
+import { ANDARES_MASMORRA } from "../../data/constants";
 import Sprite from "../battle/Sprite";
 import BarraValor from "../common/BarraValor";
 import Botao from "../common/Botao";
@@ -13,6 +14,40 @@ function estadoDaZona(s) {
   if (!s.jogavel) return "Em breve";
   if (s.chefeDerrotado) return "Concluída";
   return `${s.encontrosVencidos}/${s.zona.encontrosParaChefe} encontros`;
+}
+
+function Masmorra({ zona, save, acoes }) {
+  const progresso = save.progresso.masmorras[zona.masmorra.id];
+  const atual = save.masmorraAtual;
+  const aqui = atual?.zonaId === zona.id;
+  return (
+    <div className="mt-4 border-t border-borda pt-3">
+      <h3 className="titulo text-sm">Masmorra: {zona.masmorra.nome}</h3>
+      {!progresso.desbloqueada ? (
+        <p className="text-sm text-texto-3">Abre depois de vencer o chefe desta zona.</p>
+      ) : (
+        <>
+          <p className="text-sm text-texto-2">
+            {progresso.concluida
+              ? "Concluída. Dá para descer de novo atrás de outro equipamento Lendário."
+              : progresso.melhorAndar > 0
+                ? `Melhor andar alcançado: ${progresso.melhorAndar} de ${ANDARES_MASMORRA}.`
+                : `${ANDARES_MASMORRA - 1} andares e o chefe no fundo, com um equipamento Lendário como prêmio.`}
+          </p>
+          {aqui ? (
+            <Botao className="mt-2" onClick={() => acoes.navegar("masmorra")}>
+              Continuar a descida
+            </Botao>
+          ) : (
+            <Botao className="mt-2" disabled={Boolean(atual) || Boolean(save.batalha)} onClick={() => acoes.entrarNaMasmorra(zona.id)}>
+              Entrar na masmorra
+            </Botao>
+          )}
+          {atual && !aqui && <p className="mt-1 text-sm text-texto-3">O grupo já está em outra masmorra.</p>}
+        </>
+      )}
+    </div>
+  );
 }
 
 function PainelZona({ s, save, acoes }) {
@@ -73,11 +108,7 @@ function PainelZona({ s, save, acoes }) {
           </div>
           {motivoChefe && <p className="mt-2 text-sm text-texto-3">{motivoChefe}</p>}
           {batalhaAtiva && <p className="mt-2 text-sm text-texto-3">Termine ou retome a batalha em andamento primeiro.</p>}
-          {save.progresso.masmorras[zona.masmorra.id]?.desbloqueada && (
-            <p className="mt-3 text-sm text-texto-2">
-              Masmorra {zona.masmorra.nome}: as masmorras chegam em uma próxima versão.
-            </p>
-          )}
+          <Masmorra zona={zona} save={save} acoes={acoes} />
         </>
       ) : (
         <p className="mt-3 text-texto-2">

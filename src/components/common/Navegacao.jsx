@@ -1,7 +1,7 @@
 import { useEstado, useAcoes } from "../../state/contextos";
 
 const ABAS = [
-  { tela: "mapa", nome: "Mapa" },
+  { tela: "mapa", nome: "Mapa", inclui: ["mapa", "masmorra"] },
   { tela: "grupo", nome: "Grupo" },
   { tela: "inventario", nome: "Inventário" },
   { tela: "mais", nome: "Mais", inclui: ["mais", "loja", "bestiario"] },

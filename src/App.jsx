@@ -10,6 +10,7 @@ import TelaResultado from "./components/screens/TelaResultado";
 import TelaLoja from "./components/screens/TelaLoja";
 import TelaBestiario from "./components/screens/TelaBestiario";
 import TelaMais from "./components/screens/TelaMais";
+import TelaMasmorra from "./components/screens/TelaMasmorra";
 import Navegacao from "./components/common/Navegacao";
 import Aviso from "./components/common/Aviso";
 
@@ -24,9 +25,10 @@ const TELAS = {
   loja: TelaLoja,
   bestiario: TelaBestiario,
   mais: TelaMais,
+  masmorra: TelaMasmorra,
 };
 
-const TELAS_COM_NAVEGACAO = ["mapa", "grupo", "inventario", "loja", "bestiario", "mais"];
+const TELAS_COM_NAVEGACAO = ["mapa", "grupo", "inventario", "loja", "bestiario", "mais", "masmorra"];
 
 function Roteador() {
   const { tela } = useEstado();

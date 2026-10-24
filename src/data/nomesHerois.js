@@ -1,0 +1,23 @@
+// Nomes sorteados para companheiros e recrutas
+export const nomesHerois = [
+  "Afonso",
+  "Beatriz",
+  "Inês",
+  "Nuno",
+  "Leonor",
+  "Vasco",
+  "Aldric",
+  "Mira",
+  "Toren",
+  "Lysa",
+  "Kael",
+  "Edwyn",
+  "Rowena",
+  "Bram",
+  "Seren",
+  "Oswin",
+  "Maren",
+  "Elara",
+  "Hugo",
+  "Ingrid",
+];

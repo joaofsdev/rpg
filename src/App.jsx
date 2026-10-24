@@ -1,51 +1,54 @@
-import { GameProvider, useGame } from './context/GameContext'
-import TitleScreen from './components/screens/TitleScreen'
-import AuthScreen from './components/screens/AuthScreen'
-import ClassSelectScreen from './components/screens/ClassSelectScreen'
-import AreaMapScreen from './components/screens/AreaMapScreen'
-import BattleScreen from './components/screens/BattleScreen'
-import LootScreen from './components/screens/LootScreen'
-import LevelUpScreen from './components/screens/LevelUpScreen'
-import VictoryScreen from './components/screens/VictoryScreen'
-import InventoryScreen from './components/screens/InventoryScreen'
-import ProfileScreen from './components/screens/ProfileScreen'
-import DefeatScreen from './components/screens/DefeatScreen'
-import GameOverScreen from './components/screens/GameOverScreen'
-import DungeonSelectScreen from './components/screens/DungeonSelectScreen'
-import DungeonBattleScreen from './components/screens/DungeonBattleScreen'
-import ShopScreen from './components/screens/ShopScreen'
+import GameProvider from "./state/GameProvider";
+import { useEstado } from "./state/contextos";
+import TelaSlots from "./components/screens/TelaSlots";
+import TelaNovoJogo from "./components/screens/TelaNovoJogo";
+import TelaMapa from "./components/screens/TelaMapa";
+import TelaGrupo from "./components/screens/TelaGrupo";
+import TelaInventario from "./components/screens/TelaInventario";
+import TelaBatalha from "./components/screens/TelaBatalha";
+import TelaResultado from "./components/screens/TelaResultado";
+import TelaLoja from "./components/screens/TelaLoja";
+import TelaBestiario from "./components/screens/TelaBestiario";
+import TelaMais from "./components/screens/TelaMais";
+import TelaMasmorra from "./components/screens/TelaMasmorra";
+import Navegacao from "./components/common/Navegacao";
+import Aviso from "./components/common/Aviso";
 
-const screens = {
-  TITLE: TitleScreen,
-  AUTH: AuthScreen,
-  CLASS_SELECT: ClassSelectScreen,
-  AREA_MAP: AreaMapScreen,
-  BATTLE: BattleScreen,
-  BOSS_BATTLE: BattleScreen,
-  LOOT: LootScreen,
-  LEVEL_UP: LevelUpScreen,
-  VICTORY: VictoryScreen,
-  INVENTORY: InventoryScreen,
-  PROFILE: ProfileScreen,
-  DEFEAT: DefeatScreen,
-  GAME_OVER: GameOverScreen,
-  DUNGEON_SELECT: DungeonSelectScreen,
-  DUNGEON_BATTLE: DungeonBattleScreen,
-  SHOP: ShopScreen,
-}
+const TELAS = {
+  slots: TelaSlots,
+  novoJogo: TelaNovoJogo,
+  mapa: TelaMapa,
+  grupo: TelaGrupo,
+  inventario: TelaInventario,
+  batalha: TelaBatalha,
+  resultado: TelaResultado,
+  loja: TelaLoja,
+  bestiario: TelaBestiario,
+  mais: TelaMais,
+  masmorra: TelaMasmorra,
+};
 
-function GameRouter() {
-  const { state } = useGame()
-  const Screen = screens[state.screen] || TitleScreen
-  return <Screen />
+const TELAS_COM_NAVEGACAO = ["mapa", "grupo", "inventario", "loja", "bestiario", "mais", "masmorra"];
+
+function Roteador() {
+  const { tela } = useEstado();
+  if (tela === "carregando") {
+    return <p className="p-6 text-texto-2">Abrindo o livro de registros…</p>;
+  }
+  const Tela = TELAS[tela];
+  return (
+    <>
+      {TELAS_COM_NAVEGACAO.includes(tela) && <Navegacao />}
+      <Tela />
+      <Aviso />
+    </>
+  );
 }
 
 export default function App() {
   return (
     <GameProvider>
-      <div className="w-full h-full overflow-hidden">
-        <GameRouter />
-      </div>
+      <Roteador />
     </GameProvider>
-  )
+  );
 }

@@ -4,6 +4,7 @@ const ABAS = [
   { tela: "mapa", nome: "Mapa" },
   { tela: "grupo", nome: "Grupo" },
   { tela: "inventario", nome: "Inventário" },
+  { tela: "mais", nome: "Mais", inclui: ["mais", "loja", "bestiario"] },
 ];
 
 export default function Navegacao() {
@@ -36,9 +37,6 @@ export default function Navegacao() {
         <span className="ml-auto hidden text-destaque-claro sm:inline" title="Ouro">
           {save.ouro} ouro
         </span>
-        <button className="botao botao-discreto" onClick={acoes.fecharSlot}>
-          Sair
-        </button>
       </div>
     </nav>
   );

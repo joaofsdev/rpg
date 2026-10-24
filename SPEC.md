@@ -128,7 +128,7 @@ Simples, previsível e definida nos dados de cada inimigo:
 - Recrutamento (Fase 7): mural da taverna oferece 3 recrutas, renovados a cada 24 h; custo em ouro;
   novas classes de recruta desbloqueiam com chefes de zona. Recruta chega com nível =
   `max(1, nivelMedioDoGrupo − 3)` e equipamento Comum do nível.
-  - Custo: `100 + 25 × nívelDoRecruta` ouro (125 no nível 1, 775 no nível 27).
+  - Custo: `100 + 35 × nívelDoRecruta` ouro (135 no nível 1, 1.045 no nível 27; calibrado em §4.9).
   - Classes no mural: Cavaleiro, Arqueiro e Mago desde o início; Bardo após o chefe da zona 1,
     Assassino após o da zona 2 e Bárbaro após o da zona 3. Classes que o jogador já tem no save
     também aparecem. O mural sorteia 3 classes diferentes e nomes que não estão em uso.
@@ -300,7 +300,7 @@ real, mesmo com o jogo fechado.
 - Recompensas só entram no save ao clicar "Coletar" (ou "Coletar tudo" no resumo de retorno).
 - Detalhes da Fase 8: só heróis da **reserva** viajam (como no treino) e partir não custa ouro. A
   tela Atividades mostra, durante a viagem, as rolagens completas e o que já foi achado ("Até
-  agora: 3 Osso Antigo · 15 ouro · 234 XP"); a prévia usa a mesma semente, então bate com o que a
+  agora: 3 Osso Antigo · 9 ouro · 234 XP"); a prévia usa a mesma semente, então bate com o que a
   coleta entrega. Zonas bloqueadas não aparecem; zonas acima do nível do herói aparecem
   desabilitadas com "Exige nível N". O XP pode subir o nível do herói na coleta (com os golpes
   do novo nível). As vagas são calculadas pelo progresso. Cancelar pede confirmação ("Voltar
@@ -346,7 +346,7 @@ Exemplos de receita:
 
 **Regras.**
 - **Treino de atributo:** escolher atributo e duração (1, 2, 4 ou 8 h). Ganho: 1 ponto de treino
-  por hora completa, na mesma taxa dos pontos de nível (§4.1). Custo: `10 × nível × horas` ouro,
+  por hora completa, na mesma taxa dos pontos de nível (§4.1). Custo: `7 × nível × horas` ouro (§4.9),
   pago no início. **Limite:** pontos de treino por atributo ≤ nível do herói.
 - **Treino de golpe:** aprende antecipadamente um golpe avançado da classe cujo nível exigido seja
   ≤ nível do herói + 5. Duração e custo definidos no golpe (`treino: { horas, ouro }`). Valores por
@@ -574,24 +574,40 @@ Masmorra (Fase 6): grupo de 2 heróis no nível máximo da zona, do andar 1 ao c
 conclusão entre 40% e 80%. A primeira versão (inimigos +1 nível por andar, chefe +5, fogueira 50%)
 concluía só 7% a 21%; com os valores atuais de §3.5 a conclusão fica entre 43% e 58%.
 
-**Economia de ouro (após a Fase 7):** teste `engine/economia.test.js`, 5 sementes. Campanha
-simulada: grupo de 2 heróis começando no nível 1; em cada zona, encontros (todos vencidos) até o
-nível médio chegar ao nível máximo da zona (mínimo 10 encontros) e então o chefe. Renda = ouro dos
-inimigos + venda (40%) dos equipamentos que caem; gastos não entram. Os custos são medidos em
-"encontros de ouro" (custo ÷ ouro médio por encontro da zona). Metas e resultado:
+**Economia de ouro:** teste `engine/economia.test.js`, 5 sementes. Campanha simulada: grupo de 2
+heróis começando no nível 1; em cada zona, encontros (todos vencidos) até o nível médio chegar ao
+nível máximo da zona (mínimo 10 encontros) e então o chefe. Ouro dos encontros = ouro dos inimigos
++ venda (40%) dos equipamentos que caem.
+
+Desde a Fase 8 a campanha também tem **dias de jogo** (hipótese: 15 encontros por dia, 2 a 3
+sessões curtas, §2). No fim de cada dia: contrata recrutas até a reserva cobrir todas as vagas
+(expedição + treino), se o ouro der; cada vaga de expedição faz 1 expedição de 8 h na zona mais
+avançada que o herói da reserva alcança; cada vaga de treino restante faz 8 h de treino de atributo,
+se o ouro der. Heróis da reserva ficam no nível dos recrutas (média do grupo − 3); os materiais das
+expedições não são vendidos. **Renda** = ouro dos encontros + ouro das expedições; os custos são
+medidos em "encontros de renda" (custo ÷ renda média por encontro da zona).
 
 | Meta | Faixa | Resultado |
 |---|---|---|
-| Primeiro recruta acessível na zona 1, não antes do 5º encontro | zona 1, ≥ 5º encontro | 9º a 15º encontro (de 50–59) |
-| Recruta no nível médio de cada zona | 5 a 12 encontros | 5,5 a 9,3 |
-| 1 h de treino de atributo no nível médio da zona | 1 a 4 encontros | 1,9 a 3,6 |
-| Golpe avançado na zona em que fica treinável (nível exigido − 5) | 4 a 12 encontros | 6,2 a 10,4 |
-| Ouro de 8 h de expedição na zona (Fase 8) | 2 a 10 encontros | dentro da faixa em todas as zonas |
+| Primeiro recruta acessível na zona 1, não antes do 5º encontro | zona 1, ≥ 5º encontro | 9º a 16º encontro (de 50–59) |
+| Recruta no nível da reserva, em cada zona | 5 a 12 encontros de renda | 5,5 a 9,2 |
+| 1 h de treino de atributo no nível médio da zona | 1 a 4 encontros de renda | 1,1 a 1,9 |
+| Golpe avançado na zona em que fica treinável (nível exigido − 5) | 4 a 12 encontros de renda | 5,3 a 8,7 |
+| Ouro de 8 h de expedição | 2 a 10 encontros de ouro da zona | 2,5 a 5,0 |
+| Ouro das expedições (todas as vagas, 1 por dia) ÷ ouro dos encontros | ≤ 75% | 15% a 68% |
+| 1 treino de 8 h por dia ÷ renda de um dia | 20% a 90% | 30% a 86% |
+| Reserva para todas as vagas (3 de expedição + 2 de treino) | 5 contratações | 5 em todas as sementes |
 
-Recrutamento e treino de atributo já estavam dentro das metas com os valores da Fase 7. O treino de
-golpe não: custava 6, 12, 22 e 34 encontros (crescia demais nos níveis altos) e passou de
-200/600/1.800/4.000 para 200/400/700/1.000 ouro. A renda do Cemitério varia de 19 a 32 ouro por
-encontro conforme a sorte nos equipamentos, por isso o golpe de nível 8 ficou em 200.
+Histórico da calibração:
+- Fase 7 (só encontros): recrutamento e treino de atributo já estavam nas metas; o treino de golpe
+  custava 6, 12, 22 e 34 encontros e passou de 200/600/1.800/4.000 para 200/400/700/1.000 ouro (a
+  renda do Cemitério varia de 19 a 32 ouro por encontro, por isso o golpe de nível 8 ficou em 200).
+- Fase 8 (com expedições e gastos): com 5 ouro por rolagem as expedições chegavam a 108% do ouro dos
+  encontros e o recruta caía para 3,4 encontros de renda (meta 5). Manter 1 treino de 8 h por dia
+  custava 70% a 130% da renda do dia. Mudanças: ouro por rolagem `5 → 3 × (zona + 1)`, recruta
+  `100 + 25 → 100 + 35 × nível`, treino de atributo `10 → 7 × nível × hora`.
+- Com todas as vagas ocupadas todo dia, os gastos chegam a ~100% da renda a partir da zona 5 (2 vagas
+  de treino): o treino é o principal destino do ouro e o jogador escolhe o que manter ocupado.
 
 Heróis da simulação: nível sorteado na faixa da zona, pontos divididos entre vida, atributo
 principal e defesa, conjunto Comum do nível. Resultado da calibração do Cemitério (Fase 3):
@@ -605,7 +621,7 @@ decorrido      = clamp(agora − inicio, 0, duracao)
 Expedição:
   rolagens     = floor(decorrido / 15 min)
   cada rolagem = 1 item da tabelaExpedicao da zona (pesos), semente = sementeDaExpedicao + i
-  ouro         = 5 × (índiceZona + 1) por rolagem
+  ouro         = 3 × (índiceZona + 1) por rolagem   (calibrado em §4.9)
   XP do herói  = floor(xpPorInimigo(floor((nivelMin + nivelMax) / 2)) × 0,5) por rolagem
 Treino:
   pontos       = floor(decorrido / 1 h)
@@ -614,7 +630,7 @@ Cozinha:
 ```
 
 Ex.: expedição de 2 h no Cemitério = 8 rolagens → ~5 Osso Antigo, ~2 Erva da Névoa,
-~1 Pano Mortuário; 40 ouro; 8 × 78 = 624 XP (≈ 44% de um nível para um herói nv 5).
+~1 Pano Mortuário; 24 ouro; 8 × 78 = 624 XP (≈ 44% de um nível para um herói nv 5).
 
 ---
 
@@ -1136,10 +1152,10 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
   `primeiro`); recrutas e heróis vindos da reserva entram no fim.
 - Treinar exige tirar o herói do grupo; com o grupo inicial de 2, isso deixa 1 herói lutando até
   contratar alguém. Reavaliar se ficar incômodo.
-- A calibração da economia (§4.9) mede só a renda dos encontros; gastos e o ouro das expedições
-  não entram na campanha simulada. Reavaliar quando a cozinha (Fase 9) mudar a renda.
-- O limite de pilha dos itens (`empilhaAte`) não é aplicado a drops de batalha nem a expedições;
-  os materiais empilham até 999 e ainda não há uso para eles (ferraria na Fase 10).
+- Empilháveis não ocupam os 50 espaços do inventário (só o limite da pilha, 99 ou 999). Se a ideia
+  for "1 espaço por tipo", é uma mudança de modelo e de save ainda não feita.
+- A campanha da economia (§4.9) não inclui consumíveis, loja nem cozinha; os 15 encontros por dia
+  são uma hipótese. Reavaliar quando a cozinha (Fase 9) e a ferraria (Fase 10) gastarem materiais.
 
 ---
 

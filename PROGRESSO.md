@@ -19,7 +19,7 @@ trabalho no [CLAUDE.md](CLAUDE.md); este arquivo resume o que já foi feito e o 
 | 7 | Grupo e reserva, mural de recrutas, dispensar herói, atividades por tempo, treino de atributo e de golpe, resumo "Bem-vindo de volta", save v4, calibração da economia de ouro | testes + navegador |
 | 8 | Expedições com rolagens de 15 min, vagas progressivas, prévia do que foi achado, cancelar e coletar, resumo por categoria | testes + navegador |
 
-Estado ao fim da Fase 8: 596 testes passando (29 arquivos), `npm run lint` sem erros nem
+Estado ao fim da Fase 8: 607 testes passando (29 arquivos), `npm run lint` sem erros nem
 avisos, `npm run build` ok.
 
 ## Decisões tomadas
@@ -72,7 +72,17 @@ registradas no SPEC.md.
   Meta nova na economia: 8 h de expedição rendem o ouro de 2 a 10 encontros da zona, para
   complementar o combate sem substituí-lo. O save continua na v4. (§3.6, §4.9)
 - **Fase 8, resumo de retorno:** separado por categoria (Expedições, Treino), como pede §3.9.
-- **Fase 7, recrutas:** custo `100 + 25 × nível`; Cavaleiro, Arqueiro e Mago desde o início, Bardo,
+- **Após a Fase 8, entrada de itens:** uma função só (`guardarNoInventario`) para batalha, masmorra e
+  expedição; excedente vendido com aviso. Empilháveis **não** ocupam os 50 espaços (o modelo é por
+  pilha); recruta chega equipado e não ocupa espaço livre. Materiais ganharam preço de referência
+  (10 × número da zona). (§3.11, §4.8)
+- **Após a Fase 8, economia com expedições e gastos:** dias de 15 encontros, 1 expedição de 8 h por
+  vaga por dia, reserva contratada para todas as vagas e 8 h de treino por vaga quando o ouro dá.
+  A meta do recruta estourou (3,4 encontros; meta 5–12) porque as expedições quase dobravam a
+  renda. Recalibrado: ouro por rolagem 5 → 3, recruta 25 → 35 por nível, treino 10 → 7 por nível
+  e hora. Metas novas: expedições ≤ 75% do ouro dos encontros; 1 treino de 8 h por dia entre 20% e
+  90% da renda do dia. Todas as metas passam. (§4.9)
+- **Fase 7, recrutas:** custo `100 + 35 × nível` (era 25, recalibrado na Fase 8); Cavaleiro, Arqueiro e Mago desde o início, Bardo,
   Assassino e Bárbaro após os chefes das zonas 1, 2 e 3 (e classes que o jogador já tem); recruta
   chega com os pontos livres do nível e entra no grupo se houver espaço. (§3.2)
 - **Fase 7, grupo travado:** ninguém entra nem sai do grupo com batalha salva ou masmorra em
@@ -92,15 +102,15 @@ A lista oficial está no SPEC.md, seção "Pendências conhecidas (após a Fase 
 - 9 vulnerabilidades do `npm audit` em dependências de desenvolvimento;
 - sem como reordenar o grupo;
 - treinar exige tirar o herói do grupo (com 2 heróis, sobra 1 lutando até contratar alguém);
-- a calibração da economia mede só a renda dos encontros (gastos e expedições não entram);
-- limite de pilha dos itens (`empilhaAte`) não aplicado a drops nem a expedições.
+- empilháveis não ocupam os 50 espaços do inventário (mudança de modelo pendente de decisão);
+- a economia simulada não inclui consumíveis, loja nem cozinha; 15 encontros por dia é hipótese.
 
 ## Como testar
 
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm test         # 596 testes (a simulação de balanceamento leva ~20 s)
+npm test         # 607 testes (a simulação de balanceamento leva ~20 s)
 npm run lint
 npm run build
 ```
@@ -175,7 +185,7 @@ location.reload();
    const a = Object.values(s.atividades)[0]; a.inicio -= 50 * 60000; s.ultimaVisita -= 50 * 60000;
    localStorage.setItem("magichill:slot:0", JSON.stringify(s)); location.reload();
    ```
-   O cartão mostra "3/8 rolagens" e "Até agora: … · 15 ouro · … XP". "Cancelar" → "Voltar agora"
+   O cartão mostra "3/8 rolagens" e "Até agora: … · 9 ouro · … XP". "Cancelar" → "Voltar agora"
    entrega exatamente isso.
 4. Com uma expedição de 1 h e um treino de 4 h, recue 1 h (mesmo comando, `60 * 60000` em todas
    as atividades): "Continuar" abre o resumo com "Expedições: pronto para coletar" e "Treino de

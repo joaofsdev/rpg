@@ -56,13 +56,13 @@ describe("expedições (SPEC §3.6)", () => {
     expect(rolagensCompletas(atividade, relogio(viajando, 0))).toBe(4);
   });
 
-  it("Cemitério por 2 h: 40 ouro e 624 XP (exemplo de §4.10)", () => {
+  it("Cemitério por 2 h: 24 ouro e 624 XP (exemplo de §4.10)", () => {
     const { save, reservaId } = jogoComReserva({ nivel: 5, ouro: 0 });
     const viajando = partir(save, reservaId).save;
     const { save: depois, ganho } = coletarAtividade(viajando, "e1", 2 * HORA);
-    expect(ganho.ouro).toBe(40);
+    expect(ganho.ouro).toBe(24);
     expect(ganho.xp).toBe(624);
-    expect(depois.ouro).toBe(40);
+    expect(depois.ouro).toBe(24);
     for (const [itemId, qtd] of Object.entries(ganho.itens)) {
       expect(depois.inventario.itens[itemId]).toBe((save.inventario.itens[itemId] || 0) + qtd);
     }

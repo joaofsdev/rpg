@@ -337,9 +337,9 @@ describe("expedições", () => {
     const { state, reservaId } = viajando(60);
     const ouroAntes = state.save.ouro;
     const coletado = reducer(state, { type: "COLETAR_TUDO", agora: 1000 + HORA });
-    expect(coletado.save.ouro).toBe(ouroAntes + 4 * 5);
+    expect(coletado.save.ouro).toBe(ouroAntes + 4 * 3);
     expect(coletado.save.herois[reservaId].xp + coletado.save.herois[reservaId].nivel).toBeGreaterThan(1);
-    expect(coletado.aviso).toMatch(/voltou de Cemitério Antigo: 4 itens, 20 ouro e \d+ XP/);
+    expect(coletado.aviso).toMatch(/voltou de Cemitério Antigo: 4 itens, 12 ouro e \d+ XP/);
   });
 
   it("recusa zona bloqueada", () => {

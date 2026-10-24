@@ -6,7 +6,7 @@ export const NIVEIS_ABAIXO_DO_GRUPO = 3; // nível do recruta: max(1, nível mé
 
 // custo = CUSTO_RECRUTA_BASE + CUSTO_RECRUTA_POR_NIVEL × nível do recruta
 export const CUSTO_RECRUTA_BASE = 100;
-export const CUSTO_RECRUTA_POR_NIVEL = 25;
+export const CUSTO_RECRUTA_POR_NIVEL = 35;
 
 // Classes que aparecem no mural. zonaId: o chefe dessa zona libera a classe (null = desde o início).
 // Classes que o jogador já tem no save também aparecem, mesmo que ainda não liberadas.

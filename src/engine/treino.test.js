@@ -30,10 +30,10 @@ describe("treino de atributo (SPEC §3.8)", () => {
     expect(depois.atividades).toEqual({});
   });
 
-  it("cobra 10 × nível × horas no início", () => {
+  it("cobra 7 × nível × horas no início", () => {
     const { save, reservaId } = jogoComReserva({ nivel: 12, ouro: 1000 });
-    expect(custoTreinoAtributo(save.herois[reservaId], 4)).toBe(480);
-    expect(treinarForca(save, reservaId).save.ouro).toBe(520);
+    expect(custoTreinoAtributo(save.herois[reservaId], 4)).toBe(336);
+    expect(treinarForca(save, reservaId).save.ouro).toBe(664);
   });
 
   it("com força de treino em 12/12, treinar força fica desabilitado com 'Limite 12/12'", () => {
@@ -66,7 +66,7 @@ describe("treino de atributo (SPEC §3.8)", () => {
     const { save: depois, ganho } = cancelarAtividade(treinando, "t1", 2.5 * HORA);
     expect(ganho.pontos).toBe(2);
     expect(depois.herois[reservaId].pontosTreino.forca).toBe(2);
-    expect(depois.ouro).toBe(520);
+    expect(depois.ouro).toBe(664);
     expect(depois.atividades).toEqual({});
   });
 

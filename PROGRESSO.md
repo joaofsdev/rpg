@@ -43,7 +43,8 @@ registradas no SPEC.md.
   chefes 60–85% em cerca de 8 rodadas).
 - **Sprites:** heróis do Puny Characters, inimigos e cenário do 0x72 DungeonTilesetII, todos CC0;
   inimigos reaproveitam bases com filtro de cor em CSS. (§7.6, CREDITS.md)
-- **Inventário cheio** vende automaticamente o equipamento excedente por 40%. (§4.8)
+- **Inventário cheio** vende automaticamente o excedente por 40%: equipamentos além dos 50 espaços
+  livres e empilháveis além do limite da pilha, em batalha, masmorra e expedição. (§4.8)
 - **Fase 6, chefe da masmorra:** é o chefe da própria zona fortalecido; chefes exclusivos ficaram
   fora de escopo. (§3.5, §9)
 - **Fase 6, recalibração das masmorras:** a primeira versão concluía só 7–21% das descidas.

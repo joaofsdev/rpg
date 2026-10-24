@@ -7,6 +7,7 @@ import {
   DERROTAS_PARA_REVELAR_AFINIDADES,
 } from "./progressao";
 import { aplicarAcao } from "./combate";
+import { precoVendaItem } from "./inventario";
 import { criarRng } from "./rng";
 import { batalhaTeste, ajustar, golpeQualquer } from "./__fixtures__/batalhas";
 import { criarNovoJogo } from "../save/novoJogo";
@@ -160,6 +161,18 @@ describe("aplicarResultadoBatalha", () => {
     expect(resumo.equipamentosVendidos).toHaveLength(2);
     const vendido = resumo.equipamentosVendidos.reduce((s, v) => s + v.valor, 0);
     expect(depois.ouro).toBe(batalha.recompensas.ouro + vendido);
+  });
+
+  it("drops além do limite da pilha são vendidos e aparecem no resumo", () => {
+    const base = jogo();
+    const save = { ...base, inventario: { ...base.inventario, itens: { ...base.inventario.itens, osso_antigo: 998 } } };
+    const batalha = vencer(save, [{ id: "rato_tumba", nivel: 1 }]);
+    batalha.recompensas = { ...batalha.recompensas, itens: { osso_antigo: 4 }, equipamentos: [] };
+    const { save: depois, resumo } = aplicarResultadoBatalha(save, batalha);
+    expect(depois.inventario.itens.osso_antigo).toBe(999);
+    expect(resumo.itens).toEqual({ osso_antigo: 1 });
+    expect(resumo.itensVendidos).toEqual([{ itemId: "osso_antigo", qtd: 3, valor: 3 * precoVendaItem("osso_antigo") }]);
+    expect(depois.ouro).toBe(save.ouro + batalha.recompensas.ouro + 3 * precoVendaItem("osso_antigo"));
   });
 
   it("refeição ativa perde um encontro a cada batalha", () => {

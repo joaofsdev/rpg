@@ -184,7 +184,10 @@ function descreverGanho(save, ganho) {
     const qtd = Object.values(ganho.itens).reduce((s, q) => s + q, 0);
     const itens = qtd === 1 ? "1 item" : `${qtd} itens`;
     const nivel = ganho.niveisGanhos > 0 ? ` Subiu para o nível ${ganho.nivelNovo}.` : "";
-    return `${nome} voltou de ${buscarZona(ganho.zonaId).nome}: ${itens}, ${ganho.ouro} ouro e ${ganho.xp} XP.${nivel}`;
+    const vendidos = ganho.vendidos?.length
+      ? ` Pilha cheia: ${ganho.vendidos.reduce((s, v) => s + v.qtd, 0)} vendido(s) por ${ganho.ouroDasVendas} ouro.`
+      : "";
+    return `${nome} voltou de ${buscarZona(ganho.zonaId).nome}: ${itens}, ${ganho.ouro} ouro e ${ganho.xp} XP.${nivel}${vendidos}`;
   }
   if (ganho.tipo === "treinoGolpe") {
     const golpe = golpes[ganho.golpeId].nome;

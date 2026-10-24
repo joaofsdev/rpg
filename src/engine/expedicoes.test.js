@@ -86,6 +86,17 @@ describe("expedições (SPEC §3.6)", () => {
     expect(itens.pano_mortuario / 4000).toBeCloseTo(1 / 8, 1);
   });
 
+  it("itens além do limite da pilha são vendidos na coleta", () => {
+    const { save, reservaId } = jogoComReserva();
+    const cheio = { ...save, inventario: { ...save.inventario, itens: { osso_antigo: 999, erva_da_nevoa: 999, pano_mortuario: 999 } } };
+    const viajando = partir(cheio, reservaId).save;
+    const { save: depois, ganho } = coletarAtividade(viajando, "e1", 2 * HORA);
+    expect(depois.inventario.itens).toEqual(cheio.inventario.itens);
+    expect(ganho.vendidos.reduce((s, v) => s + v.qtd, 0)).toBe(8);
+    expect(depois.ouro).toBe(cheio.ouro + ganho.ouro + ganho.ouroDasVendas);
+    expect(ganho.ouroDasVendas).toBeGreaterThan(0);
+  });
+
   it("XP da expedição pode subir o nível do herói", () => {
     const { save, reservaId } = jogoComReserva({ nivel: 1 });
     const viajando = partir(save, reservaId, { minutos: 480 }).save;

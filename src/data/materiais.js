@@ -1,4 +1,5 @@
-// Materiais e ingredientes das zonas 2 a 10 (usados na ferraria e na cozinha nas próximas fases)
+// Materiais e ingredientes das zonas 2 a 10 (usados na ferraria e na cozinha nas próximas fases).
+// preco: valor de referência (10 × número da zona); a venda paga 40% (FRACAO_PRECO_VENDA).
 
 export const materiais = {
   minerio_de_ferro: {
@@ -6,6 +7,7 @@ export const materiais = {
     nome: "Minério de Ferro",
     descricao: "Pedra com veios de ferro das Minas Profundas.",
     categoria: "material",
+    preco: 20,
     empilhaAte: 999,
   },
   cristal_bruto: {
@@ -13,6 +15,7 @@ export const materiais = {
     nome: "Cristal Bruto",
     descricao: "Cristal opaco que ainda brilha no escuro.",
     categoria: "material",
+    preco: 20,
     empilhaAte: 999,
   },
   cogumelo_da_caverna: {
@@ -20,6 +23,7 @@ export const materiais = {
     nome: "Cogumelo da Caverna",
     descricao: "Cogumelo carnudo que cresce perto dos trilhos.",
     categoria: "ingrediente",
+    preco: 20,
     empilhaAte: 999,
   },
   escama_marinha: {
@@ -27,6 +31,7 @@ export const materiais = {
     nome: "Escama Marinha",
     descricao: "Escama dura e iridescente.",
     categoria: "material",
+    preco: 30,
     empilhaAte: 999,
   },
   perola_opaca: {
@@ -34,6 +39,7 @@ export const materiais = {
     nome: "Pérola Opaca",
     descricao: "Pérola sem brilho, ainda valiosa.",
     categoria: "material",
+    preco: 30,
     empilhaAte: 999,
   },
   alga_salgada: {
@@ -41,6 +47,7 @@ export const materiais = {
     nome: "Alga Salgada",
     descricao: "Alga crocante das ruínas submersas.",
     categoria: "ingrediente",
+    preco: 30,
     empilhaAte: 999,
   },
   fragmento_espectral: {
@@ -48,6 +55,7 @@ export const materiais = {
     nome: "Fragmento Espectral",
     descricao: "Resto frio de uma aparição.",
     categoria: "material",
+    preco: 40,
     empilhaAte: 999,
   },
   ferro_amaldicoado: {
@@ -55,6 +63,7 @@ export const materiais = {
     nome: "Ferro Amaldiçoado",
     descricao: "Metal escuro tirado de armaduras antigas.",
     categoria: "material",
+    preco: 40,
     empilhaAte: 999,
   },
   raiz_palida: {
@@ -62,6 +71,7 @@ export const materiais = {
     nome: "Raiz Pálida",
     descricao: "Raiz branca que nasce na terra cinza.",
     categoria: "ingrediente",
+    preco: 40,
     empilhaAte: 999,
   },
   essencia_sombria: {
@@ -69,6 +79,7 @@ export const materiais = {
     nome: "Essência Sombria",
     descricao: "Sombra condensada em um frasco.",
     categoria: "material",
+    preco: 50,
     empilhaAte: 999,
   },
   olho_vitreo: {
@@ -76,6 +87,7 @@ export const materiais = {
     nome: "Olho Vítreo",
     descricao: "Esfera de vidro que parece observar.",
     categoria: "material",
+    preco: 50,
     empilhaAte: 999,
   },
   cogumelo_azul: {
@@ -83,6 +95,7 @@ export const materiais = {
     nome: "Cogumelo Azul",
     descricao: "Cogumelo que brilha em azul no escuro.",
     categoria: "ingrediente",
+    preco: 50,
     empilhaAte: 999,
   },
   aco_negro: {
@@ -90,6 +103,7 @@ export const materiais = {
     nome: "Aço Negro",
     descricao: "Aço temperado das forjas da fortaleza.",
     categoria: "material",
+    preco: 60,
     empilhaAte: 999,
   },
   insignia_partida: {
@@ -97,6 +111,7 @@ export const materiais = {
     nome: "Insígnia Partida",
     descricao: "Emblema de um batalhão esquecido.",
     categoria: "material",
+    preco: 60,
     empilhaAte: 999,
   },
   trigo: {
@@ -104,6 +119,7 @@ export const materiais = {
     nome: "Trigo",
     descricao: "Trigo dos campos ao redor da fortaleza.",
     categoria: "ingrediente",
+    preco: 60,
     empilhaAte: 999,
   },
   brasa_viva: {
@@ -111,6 +127,7 @@ export const materiais = {
     nome: "Brasa Viva",
     descricao: "Brasa que nunca apaga.",
     categoria: "material",
+    preco: 70,
     empilhaAte: 999,
   },
   obsidiana: {
@@ -118,6 +135,7 @@ export const materiais = {
     nome: "Obsidiana",
     descricao: "Vidro vulcânico afiado.",
     categoria: "material",
+    preco: 70,
     empilhaAte: 999,
   },
   pimenta_de_fogo: {
@@ -125,6 +143,7 @@ export const materiais = {
     nome: "Pimenta de Fogo",
     descricao: "Pimenta que aquece por dentro.",
     categoria: "ingrediente",
+    preco: 70,
     empilhaAte: 999,
   },
   chifre_demoniaco: {
@@ -132,6 +151,7 @@ export const materiais = {
     nome: "Chifre Demoníaco",
     descricao: "Chifre curvo e ainda morno.",
     categoria: "material",
+    preco: 80,
     empilhaAte: 999,
   },
   areia_rubra: {
@@ -139,6 +159,7 @@ export const materiais = {
     nome: "Areia Rubra",
     descricao: "Areia vermelha que escorre como brasa.",
     categoria: "material",
+    preco: 80,
     empilhaAte: 999,
   },
   mel_selvagem: {
@@ -146,6 +167,7 @@ export const materiais = {
     nome: "Mel Selvagem",
     descricao: "Mel escuro de colmeias do deserto.",
     categoria: "ingrediente",
+    preco: 80,
     empilhaAte: 999,
   },
   casca_arcana: {
@@ -153,6 +175,7 @@ export const materiais = {
     nome: "Casca Arcana",
     descricao: "Casca de árvore com runas gravadas.",
     categoria: "material",
+    preco: 90,
     empilhaAte: 999,
   },
   po_de_fada: {
@@ -160,6 +183,7 @@ export const materiais = {
     nome: "Pó de Fada",
     descricao: "Pó cintilante que flutua sozinho.",
     categoria: "material",
+    preco: 90,
     empilhaAte: 999,
   },
   fruta_luminosa: {
@@ -167,6 +191,7 @@ export const materiais = {
     nome: "Fruta Luminosa",
     descricao: "Fruta que brilha suavemente.",
     categoria: "ingrediente",
+    preco: 90,
     empilhaAte: 999,
   },
   fragmento_do_caos: {
@@ -174,6 +199,7 @@ export const materiais = {
     nome: "Fragmento do Caos",
     descricao: "Pedaço de realidade que muda de forma.",
     categoria: "material",
+    preco: 100,
     empilhaAte: 999,
   },
   nucleo_instavel: {
@@ -181,6 +207,7 @@ export const materiais = {
     nome: "Núcleo Instável",
     descricao: "Núcleo que vibra sem parar.",
     categoria: "material",
+    preco: 100,
     empilhaAte: 999,
   },
   flor_do_vazio: {
@@ -188,6 +215,7 @@ export const materiais = {
     nome: "Flor do Vazio",
     descricao: "Flor de pétalas negras e perfume doce.",
     categoria: "ingrediente",
+    preco: 100,
     empilhaAte: 999,
   },
 };

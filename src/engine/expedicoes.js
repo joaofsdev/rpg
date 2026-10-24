@@ -14,6 +14,7 @@ import {
 import { criarRng, escolherPonderado } from "./rng";
 import { decorrido, heroiOcupado, listarAtividades, adicionarAtividade, removerAtividade } from "./atividades";
 import { ganharXp, xpPorInimigo } from "./progressao";
+import { guardarNoInventario } from "./inventario";
 
 const MINUTO_MS = 60 * 1000;
 const ROLAGEM_MS = MINUTOS_POR_ROLAGEM * MINUTO_MS;
@@ -95,17 +96,25 @@ export function recompensaDaExpedicao(atividade, rolagens) {
   };
 }
 
-// Encerra (concluída ou cancelada): entrega as rolagens completas e libera o herói.
-// Retorna { save, ganho }.
+// Encerra (concluída ou cancelada): entrega as rolagens completas e libera o herói. Itens além do
+// limite da pilha são vendidos na hora (ganho.vendidos). Retorna { save, ganho }.
 export function encerrarExpedicao(save, atividade, agora) {
   const rolagens = rolagensCompletas(atividade, agora);
   const { itens, ouro, xp } = recompensaDaExpedicao(atividade, rolagens);
-  const semAtividade = removerAtividade(save, atividade.id);
-  const ganho = { tipo: "expedicao", heroiId: atividade.heroiId, zonaId: atividade.parametros.zonaId, rolagens, itens, ouro, xp };
+  const guardado = guardarNoInventario({ ...removerAtividade(save, atividade.id), ouro: save.ouro + ouro }, { itens });
+  const ganho = {
+    tipo: "expedicao",
+    heroiId: atividade.heroiId,
+    zonaId: atividade.parametros.zonaId,
+    rolagens,
+    itens,
+    ouro,
+    xp,
+    vendidos: guardado.vendidos.itens,
+    ouroDasVendas: guardado.ouroDasVendas,
+  };
 
-  const inventario = { ...semAtividade.inventario.itens };
-  for (const [itemId, qtd] of Object.entries(itens)) inventario[itemId] = (inventario[itemId] || 0) + qtd;
-  let herois = semAtividade.herois;
+  let herois = guardado.save.herois;
   const heroi = herois[atividade.heroiId];
   if (heroi && xp > 0) {
     const { heroi: atualizado, niveisGanhos, golpesNovos } = ganharXp(heroi, xp);
@@ -114,13 +123,5 @@ export function encerrarExpedicao(save, atividade, agora) {
     ganho.nivelNovo = atualizado.nivel;
     ganho.golpesNovos = golpesNovos;
   }
-  return {
-    save: {
-      ...semAtividade,
-      ouro: semAtividade.ouro + ouro,
-      herois,
-      inventario: { ...semAtividade.inventario, itens: inventario },
-    },
-    ganho,
-  };
+  return { save: { ...guardado.save, herois }, ganho };
 }

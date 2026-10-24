@@ -406,6 +406,7 @@ consumíveis, materiais e relíquias. Mostra percentual de conclusão.
 - Vender: 40% do preço de compra (fórmula atual mantida).
 
 **Materiais:** 2–3 por zona (ex.: Cemitério — Osso Antigo, Pano Mortuário). Empilham até 999.
+Têm preço de referência `10 × número da zona` (venda a 40%), usado quando a pilha transborda (§4.8).
 
 **Ferraria (Fase 10):**
 - **Forjar:** receita de equipamento (slot + tipo) com materiais da zona + ouro → item do nível da
@@ -554,7 +555,13 @@ equipamento: 8% por inimigo comum; chefe garante 2 (o 1º com raridade ≥ Raro)
 raridade (comum / chefe): tabela atual de sortearRaridade mantida
 compatibilidade: 60% dos equipamentos sorteados são de tipo usável por algum herói do grupo
 materiais/ingredientes/consumíveis: tabela de drops do inimigo (chance individual por item)
-inventário cheio (50 não equipados): equipamento excedente é vendido na hora (40%) e o resumo avisa
+entrada de itens (engine/inventario.guardarNoInventario, único caminho):
+  equipamento ocupa 1 dos 50 espaços livres (equipados não contam); empilhável respeita a pilha
+  (empilhaAte: 99 consumíveis, 999 materiais/ingredientes) e não ocupa espaço dos 50.
+  O que não couber é vendido na hora pelo preço de venda (40%) e a tela avisa: resultado da batalha
+  (inclusive andares de masmorra), aviso da coleta da expedição. Recruta chega com o conjunto
+  equipado, então não ocupa espaço livre. Ações do jogador (comprar, desequipar, dispensar) são
+  recusadas quando não cabe, em vez de vender.
 ```
 
 ### 4.9 Calibração
@@ -653,7 +660,7 @@ Zona {
 
 ItemBase {            // consumíveis, materiais, ingredientes, relíquias, refeições
   id, nome, descricao, categoria: 'consumivel' | 'material' | 'ingrediente' | 'reliquia' | 'refeicao',
-  efeito?, preco?, empilhaAte, icone
+  efeito?, preco? (materiais: referência 10 × zona), empilhaAte, icone
 }
 
 Receita { id, nome, ingredientes: [{ itemId, qtd }], minutos, resultado: itemId,

@@ -61,12 +61,13 @@ const itensBase = {
     empilhaAte: 99,
   },
 
-  // ---------- Materiais ----------
+  // ---------- Materiais e ingredientes do Cemitério (preco: referência, 10 × número da zona) ----------
   osso_antigo: {
     id: "osso_antigo",
     nome: "Osso Antigo",
     descricao: "Osso amarelado do Cemitério. Usado na ferraria.",
     categoria: "material",
+    preco: 10,
     empilhaAte: 999,
   },
   pano_mortuario: {
@@ -74,6 +75,7 @@ const itensBase = {
     nome: "Pano Mortuário",
     descricao: "Tecido velho e resistente.",
     categoria: "material",
+    preco: 10,
     empilhaAte: 999,
   },
 
@@ -83,6 +85,7 @@ const itensBase = {
     nome: "Erva da Névoa",
     descricao: "Erva pálida que cresce entre as lápides.",
     categoria: "ingrediente",
+    preco: 10,
     empilhaAte: 999,
   },
 };

@@ -12,8 +12,9 @@ import {
 } from "./recrutamento";
 import { criarRng } from "./rng";
 import { podeEquipar } from "./itens";
+import { equipamentosLivres } from "./inventario";
 import { DURACAO_MURAL_MS, RECRUTAS_NO_MURAL } from "../data/recrutamento";
-import { MAX_GRUPO, MAX_HEROIS, SLOTS_EQUIPAMENTO, PONTOS_POR_NIVEL } from "../data/constants";
+import { MAX_GRUPO, MAX_HEROIS, SLOTS_EQUIPAMENTO, PONTOS_POR_NIVEL, MAX_EQUIPAMENTOS_INVENTARIO } from "../data/constants";
 import { HORA, jogoComReserva, comChefeVencido } from "./__fixtures__/atividades";
 
 function comMural(save, agora = 0) {
@@ -76,6 +77,18 @@ describe("contratar", () => {
     expect(noGrupo).toBe(true);
     expect(depois.grupo).toContain(heroi.id);
     expect(depois.recrutas.opcoes[0].contratado).toBe(true);
+  });
+
+  it("com o inventário cheio, o recruta chega equipado sem ocupar espaço livre", () => {
+    const { save } = jogoComReserva();
+    const extras = {};
+    for (let i = equipamentosLivres(save).length; i < MAX_EQUIPAMENTOS_INVENTARIO; i++) {
+      extras[`x${i}`] = { id: `x${i}`, slot: "botas", pesoArmadura: "leve", raridade: "Comum", nivel: 1, bonus: {}, aprimoramento: 0 };
+    }
+    const lotado = comMural({ ...save, inventario: { ...save.inventario, equipamentos: { ...save.inventario.equipamentos, ...extras } } });
+    const { save: depois, heroi } = contratarRecruta(lotado, 0, criarRng(4));
+    expect(equipamentosLivres(depois)).toHaveLength(MAX_EQUIPAMENTOS_INVENTARIO);
+    expect(Object.values(heroi.equipamento).every(Boolean)).toBe(true);
   });
 
   it("nível mínimo 1", () => {

@@ -3,7 +3,7 @@
 Obrigado por testar! **Esta é uma versão beta:** o jogo está completo do começo ao fim, mas o
 balanceamento ainda vai mudar e podem aparecer bugs. Seu relato ajuda muito.
 
-**Link do jogo:** _(preenchido após o deploy)_
+**Link do jogo:** https://magichill.vercel.app/
 
 Funciona no navegador do computador e do celular. Não precisa instalar nem criar conta.
 

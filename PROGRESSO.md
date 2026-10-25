@@ -325,6 +325,25 @@ localStorage.setItem("magichill:slot:0", JSON.stringify(s)); location.reload();
    continuam funcionando.
 5. **Celular (375 px):** nenhuma tela rola na horizontal.
 
+## Versão beta publicada (25/10/2026)
+
+- **Endereço:** https://magichill.vercel.app/ (Vercel, plano gratuito, sem domínio próprio).
+- **Origem:** branch `main` do GitHub (`joaofsdev/rpg`), integrada à Vercel. Cada merge em `main`
+  publica sozinho no mesmo endereço; PRs geram endereços de pré-visualização.
+- **Configuração:** `vercel.json` (Vite, build `npm run build`, saída `dist/`, cache de um ano para
+  `/assets/`, cujos arquivos têm hash). Sem fallback de SPA (o jogo não tem rotas), sem variáveis de
+  ambiente, sem analytics.
+- **Validação em produção:** 31 verificações no computador e 12 no celular (375 px, toque), todas OK,
+  sem erros no console nem falhas de rede. A página publicada serve exatamente o build validado.
+- **Saves:** `localStorage` do navegador (`magichill:indice`, `magichill:slot:N`, `magichill:config`).
+  Ficam no aparelho, não sincronizam e somem ao limpar os dados do site (no Safari, também após 7 dias
+  sem visita). O guia dos testadores está em [TESTES_BETA.md](TESTES_BETA.md).
+
+**Como atualizar o jogo:** trabalhar numa branch, rodar `npm test`, `npm run lint` e `npm run build`,
+abrir um PR para `main` e fazer o merge. A Vercel publica em 1–2 minutos; o `index.html` não fica em
+cache, então os jogadores recebem a versão nova ao recarregar. Mudanças no formato do save continuam
+exigindo versão e migração (CLAUDE.md), porque os testadores já têm saves.
+
 ## Próximos passos
 
 O roadmap do SPEC §8 termina na Fase 11. O que vem depois é decisão do autor; as prioridades já

@@ -69,3 +69,18 @@ export const NOMES_ARMA = {
   maca_pesada: "maça pesada",
   lanca: "lança",
 };
+
+// "Vida máxima +10%", "Recurso inicial +20"…
+const ROTULO_EFEITO_REFEICAO = {
+  vidaMax: "Vida máxima",
+  ataque: "Força e magia",
+  defesa: "Defesa e resistência",
+  recursoInicial: "Recurso inicial",
+  xp: "XP",
+  ouro: "Ouro",
+};
+
+export function descreverEfeitoRefeicao({ tipo, valor }) {
+  const quanto = tipo === "recursoInicial" ? `+${valor}` : `+${Math.round(valor * 100)}%`;
+  return `${ROTULO_EFEITO_REFEICAO[tipo]} ${quanto}`;
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calcularAtributosHeroi, calcularAtributosInimigo, bonusDoEquipamento } from "./atributos";
+import { calcularAtributosHeroi, calcularAtributosInimigo, bonusDoEquipamento, aumentarPercentual } from "./atributos";
 import { criarHeroi } from "./herois";
 import { inimigos } from "../data/inimigos";
 
@@ -54,5 +54,14 @@ describe("atributos de inimigo", () => {
   it("escala chefe com 8% por nível", () => {
     const atributos = calcularAtributosInimigo(inimigos.guardiao_cripta, 10);
     expect(atributos.vida).toBe(Math.floor(1125 * 1.72));
+  });
+});
+
+describe("aumentarPercentual", () => {
+  it("não sofre com o ponto flutuante", () => {
+    expect(aumentarPercentual(100, 0.15)).toBe(115);
+    expect(aumentarPercentual(20, 0.15)).toBe(23);
+    expect(aumentarPercentual(215, 0.1)).toBe(236);
+    expect(aumentarPercentual(7, 0)).toBe(7);
   });
 });

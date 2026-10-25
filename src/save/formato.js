@@ -70,7 +70,7 @@ export function validarSave(save) {
   }
   if (!ehObjeto(save.atividades)) {
     erros.push("Atividades inválidas.");
-  } else if (Object.values(save.atividades).some((a) => !save.herois?.[a.heroiId])) {
+  } else if (Object.values(save.atividades).some((a) => a.heroiId !== undefined && !save.herois?.[a.heroiId])) {
     erros.push("Atividade de herói inexistente.");
   }
   if (!ehObjeto(save.inventario?.equipamentos) || !ehObjeto(save.inventario?.itens)) {

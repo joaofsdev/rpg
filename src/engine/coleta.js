@@ -4,11 +4,13 @@
 import { atividadeConcluida, fimDaAtividade, listarAtividades, tempoRestante } from "./atividades";
 import { encerrarTreino } from "./treino";
 import { encerrarExpedicao } from "./expedicoes";
+import { encerrarPreparo } from "./cozinha";
 
 const ENCERRAR = {
   treinoAtributo: encerrarTreino,
   treinoGolpe: encerrarTreino,
   expedicao: encerrarExpedicao,
+  cozinha: encerrarPreparo,
 };
 
 // Só atividades concluídas. Coletar de novo a mesma atividade não entrega nada (ela já saiu do save).

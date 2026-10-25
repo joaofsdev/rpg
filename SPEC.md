@@ -3,7 +3,7 @@
 > Fonte da verdade do design. Mudanças de design são propostas aqui **antes** de qualquer código.
 > Valores numéricos são iniciais e serão calibrados com testes de simulação do motor (§4.9).
 
-**Status:** Fase 8 concluída — aguardando aprovação.
+**Status:** Fase 9 concluída — aguardando aprovação.
 
 ---
 
@@ -325,14 +325,36 @@ de recrutas (Fase 7).
 - Comer fora de batalha ativa a refeição para o grupo. **1 refeição ativa por vez**; comer outra
   substitui a atual (com confirmação).
 - Duração em **encontros**, não em tempo: o bônus não expira enquanto o jogador está fora.
+- Detalhes da Fase 9:
+  - Os ingredientes saem do inventário ao começar. Cancelar ("Tirar do fogo") entrega as porções
+    prontas e **devolve os ingredientes** das que não ficaram prontas. As porções entram pela
+    entrada única do inventário (pilha de 99; o excedente é vendido, §4.8).
+  - Não dá para comer com uma batalha salva em andamento (o efeito é aplicado ao criar a batalha).
+    Entre andares de masmorra pode.
+  - Efeitos: `vidaMax`, `ataque` (força e magia), `defesa` (defesa e resistência) multiplicam os
+    atributos no início da batalha; `recursoInicial` soma ao vigor inicial (até 100) ou, nas classes
+    de mana, ao máximo e ao atual; `xp` e `ouro` aumentam as recompensas da batalha.
+  - O contador desce em todo resultado (vitória, derrota ou fuga), inclusive nos andares de masmorra.
+  - As 3 receitas iniciais usam ingredientes das zonas 1 a 3 (os exemplos antigos pediam Raiz Pálida,
+    Trigo e Mel, das zonas 4 a 8). As outras 7 (uma por zona, da 4 à 10): o chefe da zona ensina ao
+    ser vencido, se ainda não for conhecida; a loja vende uma por semana (§3.11).
+  - `save.receitasConhecidas` guarda só as aprendidas; as iniciais vêm dos dados (sem migração).
+  - A tela fica na Taverna, abaixo do mural; o mapa mostra a refeição ativa e os encontros restantes.
 
-Exemplos de receita:
+Receitas (`src/data/receitas.js`):
 
-| Receita | Ingredientes | Tempo/porção | Efeito | Duração |
-|---|---|---|---|---|
-| Ensopado do Coveiro | 2 Erva da Névoa, 1 Raiz Pálida | 10 min | Vida máx. +10% | 5 encontros |
-| Pão de Mel da Estrada | 1 Trigo, 1 Mel Selvagem | 15 min | XP +15% | 5 encontros |
-| Caldo de Cogumelo Azul | 2 Cogumelo Azul | 20 min | Recurso inicial +20 | 6 encontros |
+| Receita | Ingredientes (por porção) | Tempo/porção | Efeito | Duração | Como aprender |
+|---|---|---|---|---|---|
+| Ensopado do Coveiro | 2 Erva da Névoa | 10 min | Vida máx. +10% | 5 encontros | inicial |
+| Caldo de Cogumelo | 2 Cogumelo da Caverna | 20 min | Recurso inicial +20 | 6 encontros | inicial |
+| Sopa de Alga | 1 Alga Salgada, 1 Erva da Névoa | 15 min | XP +15% | 5 encontros | inicial |
+| Ensopado de Raiz Pálida | 2 Raiz Pálida, 1 Erva da Névoa | 20 min | Defesa e resistência +10% | 6 encontros | chefe da zona 4 |
+| Caldo de Cogumelo Azul | 2 Cogumelo Azul | 20 min | Força e magia +10% | 6 encontros | chefe da zona 5 |
+| Pão de Trigo | 2 Trigo | 25 min | Vida máx. +15% | 6 encontros | chefe da zona 6 |
+| Ensopado Picante | 1 Pimenta de Fogo, 1 Trigo | 25 min | Força e magia +15% | 6 encontros | chefe da zona 7 |
+| Pão de Mel da Estrada | 1 Trigo, 1 Mel Selvagem | 30 min | XP +25% | 6 encontros | chefe da zona 8 |
+| Compota Luminosa | 2 Fruta Luminosa | 30 min | Ouro +25% | 8 encontros | chefe da zona 9 |
+| Banquete do Vazio | 1 Flor do Vazio, 1 Fruta Luminosa, 1 Mel Selvagem | 40 min | Recurso inicial +40 | 8 encontros | chefe da zona 10 |
 
 **CA.**
 - Preparar 3 porções de uma receita de 10 min, fechar o jogo e voltar após 40 min mostra as 3
@@ -402,7 +424,9 @@ consumíveis, materiais e relíquias. Mostra percentual de conclusão.
 **Loja (por slot, não global):**
 - 5 equipamentos rotativos renovados a cada 24 h (timestamp); renovar antes custa
   `50 × nivelMedioGrupo` ouro.
-- Consumíveis fixos sempre à venda (§3.12). Receitas de cozinha à venda em rotação semanal.
+- Consumíveis fixos sempre à venda (§3.12). Receitas de cozinha à venda em rotação semanal:
+  uma por semana entre as de zonas desbloqueadas ainda não aprendidas, por `150 × número da zona`
+  ouro. A rotação é calculada pelo relógio (semana = `floor(agora / 7 dias)`), sem nada no save.
 - Vender: 40% do preço de compra (fórmula atual mantida).
 
 **Materiais:** 2–3 por zona (ex.: Cemitério — Osso Antigo, Pano Mortuário). Empilham até 999.
@@ -680,7 +704,8 @@ ItemBase {            // consumíveis, materiais, ingredientes, relíquias, refe
 }
 
 Receita { id, nome, ingredientes: [{ itemId, qtd }], minutos, resultado: itemId,
-          efeito: { tipo, valor }, duracaoEncontros }
+          efeito: { tipo: 'vidaMax' | 'ataque' | 'defesa' | 'recursoInicial' | 'xp' | 'ouro', valor },
+          duracaoEncontros, inicial? | zonaId? }   // zonaId: o chefe dessa zona ensina
 ```
 
 ### 5.2 Instâncias (no save)
@@ -763,7 +788,7 @@ Save {
   recrutas: { opcoes: [{ classeId, nome, contratado }], renovadaEm } | null,
   bestiario: { [inimigoId]: { visto, derrotas, afinidadesReveladas: [elemento], dropsVistos: [] } },
   colecao: { equipamentos: { [chave]: [raridade] }, itens: [itemId], reliquias: [itemId] },
-  receitasConhecidas: [receitaId],
+  receitasConhecidas: [receitaId],                  // só as aprendidas; as iniciais vêm dos dados
   estatisticas: { encontrosVencidos, derrotas, fugas, danoCausado, ... }
 }
 ```
@@ -820,8 +845,7 @@ components/ (UI)  ──dispara ações──▶  state/ (store)  ──chama─
   `status`, `turnos`, `ia`, `combate`, `progressao`, `itens`, `loja`, `masmorra`, `relogio`
   (relógio que não volta e prazos), `atividades` (base de tempo), `treino`, `coleta` (coletar,
   cancelar e resumo de retorno; cada tipo de atividade registra a função que a encerra),
-  `expedicoes`, `grupo`,
-  `recrutamento`.
+  `expedicoes`, `cozinha`, `grupo`, `recrutamento`.
 - **data/**: conteúdo (§5.1) e `constants.js`. Validação de integridade dos dados por teste
   (ids referenciados existem, pesos > 0).
 - **state/**: store global, criadores de ação (que injetam `agora`), seletores.
@@ -1127,7 +1151,7 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
 - [x] Expedições com rolagens, vagas progressivas, cancelar e coletar
 
 ### Fase 9 — Taverna e cozinha
-- [ ] Ingredientes, receitas, preparo por tempo, refeição ativa por encontros
+- [x] Ingredientes, receitas, preparo por tempo, refeição ativa por encontros
 
 ### Fase 10 — Ferraria, relíquias e coleção
 - [ ] Forjar, aprimorar (+1 a +5), relíquias de chefe, tela de coleção
@@ -1137,7 +1161,7 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
 - [ ] Efeitos sonoros e música com controle de volume
 - [ ] Revisão de responsividade, acessibilidade (teclado, foco, rótulos) e textos
 
-### Pendências conhecidas (após a Fase 8)
+### Pendências conhecidas (após a Fase 9)
 - A vida dos heróis durante uma masmorra só aparece na tela da masmorra; o mapa não mostra.
 - Chefes exclusivos de masmorra não existem: o chefe da masmorra é o chefe da zona fortalecido
   (decisão da Fase 6, §3.5; ideia registrada em §9).
@@ -1154,8 +1178,12 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
   contratar alguém. Reavaliar se ficar incômodo.
 - Empilháveis não ocupam os 50 espaços do inventário (só o limite da pilha, 99 ou 999). Se a ideia
   for "1 espaço por tipo", é uma mudança de modelo e de save ainda não feita.
-- A campanha da economia (§4.9) não inclui consumíveis, loja nem cozinha; os 15 encontros por dia
-  são uma hipótese. Reavaliar quando a cozinha (Fase 9) e a ferraria (Fase 10) gastarem materiais.
+- A campanha da economia (§4.9) não inclui consumíveis, loja nem cozinha (a Compota Luminosa dá
+  +25% de ouro e as receitas custam ouro); os 15 encontros por dia são uma hipótese. Reavaliar
+  quando a ferraria (Fase 10) também gastar materiais.
+- Refeições e receitas ainda não aparecem numa coleção (Fase 10). Pratos só podem ser comidos na
+  Taverna, não no Inventário.
+- A cozinha tem 1 panela; a melhoria "+1 panela" citada nas regras ainda não existe.
 
 ---
 

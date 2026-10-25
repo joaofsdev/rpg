@@ -71,3 +71,8 @@ export function calcularAtributosInimigo(dadosInimigo, nivel) {
   }
   return resultado;
 }
+
+// valor × (1 + fração), arredondado para baixo sem o erro do ponto flutuante (100 × 1,15 = 115)
+export function aumentarPercentual(valor, fracao) {
+  return Math.floor(Math.round(valor * (1 + fracao) * 1e6) / 1e6);
+}

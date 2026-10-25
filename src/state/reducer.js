@@ -27,6 +27,8 @@ import { relogio, registrarRelogio } from "../engine/relogio";
 import { colocarNoGrupo, tirarDoGrupo, dispensarHeroi } from "../engine/grupo";
 import { iniciarTreinoAtributo, iniciarTreinoGolpe } from "../engine/treino";
 import { iniciarExpedicao } from "../engine/expedicoes";
+import { iniciarPreparo, comer, comprarReceita, efeitoDaRefeicao } from "../engine/cozinha";
+import { receitas } from "../data/receitas";
 import { coletarAtividade, cancelarAtividade, coletarTudo, atividadesConcluidas, concluidasDesde } from "../engine/coleta";
 import { muralEmDia, contratarRecruta } from "../engine/recrutamento";
 
@@ -119,6 +121,7 @@ function comecarBatalha(state, save, { inimigos, origem, rng, vidaInicial }) {
     afinidadesConhecidas: afinidadesDoBestiario(save),
     bonusDrop: bonusDropDoBestiario(save),
     vidaInicial,
+    refeicao: efeitoDaRefeicao(save),
   });
 
   const proximo = {
@@ -179,6 +182,12 @@ function alterarSave(state, resultado) {
 }
 
 function descreverGanho(save, ganho) {
+  if (ganho.tipo === "cozinha") {
+    const prato = receitas[ganho.receitaId].nome;
+    const vendidos = ganho.vendidos?.length ? ` Pilha cheia: ${ganho.vendidos[0].qtd} vendida(s) por ${ganho.ouroDasVendas} ouro.` : "";
+    const devolvidos = ganho.devolvidas > 0 ? " Os ingredientes do resto voltaram ao inventário." : "";
+    return `${prato}: ${ganho.porcoes} ${ganho.porcoes === 1 ? "porção pronta" : "porções prontas"}.${devolvidos}${vendidos}`;
+  }
   const nome = save.herois[ganho.heroiId]?.nome ?? "O herói";
   if (ganho.tipo === "expedicao") {
     const qtd = Object.values(ganho.itens).reduce((s, q) => s + q, 0);
@@ -332,6 +341,29 @@ export function reducer(state, action) {
       });
       if (resultado.erro) return comAviso(state, resultado.erro);
       return { ...state, save: registrarRelogio(resultado.save, agora) };
+    }
+
+    case "PREPARAR_RECEITA": {
+      if (!state.save) return state;
+      const agora = relogio(state.save, action.agora);
+      const resultado = iniciarPreparo(state.save, {
+        id: gerarId(criarRng(action.semente)),
+        receitaId: action.receitaId,
+        porcoes: action.porcoes,
+        agora,
+      });
+      if (resultado.erro) return comAviso(state, resultado.erro);
+      return { ...state, save: registrarRelogio(resultado.save, agora) };
+    }
+
+    case "COMER":
+      return alterarSave(state, comer(state.save, action.itemId));
+
+    case "COMPRAR_RECEITA": {
+      if (!state.save) return state;
+      const resultado = comprarReceita(state.save, relogio(state.save, action.agora));
+      if (resultado.erro) return comAviso(state, resultado.erro);
+      return comAviso({ ...state, save: resultado.save }, `Você aprendeu a receita ${resultado.receita.nome}.`);
     }
 
     case "COLOCAR_NO_GRUPO":

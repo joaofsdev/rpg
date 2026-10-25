@@ -208,6 +208,18 @@ export function criarAcoes(dispatch, storage) {
       dispatch({ type: "INICIAR_EXPEDICAO", heroiId, zonaId, minutos, agora: Date.now(), semente: novaSemente() });
     },
 
+    prepararReceita(receitaId, porcoes) {
+      dispatch({ type: "PREPARAR_RECEITA", receitaId, porcoes, agora: Date.now(), semente: novaSemente() });
+    },
+
+    comer(itemId) {
+      dispatch({ type: "COMER", itemId });
+    },
+
+    comprarReceita() {
+      dispatch({ type: "COMPRAR_RECEITA", agora: Date.now() });
+    },
+
     colocarNoGrupo(heroiId) {
       dispatch({ type: "COLOCAR_NO_GRUPO", heroiId });
     },

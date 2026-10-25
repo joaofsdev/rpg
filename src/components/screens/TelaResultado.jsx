@@ -1,6 +1,7 @@
 import { useEstado, useAcoes } from "../../state/contextos";
 import { itens } from "../../data/itens";
 import { golpes } from "../../data/golpes";
+import { receitas } from "../../data/receitas";
 import { NOMES_SLOT } from "../../data/textos";
 import { PONTOS_POR_NIVEL } from "../../data/constants";
 import { descreverItens } from "../common/descricoes";
@@ -118,6 +119,13 @@ export default function TelaResultado() {
               </li>
             ))}
           </ul>
+        )}
+
+        {r.receitaNova && (
+          <p className="mt-4 border-t border-borda pt-3">
+            O chefe ensinou a receita <span className="text-destaque">{receitas[r.receitaNova].nome}</span>. Prepare na
+            cozinha da Taverna.
+          </p>
         )}
 
         <div className="mt-6 flex flex-wrap gap-2">

@@ -8,7 +8,9 @@ import {
   ELEMENTOS,
 } from "../data/constants";
 import { guardarNoInventario } from "./inventario";
+import { aumentarPercentual } from "./atributos";
 import { aprenderGolpesDoNivel } from "./herois";
+import { efeitoDaRefeicao, receitaDoChefe, aprenderReceita } from "./cozinha";
 
 // Marcos do bestiário (SPEC.md §3.10)
 export const DERROTAS_PARA_REVELAR_AFINIDADES = 10;
@@ -98,7 +100,15 @@ function atualizarProgressoZona(progresso, origem, resultado) {
 export function aplicarResultadoBatalha(save, batalha) {
   if (batalha.fase !== "fim") throw new Error("A batalha ainda não terminou.");
 
-  const recompensas = batalha.recompensas;
+  // Refeição de XP ou de ouro aumenta as recompensas desta batalha (SPEC.md §3.7)
+  const refeicao = efeitoDaRefeicao(save);
+  const bonusXp = refeicao?.tipo === "xp" ? refeicao.valor : 0;
+  const bonusOuro = refeicao?.tipo === "ouro" ? refeicao.valor : 0;
+  const recompensas = {
+    ...batalha.recompensas,
+    xp: aumentarPercentual(batalha.recompensas.xp, bonusXp),
+    ouro: aumentarPercentual(batalha.recompensas.ouro, bonusOuro),
+  };
   const resumo = {
     resultado: batalha.resultado,
     xp: recompensas.xp,
@@ -108,6 +118,7 @@ export function aplicarResultadoBatalha(save, batalha) {
     equipamentosVendidos: [],
     itensVendidos: [],
     niveis: [],
+    receitaNova: null,
   };
 
   const herois = { ...save.herois };
@@ -144,9 +155,18 @@ export function aplicarResultadoBatalha(save, batalha) {
     refeicaoAtiva = restantes > 0 ? { ...refeicaoAtiva, encontrosRestantes: restantes } : null;
   }
 
+  // O chefe da zona ensina a receita dela, se ainda não for conhecida
+  let comReceita = guardado.save;
+  const { origem } = batalha;
+  if (batalha.resultado === "vitoria" && origem?.tipo === "zona" && origem.chefe) {
+    const receita = receitaDoChefe(origem.zonaId);
+    comReceita = aprenderReceita(guardado.save, receita?.id);
+    if (comReceita !== guardado.save) resumo.receitaNova = receita.id;
+  }
+
   return {
     save: {
-      ...guardado.save,
+      ...comReceita,
       herois,
       progresso: atualizarProgressoZona(save.progresso, batalha.origem, batalha.resultado),
       bestiario: atualizarBestiario(save.bestiario, batalha),

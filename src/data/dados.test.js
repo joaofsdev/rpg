@@ -15,6 +15,7 @@ import { ELEMENTOS, MAX_GOLPES_EQUIPADOS, MAX_INIMIGOS_ENCONTRO, MAX_HEROIS, TET
 import { CLASSES_RECRUTAVEIS, RECRUTAS_NO_MURAL } from "./recrutamento";
 import { DURACOES_TREINO_HORAS, ZONAS_QUE_LIBERAM_VAGA_TREINO } from "./treino";
 import { nomesHerois } from "./nomesHerois";
+import { receitas, PORCOES_MAX } from "./receitas";
 import { DURACOES_EXPEDICAO_MINUTOS, MINUTOS_POR_ROLAGEM, ZONAS_QUE_LIBERAM_VAGA_EXPEDICAO } from "./expedicoes";
 
 const CATEGORIAS = ["fisico", "magico", "suporte"];
@@ -198,5 +199,38 @@ describe("conteúdo da Fase 8", () => {
 
   it("zonas que liberam vaga de expedição existem", () => {
     for (const id of ZONAS_QUE_LIBERAM_VAGA_EXPEDICAO) expect(zonas.some((z) => z.id === id)).toBe(true);
+  });
+});
+
+describe("conteúdo da Fase 9", () => {
+  const EFEITOS_REFEICAO = ["vidaMax", "ataque", "defesa", "recursoInicial", "xp", "ouro"];
+
+  it("ids de receita batem com as chaves", () => chavesBatemComIds(receitas));
+
+  it.each(Object.values(receitas))("$id é válida", (r) => {
+    expect(itens[r.resultado]?.categoria).toBe("refeicao");
+    for (const { itemId, qtd } of r.ingredientes) {
+      expect(["ingrediente", "material"]).toContain(itens[itemId]?.categoria);
+      expect(qtd).toBeGreaterThan(0);
+    }
+    expect(EFEITOS_REFEICAO).toContain(r.efeito.tipo);
+    expect(r.efeito.valor).toBeGreaterThan(0);
+    expect(r.duracaoEncontros).toBeGreaterThan(0);
+    expect(r.minutos * PORCOES_MAX).toBeLessThanOrEqual(TETO_ATIVIDADE_HORAS * 60);
+    expect(Boolean(r.inicial) !== Boolean(r.zonaId)).toBe(true);
+    if (r.zonaId) expect(zonas.some((z) => z.id === r.zonaId)).toBe(true);
+  });
+
+  it("3 receitas iniciais, feitas com ingredientes das zonas 1 a 3", () => {
+    const iniciais = Object.values(receitas).filter((r) => r.inicial);
+    expect(iniciais).toHaveLength(3);
+    const primeiras = zonas.slice(0, 3).flatMap((z) => z.tabelaExpedicao.map((e) => e.itemId));
+    for (const r of iniciais) for (const { itemId } of r.ingredientes) expect(primeiras).toContain(itemId);
+  });
+
+  it("cada zona ensina no máximo uma receita e toda refeição tem preço", () => {
+    const zonasComReceita = Object.values(receitas).filter((r) => r.zonaId).map((r) => r.zonaId);
+    expect(new Set(zonasComReceita).size).toBe(zonasComReceita.length);
+    for (const r of Object.values(receitas)) expect(itens[r.resultado].preco).toBeGreaterThan(0);
   });
 });

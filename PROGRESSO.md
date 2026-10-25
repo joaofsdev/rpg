@@ -3,7 +3,7 @@
 Situação do projeto fase a fase. O design completo está no [SPEC.md](SPEC.md) e as regras de
 trabalho no [CLAUDE.md](CLAUDE.md); este arquivo resume o que já foi feito e o que vem a seguir.
 
-**Última atualização:** 24/10/2026, ao fim da Fase 8.
+**Última atualização:** 25/10/2026, ao fim da Fase 9.
 
 ## Fases concluídas
 
@@ -18,8 +18,9 @@ trabalho no [CLAUDE.md](CLAUDE.md); este arquivo resume o que já foi feito e o 
 | 6 | Masmorras por andares (10), fogueiras, ganhos por andar, save v3 | testes + navegador |
 | 7 | Grupo e reserva, mural de recrutas, dispensar herói, atividades por tempo, treino de atributo e de golpe, resumo "Bem-vindo de volta", save v4, calibração da economia de ouro | testes + navegador |
 | 8 | Expedições com rolagens de 15 min, vagas progressivas, prévia do que foi achado, cancelar e coletar, resumo por categoria | testes + navegador |
+| 9 | Cozinha na Taverna: 10 receitas, panela por tempo, refeição ativa por encontros, receita ensinada pelo chefe e vendida na loja | testes + navegador |
 
-Estado ao fim da Fase 8: 607 testes passando (29 arquivos), `npm run lint` sem erros nem
+Estado ao fim da Fase 9: 639 testes passando (30 arquivos), `npm run lint` sem erros nem
 avisos, `npm run build` ok.
 
 ## Decisões tomadas
@@ -82,6 +83,17 @@ registradas no SPEC.md.
   renda. Recalibrado: ouro por rolagem 5 → 3, recruta 25 → 35 por nível, treino 10 → 7 por nível
   e hora. Metas novas: expedições ≤ 75% do ouro dos encontros; 1 treino de 8 h por dia entre 20% e
   90% da renda do dia. Todas as metas passam. (§4.9)
+- **Fase 9, receitas:** as 3 iniciais usam ingredientes das zonas 1 a 3 (os exemplos do SPEC pediam
+  ingredientes das zonas 4 a 8, impossíveis no começo). As outras 7 vêm do chefe de cada zona (4 a
+  10) e da loja (uma por semana, `150 × número da zona` ouro). `receitasConhecidas` guarda só as
+  aprendidas, então o save continua na v4. (§3.7, §3.11)
+- **Fase 9, preparo e refeição:** ingredientes saem no início; tirar do fogo entrega as porções
+  prontas e devolve os ingredientes do resto; não se come com batalha salva; o contador desce em
+  vitória, derrota e fuga. Efeitos: vida máx., força e magia, defesa e resistência, recurso inicial,
+  XP e ouro. (§3.7)
+- **Fase 9, correção:** a validação do save rejeitava atividades sem herói, o que marcava como
+  "danificado" um save com a panela no fogo. Achado no teste de navegador; agora só valida o herói
+  quando a atividade tem um, com teste de regressão.
 - **Fase 7, recrutas:** custo `100 + 35 × nível` (era 25, recalibrado na Fase 8); Cavaleiro, Arqueiro e Mago desde o início, Bardo,
   Assassino e Bárbaro após os chefes das zonas 1, 2 e 3 (e classes que o jogador já tem); recruta
   chega com os pontos livres do nível e entra no grupo se houver espaço. (§3.2)
@@ -103,14 +115,15 @@ A lista oficial está no SPEC.md, seção "Pendências conhecidas (após a Fase 
 - sem como reordenar o grupo;
 - treinar exige tirar o herói do grupo (com 2 heróis, sobra 1 lutando até contratar alguém);
 - empilháveis não ocupam os 50 espaços do inventário (mudança de modelo pendente de decisão);
-- a economia simulada não inclui consumíveis, loja nem cozinha; 15 encontros por dia é hipótese.
+- a economia simulada não inclui consumíveis, loja nem cozinha; 15 encontros por dia é hipótese;
+- refeições fora da coleção (Fase 10), pratos só se comem na Taverna, 1 panela só.
 
 ## Como testar
 
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm test         # 607 testes (a simulação de balanceamento leva ~20 s)
+npm test         # 639 testes (a simulação de balanceamento leva ~20 s)
 npm run lint
 npm run build
 ```
@@ -191,19 +204,40 @@ location.reload();
    as atividades): "Continuar" abre o resumo com "Expedições: pronto para coletar" e "Treino de
    …: faltam 3h" em andamento.
 
-## Escopo da Fase 9 — Taverna e cozinha
+### Cozinha (Fase 9)
+Para ter ingredientes, no console (fora do slot, nos espaços de save):
 
-Roadmap do SPEC.md §8; regras em §3.7 e §4.10.
+```js
+const s = JSON.parse(localStorage.getItem("magichill:slot:0"));
+s.inventario.itens.erva_da_nevoa = 7;
+localStorage.setItem("magichill:slot:0", JSON.stringify(s)); location.reload();
+```
 
-- **Receitas:** 3 conhecidas desde o início; novas por drops de chefe e na loja (rotação semanal).
-- **Preparo:** receita e porções (1–5); tempo = `receita.minutos × porções`; 1 panela. Porções
-  prontas vão para o inventário. É mais um tipo de atividade (sem herói) a registrar em
-  `engine/coleta.js`, como as expedições.
-- **Refeição ativa:** comer fora de batalha ativa a refeição para o grupo; 1 por vez (trocar pede
-  confirmação); dura em encontros, não em tempo. O motor já desconta encontros em
-  `aplicarResultadoBatalha`; falta aplicar os efeitos (vida máx., XP, recurso inicial).
-- **Fora da Fase 9:** ferraria e relíquias (Fase 10).
+1. **Taverna → Cozinha:** em Ensopado do Coveiro, as porções 4 e 5 ficam desabilitadas (7 ervas só
+   dão 3). Escolha 3 → "Preparar (30 min)". A panela mostra "0/3 porções prontas" e as ervas caem
+   para 1.
+2. **Voltar 40 min depois:** recue o início da atividade e `ultimaVisita` em `40 * 60000` (mesmo
+   comando das expedições). "Continuar" mostra "Cozinha: pronto para coletar" com
+   "Panela: Ensopado do Coveiro ×3". "Coletar tudo" avisa "Ensopado do Coveiro: 3 porções prontas."
+3. **Comer:** em "Pratos prontos", "Comer". A Taverna e o mapa mostram "Vida máxima +10%, mais 5
+   encontros". Explore, fuja do encontro: o contador cai para 4.
+4. **Trocar:** com outro prato no inventário (`s.inventario.itens.sopa_de_alga = 1`), "Comer" pede
+   confirmação ("Trocar a refeição?").
+5. **Loja:** "Receita da semana" fica vazia com só a zona 1 aberta; com zonas desbloqueadas aparece
+   uma receita para aprender.
 
-Critérios de aceite a cumprir (SPEC §3.7): 3 porções de uma receita de 10 min, vistas depois de
-40 min, aparecem prontas no resumo de retorno; com "Ensopado do Coveiro" ativo, a vida máxima na
-batalha é 10% maior e o contador desce 1 por encontro concluído (vitória, derrota ou fuga).
+## Escopo da Fase 10 — Ferraria, relíquias e coleção
+
+Roadmap do SPEC.md §8; regras em §3.10 e §3.11.
+
+- **Forjar:** receita de equipamento (slot + tipo) com materiais da zona + ouro → item do nível da
+  zona, raridade sorteada com piso Incomum.
+- **Aprimorar:** +1 até +5; cada nível soma +8% aos bônus (`MULT_APRIMORAMENTO` já existe no motor);
+  custo crescente em materiais e ouro; nunca falha.
+- **Relíquias:** 1 por chefe de zona, efeito único; garantida na primeira vitória, 5% nas seguintes.
+- **Coleção:** catálogo de tipos de equipamento × raridade, consumíveis, materiais e relíquias, com
+  percentual de conclusão (o save já tem `colecao`).
+- **Fora da Fase 10:** temas, sons e polimento (Fase 11).
+
+Critérios de aceite a cumprir (SPEC §3.11): aprimorar +2 → +3 sempre tem sucesso e aumenta os
+bônus exibidos; dois slots de save têm lojas diferentes (já coberto).

@@ -27,7 +27,7 @@ import {
   MULT_DROP_MARCO,
 } from "../data/constants";
 import { criarRng, chance, escolher, gerarId } from "./rng";
-import { calcularAtributosHeroi, calcularAtributosInimigo } from "./atributos";
+import { calcularAtributosHeroi, calcularAtributosInimigo, aumentarPercentual } from "./atributos";
 import {
   calcularDano,
   faixaDano,
@@ -59,9 +59,27 @@ const ALVOS_UNICOS = ["inimigo", "aliado"];
 // Criação
 // ---------------------------------------------------------------------------
 
-function criarCombatenteHeroi(heroi, posicao, equipamentos, vidaInicial) {
+// Refeição ativa (SPEC.md §3.7): multiplica atributos no início da batalha
+const ATRIBUTOS_DA_REFEICAO = { vidaMax: ["vida"], ataque: ["forca", "magia"], defesa: ["defesa", "resistencia"] };
+
+function atributosComRefeicao(atributos, refeicao) {
+  const afetados = refeicao ? ATRIBUTOS_DA_REFEICAO[refeicao.tipo] : null;
+  if (!afetados) return atributos;
+  const resultado = { ...atributos };
+  for (const a of afetados) resultado[a] = aumentarPercentual(atributos[a], refeicao.valor);
+  return resultado;
+}
+
+function recursoInicial(classe, manaMax, refeicao) {
+  const extra = refeicao?.tipo === "recursoInicial" ? refeicao.valor : 0;
+  if (classe.recurso === "vigor") return { tipo: "vigor", atual: Math.min(VIGOR.max, VIGOR.inicial + extra), max: VIGOR.max };
+  return { tipo: "mana", atual: manaMax + extra, max: manaMax + extra };
+}
+
+function criarCombatenteHeroi(heroi, posicao, equipamentos, vidaInicial, refeicao) {
   const classe = classesHeroi[heroi.classeId];
-  const { manaMax, ...atributos } = calcularAtributosHeroi(heroi, equipamentos);
+  const { manaMax, ...base } = calcularAtributosHeroi(heroi, equipamentos);
+  const atributos = atributosComRefeicao(base, refeicao);
   const arma = heroi.equipamento.arma ? equipamentos[heroi.equipamento.arma] : null;
   return {
     id: `h${posicao}`,
@@ -75,10 +93,7 @@ function criarCombatenteHeroi(heroi, posicao, equipamentos, vidaInicial) {
     atributos,
     hpMax: atributos.vida,
     hpAtual: vidaInicial === undefined ? atributos.vida : Math.max(0, Math.min(atributos.vida, vidaInicial)),
-    recurso:
-      classe.recurso === "vigor"
-        ? { tipo: "vigor", atual: VIGOR.inicial, max: VIGOR.max }
-        : { tipo: "mana", atual: manaMax, max: manaMax },
+    recurso: recursoInicial(classe, manaMax, refeicao),
     golpes: [...heroi.golpesEquipados],
     golpeBasico: classe.golpeBasico,
     elementoBasico: arma ? elementoPorArma[arma.tipoArma] : ELEMENTO_SEM_ARMA,
@@ -128,11 +143,12 @@ export function criarBatalha({
   afinidadesConhecidas = {},
   bonusDrop = [],
   vidaInicial = {},
+  refeicao = null, // { tipo, valor } da refeição ativa
 }) {
   const rng = criarRng(semente);
   const combatentes = {};
   herois.forEach((heroi, i) => {
-    const c = criarCombatenteHeroi(heroi, i, equipamentos, vidaInicial[heroi.id]);
+    const c = criarCombatenteHeroi(heroi, i, equipamentos, vidaInicial[heroi.id], refeicao);
     combatentes[c.id] = c;
   });
   listaInimigos.forEach((inimigo, i) => {

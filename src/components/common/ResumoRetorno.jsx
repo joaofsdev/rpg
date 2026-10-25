@@ -11,7 +11,8 @@ export default function ResumoRetorno() {
   const acoes = useAcoes();
   const agora = useAgoraDoJogo(save);
   const { concluidas, emAndamento } = resumoDoRetorno(save, agora);
-  const nome = (heroiId) => save.herois[heroiId]?.nome ?? "Herói";
+  // A cozinha não tem herói: só a descrição da atividade
+  const quem = (a) => (a.heroiId ? `${save.herois[a.heroiId]?.nome ?? "Herói"}, ` : "");
 
   return (
     <Modal
@@ -41,7 +42,8 @@ export default function ResumoRetorno() {
             <ul className="space-y-1 text-sm">
               {prontas.map((a) => (
                 <li key={a.id}>
-                  <span className="text-texto">{nome(a.heroiId)}</span>, {descreverAtividade(a)}.{" "}
+                  <span className="text-texto">{quem(a)}</span>
+                  {descreverAtividade(a)}.{" "}
                   <span className="text-sucesso">{descreverGanho(previaDoGanho(save, a, agora))}</span>
                 </li>
               ))}
@@ -58,7 +60,8 @@ export default function ResumoRetorno() {
           <ul className="space-y-1 text-sm">
             {emAndamento.map(({ atividade, restante }) => (
               <li key={atividade.id}>
-                <span className="text-texto">{nome(atividade.heroiId)}</span>, {descreverAtividade(atividade)}: faltam{" "}
+                <span className="text-texto">{quem(atividade)}</span>
+                {descreverAtividade(atividade)}: faltam{" "}
                 {formatarDuracao(restante)}.
               </li>
             ))}

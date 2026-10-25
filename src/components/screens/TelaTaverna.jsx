@@ -12,6 +12,7 @@ import {
 } from "../../engine/recrutamento";
 import { motivoGrupoTravado } from "../../engine/grupo";
 import Sprite from "../battle/Sprite";
+import Cozinha from "../taverna/Cozinha";
 import Botao from "../common/Botao";
 import { formatarDuracao, useAgoraDoJogo } from "../common/tempo";
 
@@ -90,6 +91,8 @@ export default function TelaTaverna() {
           ))}
         </ul>
       </section>
+
+      <Cozinha save={save} agora={agora} acoes={acoes} />
     </main>
   );
 }

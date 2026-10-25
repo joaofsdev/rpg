@@ -349,3 +349,39 @@ describe("expedições", () => {
     expect(reducer(state, { type: "INICIAR_EXPEDICAO", heroiId: reservaId, zonaId: "minas", minutos: 60, agora: 1, semente: 1 }).aviso).toBe("Zona bloqueada");
   });
 });
+
+describe("cozinha", () => {
+  const MINUTO = 60 * 1000;
+
+  function comIngredientes() {
+    const state = jogoNovo();
+    const itens = { ...state.save.inventario.itens, erva_da_nevoa: 6 };
+    return { ...state, save: { ...state.save, inventario: { ...state.save.inventario, itens } } };
+  }
+
+  it("prepara, mostra o resumo ao voltar depois de 40 min e coleta as 3 porções", () => {
+    let state = reducer(comIngredientes(), { type: "PREPARAR_RECEITA", receitaId: "ensopado_do_coveiro", porcoes: 3, agora: 1000, semente: 2 });
+    expect(state.save.inventario.itens.erva_da_nevoa).toBeUndefined();
+    state = reducer(state, { type: "SAVE_ABERTO", slot: 0, save: state.save, agora: 1000 + 40 * MINUTO });
+    expect(state.retorno).toEqual({ tempoFora: 40 * MINUTO });
+    state = reducer(state, { type: "COLETAR_TUDO", agora: 1000 + 40 * MINUTO });
+    expect(state.save.inventario.itens.ensopado_do_coveiro).toBe(3);
+    expect(state.aviso).toBe("Ensopado do Coveiro: 3 porções prontas.");
+  });
+
+  it("comer ativa a refeição e a próxima batalha começa com a vida máxima 10% maior", () => {
+    let state = comIngredientes();
+    state = { ...state, save: { ...state.save, inventario: { ...state.save.inventario, itens: { ensopado_do_coveiro: 1 } } } };
+    const semRefeicao = reducer(state, { type: "INICIAR_ENCONTRO", zonaId: "cemiterio", semente: 3 });
+    state = reducer(state, { type: "COMER", itemId: "ensopado_do_coveiro" });
+    expect(state.save.refeicaoAtiva).toEqual({ itemId: "ensopado_do_coveiro", encontrosRestantes: 5 });
+    const comRefeicao = reducer(state, { type: "INICIAR_ENCONTRO", zonaId: "cemiterio", semente: 3 });
+    const vida = (s) => s.batalhaUi.inicial.combatentes.h0.hpMax;
+    expect(vida(comRefeicao)).toBe(Math.floor(Math.round(vida(semRefeicao) * 1.1 * 1e6) / 1e6));
+    expect(reducer(comRefeicao, { type: "COMER", itemId: "ensopado_do_coveiro" }).aviso).toBeTruthy();
+  });
+
+  it("recusa comprar receita quando não há nenhuma à venda", () => {
+    expect(reducer(jogoNovo(), { type: "COMPRAR_RECEITA", agora: 1 }).aviso).toBe("Não há receita à venda esta semana.");
+  });
+});

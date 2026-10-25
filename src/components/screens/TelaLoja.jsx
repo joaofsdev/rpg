@@ -4,18 +4,57 @@ import { itens } from "../../data/itens";
 import { iconesItens } from "../../data/sprites";
 import { CONSUMIVEIS_A_VENDA } from "../../data/loja";
 import { ATRIBUTOS } from "../../data/constants";
-import { NOMES_ATRIBUTO } from "../../data/textos";
+import { NOMES_ATRIBUTO, descreverEfeitoRefeicao } from "../../data/textos";
 import { tempoAteRenovar, custoRenovar } from "../../engine/loja";
+import { receitaDaSemana, precoDaReceita } from "../../engine/cozinha";
+import { DURACAO_ROTACAO_RECEITA_MS } from "../../data/receitas";
 import { podeEquipar } from "../../engine/itens";
 import { classeRaridade } from "../common/cores";
 import { tipoDoEquipamento } from "../common/descricoes";
 import Botao from "../common/Botao";
-import { formatarDuracao, useAgora } from "../common/tempo";
+import { formatarDuracao, useAgoraDoJogo } from "../common/tempo";
+
+// Uma receita por semana, entre as de zonas desbloqueadas que ainda não foram aprendidas
+function ReceitaDaSemana({ save, agora, acoes }) {
+  const receita = receitaDaSemana(save, agora);
+  const proxima = DURACAO_ROTACAO_RECEITA_MS - (agora % DURACAO_ROTACAO_RECEITA_MS);
+  return (
+    <section className="painel mt-4 p-4" aria-labelledby="titulo-receita">
+      <div className="mb-2 flex flex-wrap items-baseline gap-x-3">
+        <h2 id="titulo-receita" className="titulo text-lg">
+          Receita da semana
+        </h2>
+        <span className="text-sm text-texto-2">Outra receita em {formatarDuracao(proxima)}.</span>
+      </div>
+      {receita ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="min-w-48 flex-1">
+            <span className="titulo block">{receita.nome}</span>
+            <span className="text-sm text-sucesso">
+              {descreverEfeitoRefeicao(receita.efeito)} por {receita.duracaoEncontros} encontros.
+            </span>
+            <span className="block text-sm text-texto-2">
+              Ingredientes: {receita.ingredientes.map(({ itemId, qtd }) => `${qtd} ${itens[itemId].nome}`).join(", ")}.
+            </span>
+          </span>
+          <span className="text-destaque-claro">{precoDaReceita(receita)} ouro</span>
+          <Botao variante="primario" disabled={save.ouro < precoDaReceita(receita)} onClick={acoes.comprarReceita}>
+            Aprender
+          </Botao>
+        </div>
+      ) : (
+        <p className="text-sm text-texto-2">
+          Nenhuma receita nova por enquanto. Novas aparecem conforme as zonas são desbloqueadas.
+        </p>
+      )}
+    </section>
+  );
+}
 
 export default function TelaLoja() {
   const { save } = useEstado();
   const acoes = useAcoes();
-  const agora = useAgora(30000);
+  const agora = useAgoraDoJogo(save);
   const herois = heroisDoGrupo(save);
   const loja = save.loja;
   const custo = custoRenovar(save);
@@ -73,6 +112,8 @@ export default function TelaLoja() {
           })}
         </ul>
       </section>
+
+      <ReceitaDaSemana save={save} agora={agora} acoes={acoes} />
 
       <section className="painel mt-4 p-4" aria-labelledby="titulo-consumiveis">
         <h2 id="titulo-consumiveis" className="titulo mb-3 text-lg">

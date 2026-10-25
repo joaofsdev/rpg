@@ -1,6 +1,7 @@
-// Itens empilháveis: consumíveis, materiais e ingredientes (SPEC.md §3.11 e §3.12)
+// Itens empilháveis: consumíveis, materiais, ingredientes e refeições (SPEC.md §3.7, §3.11 e §3.12)
 
 import { materiais } from "./materiais";
+import { refeicoes } from "./refeicoes";
 
 const itensBase = {
   // ---------- Consumíveis ----------
@@ -90,4 +91,4 @@ const itensBase = {
   },
 };
 
-export const itens = { ...itensBase, ...materiais };
+export const itens = { ...itensBase, ...materiais, ...refeicoes };

@@ -11,6 +11,7 @@ import { xpParaProximoNivel } from "../../engine/progressao";
 import { atividadeDoHeroi, atividadeConcluida, tempoRestante } from "../../engine/atividades";
 import { motivoNaoEntraNoGrupo, motivoNaoSaiDoGrupo, motivoNaoDispensa } from "../../engine/grupo";
 import { classeRaridade, corRecurso } from "../common/cores";
+import { nomeDoEquipamento } from "../common/descricoes";
 import BarraValor from "../common/BarraValor";
 import Botao from "../common/Botao";
 import Sprite from "../battle/Sprite";
@@ -109,7 +110,7 @@ function Equipamento({ save, heroi, acoes }) {
               <span className="w-12 text-texto-3">{NOMES_SLOT[slot]}</span>
               {item ? (
                 <>
-                  <span className={`flex-1 truncate ${classeRaridade(item.raridade)}`}>{item.nome}</span>
+                  <span className={`flex-1 truncate ${classeRaridade(item.raridade)}`}>{nomeDoEquipamento(item)}</span>
                   <button
                     className="botao botao-discreto min-h-7 px-2"
                     disabled={travado}

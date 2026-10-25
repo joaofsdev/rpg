@@ -11,6 +11,7 @@ import {
   lerConfig,
 } from "../save/armazenamento";
 import { exportarSave, importarSave } from "../save/exportar";
+import { TEMA_PADRAO, TEMA_PADRAO_CLARO } from "../data/temas";
 
 function novaSemente() {
   return crypto.getRandomValues(new Uint32Array(1))[0];
@@ -31,7 +32,8 @@ export function criarAcoes(dispatch, storage) {
 
   return {
     iniciar() {
-      const config = lerConfig(storage);
+      const prefereClaro = window.matchMedia?.("(prefers-color-scheme: light)").matches;
+      const config = lerConfig(storage, { temaPadrao: prefereClaro ? TEMA_PADRAO_CLARO : TEMA_PADRAO });
       const migracao = migrarLegado(storage, { agora: Date.now(), rng: criarRng(novaSemente()) });
       dispatch({
         type: "INICIADO",
@@ -206,6 +208,26 @@ export function criarAcoes(dispatch, storage) {
 
     iniciarExpedicao(heroiId, zonaId, minutos) {
       dispatch({ type: "INICIAR_EXPEDICAO", heroiId, zonaId, minutos, agora: Date.now(), semente: novaSemente() });
+    },
+
+    prepararReceita(receitaId, porcoes) {
+      dispatch({ type: "PREPARAR_RECEITA", receitaId, porcoes, agora: Date.now(), semente: novaSemente() });
+    },
+
+    comer(itemId) {
+      dispatch({ type: "COMER", itemId });
+    },
+
+    comprarReceita() {
+      dispatch({ type: "COMPRAR_RECEITA", agora: Date.now() });
+    },
+
+    forjar(zonaId, slot, tipo) {
+      dispatch({ type: "FORJAR", zonaId, slot, tipo, semente: novaSemente() });
+    },
+
+    aprimorar(equipamentoId) {
+      dispatch({ type: "APRIMORAR", equipamentoId });
     },
 
     colocarNoGrupo(heroiId) {

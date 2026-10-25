@@ -3,6 +3,7 @@ import { gerarId } from "../engine/rng";
 import { criarHeroi, criarCompanheiro, adicionarHeroi } from "../engine/herois";
 import { conjuntoComum } from "../engine/itens";
 import { criarSaveVazio } from "./formato";
+import { registrarNaColecao } from "../engine/colecao";
 
 export function adicionarCompanheiro(save, rng, { excluirClasseId, nivel }) {
   const { heroi, equipamentos } = criarCompanheiro(rng, {
@@ -18,7 +19,7 @@ export function adicionarConsumiveisIniciais(save) {
   for (const [itemId, qtd] of Object.entries(CONSUMIVEIS_INICIAIS)) {
     itens[itemId] = (itens[itemId] || 0) + qtd;
   }
-  return { ...save, inventario: { ...save.inventario, itens } };
+  return registrarNaColecao({ ...save, inventario: { ...save.inventario, itens } }, { itens: CONSUMIVEIS_INICIAIS });
 }
 
 // Novo jogo: herói escolhido + companheiro de outra classe, ambos com um conjunto Comum,

@@ -3,6 +3,7 @@ import { reducer, criarEstadoInicial } from "./reducer";
 import { criarAcoes } from "./criarAcoes";
 import { EstadoContext, AcoesContext } from "./contextos";
 import { gravarSlot, gravarConfig } from "../save/armazenamento";
+import { buscarTema, variaveisDoTema } from "../data/temas";
 
 const ATRASO_GRAVACAO_MS = 300;
 const INTERVALO_RELOGIO_MS = 30000;
@@ -58,6 +59,14 @@ export default function GameProvider({ children }) {
       document.removeEventListener("visibilitychange", aoMudarVisibilidade);
     };
   }, [slotAberto, acoes]);
+
+  // Tema de cor (SPEC.md §7.5): as variáveis do tema escolhido valem para a página toda
+  useEffect(() => {
+    const raiz = document.documentElement;
+    for (const [variavel, cor] of Object.entries(variaveisDoTema(state.config.tema))) raiz.style.setProperty(variavel, cor);
+    raiz.style.colorScheme = buscarTema(state.config.tema).claro ? "light" : "dark";
+    raiz.dataset.tema = buscarTema(state.config.tema).id;
+  }, [state.config.tema]);
 
   useEffect(() => {
     if (state.tela === "carregando") return;

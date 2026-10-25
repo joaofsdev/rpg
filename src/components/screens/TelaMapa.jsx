@@ -5,6 +5,8 @@ import { buscarZona } from "../../data/zonas";
 import { inimigos } from "../../data/inimigos";
 import { spritesInimigos, spritesHerois } from "../../data/sprites";
 import { ANDARES_MASMORRA } from "../../data/constants";
+import { receitaDoPrato } from "../../data/receitas";
+import { descreverEfeito } from "../../data/textos";
 import Sprite from "../battle/Sprite";
 import BarraValor from "../common/BarraValor";
 import Botao from "../common/Botao";
@@ -129,6 +131,7 @@ export default function TelaMapa() {
   const [selecionada, setSelecionada] = useState(primeiraJogavel.zona.id);
   const atual = zonas.find((s) => s.zona.id === selecionada);
   const herois = heroisDoGrupo(save);
+  const refeicao = save.refeicaoAtiva ? receitaDoPrato(save.refeicaoAtiva.itemId) : null;
 
   return (
     <main className="mx-auto max-w-5xl px-3 py-4 pb-24 sm:pb-6">
@@ -157,6 +160,13 @@ export default function TelaMapa() {
             </div>
           </div>
         ))}
+        {refeicao && (
+          <p className="text-sm text-texto-2">
+            Refeição: <span className="text-texto">{refeicao.nome}</span> ·{" "}
+            <span className="text-sucesso">{descreverEfeito(refeicao.efeito)}</span> · mais{" "}
+            {save.refeicaoAtiva.encontrosRestantes} {save.refeicaoAtiva.encontrosRestantes === 1 ? "encontro" : "encontros"}
+          </p>
+        )}
         <span className="ml-auto text-destaque-claro sm:hidden">{save.ouro} ouro</span>
       </section>
 

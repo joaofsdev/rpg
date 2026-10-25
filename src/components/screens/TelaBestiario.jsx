@@ -5,7 +5,7 @@ import { inimigos } from "../../data/inimigos";
 import { itens } from "../../data/itens";
 import { spritesInimigos } from "../../data/sprites";
 import { ELEMENTOS } from "../../data/constants";
-import { NOMES_ELEMENTO, CORES_ELEMENTO } from "../../data/textos";
+import Elemento from "../common/Elemento";
 import { afinidadeContra } from "../../engine/dano";
 import {
   DERROTAS_PARA_REVELAR_AFINIDADES,
@@ -48,13 +48,13 @@ function Detalhe({ id, entrada }) {
       </div>
 
       <h3 className="titulo mt-4 mb-1 text-sm">Reação a elementos</h3>
-      <ul className="grid grid-cols-2 gap-x-4 text-sm sm:grid-cols-4">
+      <ul className="grid grid-cols-2 gap-x-4 text-sm">
         {ELEMENTOS.map((elemento) => {
           const revelado = entrada.afinidadesReveladas.includes(elemento);
           const afinidade = afinidadeContra(dados, elemento);
           return (
             <li key={elemento} className="flex justify-between gap-2">
-              <span style={{ color: CORES_ELEMENTO[elemento] }}>{NOMES_ELEMENTO[elemento]}</span>
+              <Elemento elemento={elemento} />
               <span className={revelado ? COR_AFINIDADE[afinidade] : "text-texto-3"}>
                 {revelado ? TEXTO_AFINIDADE[afinidade] : "?"}
               </span>

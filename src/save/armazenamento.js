@@ -3,6 +3,7 @@
 
 import { MAX_SLOTS } from "../data/constants";
 import { classesHeroi } from "../data/classesHeroi";
+import { temas, TEMA_PADRAO } from "../data/temas";
 import { carregarSave } from "./migracoes";
 import { CHAVE_LEGADO, listarContasV1, migrarContaV1 } from "./migracaoV1";
 
@@ -117,11 +118,21 @@ export function migrarLegado(storage, { agora, rng, usernames } = {}) {
 }
 
 // Configurações do dispositivo (fora do save)
-export const CONFIG_PADRAO = { velocidadeAnimacao: 1, reduzirMovimento: false, tema: "taverna" };
+// Volumes de 0 a 1 (SPEC.md §5.4)
+export const CONFIG_PADRAO = {
+  velocidadeAnimacao: 1,
+  reduzirMovimento: false,
+  tema: TEMA_PADRAO,
+  volumeEfeitos: 0.6,
+  volumeMusica: 0.4,
+};
 
-export function lerConfig(storage) {
-  const config = lerJson(storage, CHAVE_CONFIG);
-  return { ...CONFIG_PADRAO, ...(config && typeof config === "object" ? config : {}) };
+// temaPadrao: tema do primeiro acesso (Pergaminho quando o sistema prefere tema claro, §7.5).
+// Um tema gravado que não existe mais volta para o padrão.
+export function lerConfig(storage, { temaPadrao = TEMA_PADRAO } = {}) {
+  const gravada = lerJson(storage, CHAVE_CONFIG);
+  const config = { ...CONFIG_PADRAO, tema: temaPadrao, ...(gravada && typeof gravada === "object" ? gravada : {}) };
+  return temas[config.tema] ? config : { ...config, tema: TEMA_PADRAO };
 }
 
 export function gravarConfig(storage, config) {

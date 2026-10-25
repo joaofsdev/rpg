@@ -3,7 +3,7 @@
 > Fonte da verdade do design. Mudanças de design são propostas aqui **antes** de qualquer código.
 > Valores numéricos são iniciais e serão calibrados com testes de simulação do motor (§4.9).
 
-**Status:** Fase 8 concluída — aguardando aprovação.
+**Status:** Fase 11 concluída — aguardando aprovação.
 
 ---
 
@@ -325,14 +325,36 @@ de recrutas (Fase 7).
 - Comer fora de batalha ativa a refeição para o grupo. **1 refeição ativa por vez**; comer outra
   substitui a atual (com confirmação).
 - Duração em **encontros**, não em tempo: o bônus não expira enquanto o jogador está fora.
+- Detalhes da Fase 9:
+  - Os ingredientes saem do inventário ao começar. Cancelar ("Tirar do fogo") entrega as porções
+    prontas e **devolve os ingredientes** das que não ficaram prontas. As porções entram pela
+    entrada única do inventário (pilha de 99; o excedente é vendido, §4.8).
+  - Não dá para comer com uma batalha salva em andamento (o efeito é aplicado ao criar a batalha).
+    Entre andares de masmorra pode.
+  - Efeitos: `vidaMax`, `ataque` (força e magia), `defesa` (defesa e resistência) multiplicam os
+    atributos no início da batalha; `recursoInicial` soma ao vigor inicial (até 100) ou, nas classes
+    de mana, ao máximo e ao atual; `xp` e `ouro` aumentam as recompensas da batalha.
+  - O contador desce em todo resultado (vitória, derrota ou fuga), inclusive nos andares de masmorra.
+  - As 3 receitas iniciais usam ingredientes das zonas 1 a 3 (os exemplos antigos pediam Raiz Pálida,
+    Trigo e Mel, das zonas 4 a 8). As outras 7 (uma por zona, da 4 à 10): o chefe da zona ensina ao
+    ser vencido, se ainda não for conhecida; a loja vende uma por semana (§3.11).
+  - `save.receitasConhecidas` guarda só as aprendidas; as iniciais vêm dos dados (sem migração).
+  - A tela fica na Taverna, abaixo do mural; o mapa mostra a refeição ativa e os encontros restantes.
 
-Exemplos de receita:
+Receitas (`src/data/receitas.js`):
 
-| Receita | Ingredientes | Tempo/porção | Efeito | Duração |
-|---|---|---|---|---|
-| Ensopado do Coveiro | 2 Erva da Névoa, 1 Raiz Pálida | 10 min | Vida máx. +10% | 5 encontros |
-| Pão de Mel da Estrada | 1 Trigo, 1 Mel Selvagem | 15 min | XP +15% | 5 encontros |
-| Caldo de Cogumelo Azul | 2 Cogumelo Azul | 20 min | Recurso inicial +20 | 6 encontros |
+| Receita | Ingredientes (por porção) | Tempo/porção | Efeito | Duração | Como aprender |
+|---|---|---|---|---|---|
+| Ensopado do Coveiro | 2 Erva da Névoa | 10 min | Vida máx. +10% | 5 encontros | inicial |
+| Caldo de Cogumelo | 2 Cogumelo da Caverna | 20 min | Recurso inicial +20 | 6 encontros | inicial |
+| Sopa de Alga | 1 Alga Salgada, 1 Erva da Névoa | 15 min | XP +15% | 5 encontros | inicial |
+| Ensopado de Raiz Pálida | 2 Raiz Pálida, 1 Erva da Névoa | 20 min | Defesa e resistência +10% | 6 encontros | chefe da zona 4 |
+| Caldo de Cogumelo Azul | 2 Cogumelo Azul | 20 min | Força e magia +10% | 6 encontros | chefe da zona 5 |
+| Pão de Trigo | 2 Trigo | 25 min | Vida máx. +15% | 6 encontros | chefe da zona 6 |
+| Ensopado Picante | 1 Pimenta de Fogo, 1 Trigo | 25 min | Força e magia +15% | 6 encontros | chefe da zona 7 |
+| Pão de Mel da Estrada | 1 Trigo, 1 Mel Selvagem | 30 min | XP +25% | 6 encontros | chefe da zona 8 |
+| Compota Luminosa | 2 Fruta Luminosa | 30 min | Ouro +25% | 8 encontros | chefe da zona 9 |
+| Banquete do Vazio | 1 Flor do Vazio, 1 Fruta Luminosa, 1 Mel Selvagem | 40 min | Recurso inicial +40 | 8 encontros | chefe da zona 10 |
 
 **CA.**
 - Preparar 3 porções de uma receita de 10 min, fechar o jogo e voltar após 40 min mostra as 3
@@ -391,6 +413,14 @@ derrotas, fraquezas/resistências descobertas e drops vistos. Marcos:
 
 **Coleção:** catálogo de tipos de equipamento (slot + tipo de arma/peso) × raridade já obtidos,
 consumíveis, materiais e relíquias. Mostra percentual de conclusão.
+- Detalhes da Fase 10: equipamentos contam por chave `slot:tipo` (15 armas + 4 slots de armadura × 4
+  pesos = 31 chaves) × 5 raridades = 155 entradas; itens contam todos os empilháveis (consumíveis,
+  materiais, ingredientes e refeições, 45); relíquias, 10. O percentual é a soma das três partes.
+- "Obtido" fica registrado mesmo depois de vender: todo item que entra no save passa pelo registro
+  (entrada única do inventário, compras da loja, forja, conjuntos de heróis novos e recrutas,
+  consumíveis iniciais), inclusive o que foi vendido na hora por falta de espaço.
+- Tela em **Mais → Coleção**: relíquias (nome e efeito, ou "???" com o chefe que a guarda),
+  tabela de equipamentos por tipo × raridade e itens por categoria.
 
 **CA.**
 - Acertar um Fantasma Menor com *Acorde Letal* (luz) revela "luz: fraco" no bestiário e na prévia
@@ -402,7 +432,9 @@ consumíveis, materiais e relíquias. Mostra percentual de conclusão.
 **Loja (por slot, não global):**
 - 5 equipamentos rotativos renovados a cada 24 h (timestamp); renovar antes custa
   `50 × nivelMedioGrupo` ouro.
-- Consumíveis fixos sempre à venda (§3.12). Receitas de cozinha à venda em rotação semanal.
+- Consumíveis fixos sempre à venda (§3.12). Receitas de cozinha à venda em rotação semanal:
+  uma por semana entre as de zonas desbloqueadas ainda não aprendidas, por `150 × número da zona`
+  ouro. A rotação é calculada pelo relógio (semana = `floor(agora / 7 dias)`), sem nada no save.
 - Vender: 40% do preço de compra (fórmula atual mantida).
 
 **Materiais:** 2–3 por zona (ex.: Cemitério — Osso Antigo, Pano Mortuário). Empilham até 999.
@@ -413,9 +445,42 @@ Têm preço de referência `10 × número da zona` (venda a 40%), usado quando a
   zona; raridade sorteada com piso Incomum.
 - **Aprimorar:** +1 até +5; cada nível soma +8% aos bônus do item; custo crescente em materiais e
   ouro; **nunca falha**.
+- Detalhes da Fase 10 (tela em **Mais → Ferraria**):
+  - Os materiais de cada zona são os 2 itens de categoria "material" da tabela de expedição: o
+    **principal** (maior peso) e o **secundário**. Ingredientes não entram na ferraria.
+  - Forjar não tem receita por item: qualquer slot e tipo de qualquer zona desbloqueada. Custo: arma
+    8 do principal + 4 do secundário; armadura 6 + 3; ouro `15 × nível máximo da zona`. O item sai
+    exatamente no nível máximo da zona. Com o inventário cheio a forja é recusada (ação do jogador).
+  - Aprimorar para +N: `2N` do principal + `N` do secundário da zona do nível do item (itens acima
+    do nível 100 usam a última zona) e `3 × nível do item × N` ouro (calibrado em §4.9). Itens
+    equipados também podem ser aprimorados, exceto com o dono numa batalha salva. O nome passa a
+    mostrar "+N".
+  - Regra do bônus: cada nível soma 8% a cada bônus diferente de zero, com **no mínimo +1 por
+    nível** (`bônus + max(N, floor(bônus × 8% × N))`). Sem o mínimo, itens de bônus pequenos não
+    mudavam (1 × 1,24 = 1) e o CA abaixo falhava; bônus grandes continuam com os 8% exatos.
 
 **Itens raros:** **Relíquias** — 1 por chefe de zona, efeito único (ex.: "Coroa do Guardião:
 dano de luz +10%"); drop garantido na primeira vitória sobre o chefe, 5% nas seguintes.
+- Detalhes da Fase 10: relíquias não se equipam nem ocupam inventário; ficam em
+  `colecao.reliquias` e **ter a relíquia já ativa o efeito para o grupo inteiro** em toda batalha
+  (somado aos da refeição; efeitos do mesmo tipo se somam). Os 5% das revanches só valem enquanto o
+  jogador não tiver a relíquia (não há cópias). Só o chefe da zona entrega a relíquia (o chefe da
+  masmorra, não). O sorteio usa o estado final do RNG da batalha, então é reproduzível.
+- Saves de antes da Fase 10 recebem, na migração, as relíquias dos chefes já vencidos (a primeira
+  vitória deles aconteceu antes de as relíquias existirem; §5.5).
+
+| Relíquia | Chefe | Efeito |
+|---|---|---|
+| Coroa do Guardião | Cemitério Antigo | Dano de luz +10% |
+| Coração de Pedra | Minas Profundas | Vida máxima +5% |
+| Escama do Leviatã | Costa Submersa | Dano de gelo +10% |
+| Cetro dos Mortos | Planície dos Mortos | Dano de sombra +10% |
+| Olho do Devorador | Abismo das Sombras | XP +10% |
+| Estandarte do General | Terras da Fortaleza | Força e magia +5% |
+| Brasa Eterna | Montanha Vulcânica | Dano de fogo +10% |
+| Chifre do Príncipe | Deserto Infernal | Ouro +10% |
+| Pena do Arauto | Floresta Arcana | Dano de raio +10% |
+| Fragmento Primordial | Campos do Caos | Defesa e resistência +5% |
 
 **CA.**
 - Dois slots de save diferentes têm lojas diferentes.
@@ -470,7 +535,7 @@ afinidade: fraco 1,5 · neutro 1 · resiste 0,5 · imune 0
 critico:  1,5 se crítico, senão 1
 variacao: uniforme em [0,90; 1,10]
 modificadores (multiplicam): Defender 0,5 · Proteção 0,7 · Fraqueza (atacante) 0,75 ·
-                             passivos de classe · relíquias
+                             passivos de classe · relíquias (1 + bônus do elemento do golpe)
 ```
 
 Ex.: Mago nv 5 (magia 32) usa Bola de Fogo (28) em Esqueleto Errante nv 5 (resistência 5):
@@ -557,7 +622,8 @@ compatibilidade: 60% dos equipamentos sorteados são de tipo usável por algum h
 materiais/ingredientes/consumíveis: tabela de drops do inimigo (chance individual por item)
 entrada de itens (engine/inventario.guardarNoInventario, único caminho):
   equipamento ocupa 1 dos 50 espaços livres (equipados não contam); empilhável respeita a pilha
-  (empilhaAte: 99 consumíveis, 999 materiais/ingredientes) e não ocupa espaço dos 50.
+  (empilhaAte: 99 consumíveis, 999 materiais/ingredientes) e não ocupa espaço dos 50 (decisão
+  definitiva de 25/10/2026: os 50 espaços são só de equipamentos).
   O que não couber é vendido na hora pelo preço de venda (40%) e a tela avisa: resultado da batalha
   (inclusive andares de masmorra), aviso da coleta da expedição. Recruta chega com o conjunto
   equipado, então não ocupa espaço livre. Ações do jogador (comprar, desequipar, dispensar) são
@@ -597,6 +663,11 @@ medidos em "encontros de renda" (custo ÷ renda média por encontro da zona).
 | Ouro das expedições (todas as vagas, 1 por dia) ÷ ouro dos encontros | ≤ 75% | 15% a 68% |
 | 1 treino de 8 h por dia ÷ renda de um dia | 20% a 90% | 30% a 86% |
 | Reserva para todas as vagas (3 de expedição + 2 de treino) | 5 contratações | 5 em todas as sementes |
+| Forjar uma arma na zona (Fase 10) | 2 a 10 encontros de renda | 2,6 a 6,5 |
+| Aprimorar um item do nível máximo da zona de +0 a +5 (Fase 10) | 5 a 25 encontros de renda | ~8 a ~20 |
+
+- Fase 10: com `5 × nível × N` o aprimoramento completo chegava a 29 encontros na zona 1 (a renda
+  mais baixa do jogo). Com 4, ainda 26 em outra zona; ficou `3 × nível × N`.
 
 Histórico da calibração:
 - Fase 7 (só encontros): recrutamento e treino de atributo já estavam nas metas; o treino de golpe
@@ -674,13 +745,19 @@ Zona {
   tabelaExpedicao: [{ itemId, peso }], cenario: spriteId, paleta
 }
 
-ItemBase {            // consumíveis, materiais, ingredientes, relíquias, refeições
-  id, nome, descricao, categoria: 'consumivel' | 'material' | 'ingrediente' | 'reliquia' | 'refeicao',
+ItemBase {            // consumíveis, materiais, ingredientes, refeições
+  id, nome, descricao, categoria: 'consumivel' | 'material' | 'ingrediente' | 'refeicao',
   efeito?, preco? (materiais: referência 10 × zona), empilhaAte, icone
 }
 
+Reliquia {            // src/data/reliquias.js; não é item de inventário
+  id, nome, zonaId (o chefe dessa zona a guarda),
+  efeito: { tipo: 'danoElemento' | 'vidaMax' | 'ataque' | 'defesa' | 'xp' | 'ouro', valor, elemento? }
+}
+
 Receita { id, nome, ingredientes: [{ itemId, qtd }], minutos, resultado: itemId,
-          efeito: { tipo, valor }, duracaoEncontros }
+          efeito: { tipo: 'vidaMax' | 'ataque' | 'defesa' | 'recursoInicial' | 'xp' | 'ouro', valor },
+          duracaoEncontros, inicial? | zonaId? }   // zonaId: o chefe dessa zona ensina
 ```
 
 ### 5.2 Instâncias (no save)
@@ -743,11 +820,12 @@ localStorage:
   magichill:slot:<n> → Save
   magichill:config   → { tema, velocidadeAnimacao: 1|2|3, volumeEfeitos, volumeMusica,
                           reduzirMovimento }          // por dispositivo, fora do save
+                      // volumes de 0 a 1 (padrão 0,6 e 0,4); tema: taverna | pergaminho | bosque | noite
 
 ResumoSlot { nome, criadoEm, atualizadoEm, nivelMaisAlto, classePrincipal, tempoJogado }
 
 Save {
-  versao: 4, criadoEm, atualizadoEm, ultimaVisita (maior instante já visto), tempoJogado,
+  versao: 5, criadoEm, atualizadoEm, ultimaVisita (maior instante já visto), tempoJogado,
   ouro,
   herois: { [heroiId]: Heroi }, grupo: [heroiId ×≤4],
   inventario: { equipamentos: { [id]: Equipamento } (máx. 50),
@@ -762,8 +840,8 @@ Save {
   loja: { itens: [Equipamento & { preco }], vendidos: [bool], renovadaEm },
   recrutas: { opcoes: [{ classeId, nome, contratado }], renovadaEm } | null,
   bestiario: { [inimigoId]: { visto, derrotas, afinidadesReveladas: [elemento], dropsVistos: [] } },
-  colecao: { equipamentos: { [chave]: [raridade] }, itens: [itemId], reliquias: [itemId] },
-  receitasConhecidas: [receitaId],
+  colecao: { equipamentos: { ['slot:tipo']: [raridade] }, itens: [itemId], reliquias: [reliquiaId] },  // v5
+  receitasConhecidas: [receitaId],                  // só as aprendidas; as iniciais vêm dos dados
   estatisticas: { encontrosVencidos, derrotas, fugas, danoCausado, ... }
 }
 ```
@@ -794,6 +872,9 @@ Fonte: chave `rpg_users` (§ formato v1 documentado na Fase 0).
    - **v3 → v4** (Fase 7): remove `vagas` (agora calculadas pelo progresso) e `heroi.atividade`
      (lida de `save.atividades`); normaliza `atividades` para `{}` e `recrutas` para `null`
      (nenhum save v3 tinha atividades nem mural).
+   - **v4 → v5** (Fase 10): a coleção passa a ser registrada. A migração a preenche com os
+     equipamentos (equipados ou não) e os itens do inventário e entrega as relíquias dos chefes já
+     vencidos. A migração das contas antigas (v1) aplica a mesma regra das relíquias.
 
 **CA.**
 - Um `rpg_users` com 2 contas (Cavaleiro nv 14 com 6 itens; Mago nv 3 sem itens) vira 2 slots com
@@ -820,8 +901,8 @@ components/ (UI)  ──dispara ações──▶  state/ (store)  ──chama─
   `status`, `turnos`, `ia`, `combate`, `progressao`, `itens`, `loja`, `masmorra`, `relogio`
   (relógio que não volta e prazos), `atividades` (base de tempo), `treino`, `coleta` (coletar,
   cancelar e resumo de retorno; cada tipo de atividade registra a função que a encerra),
-  `expedicoes`, `grupo`,
-  `recrutamento`.
+  `expedicoes`, `cozinha`, `grupo`, `recrutamento`, `ferraria`, `reliquias`, `colecao`, `efeitos`
+  (soma dos efeitos de refeição e relíquias que o combate recebe como lista).
 - **data/**: conteúdo (§5.1) e `constants.js`. Validação de integridade dos dados por teste
   (ids referenciados existem, pesos > 0).
 - **state/**: store global, criadores de ação (que injetam `agora`), seletores.
@@ -1012,7 +1093,9 @@ Configurações, Slots).
 
 ### 7.5 Paleta e temas
 
-Tokens no `@theme` com quatro temas; o atual (preto/ouro saturado) é suavizado.
+Fonte única: `src/data/temas.js`. O `@theme` de `src/index.css` repete o tema Taverna (o Tailwind
+precisa dele para gerar as classes) e um teste confere que os dois batem. Os outros temas trocam as
+variáveis `--color-*` na raiz da página em tempo de execução.
 
 | Token | Taverna (padrão, escuro) | Pergaminho (claro) | Bosque (escuro) | Noite (escuro) |
 |---|---|---|---|---|
@@ -1020,19 +1103,36 @@ Tokens no `@theme` com quatro temas; o atual (preto/ouro saturado) é suavizado.
 | superfície | #26201a | #fbf5e8 | #1b231e | #1b2033 |
 | elevado | #2f281f | #eadfc8 | #232d26 | #232a40 |
 | borda | #3d3428 | #d6c6a6 | #2e3a31 | #2f3752 |
+| borda forte | #5c4a35 | #b9a47e | #46574a | #46507a |
 | texto | #ece3d3 | #3b2f22 | #e3eadf | #e4e6f0 |
 | texto secundário | #b5a68e | #6b5a45 | #a3b09c | #a2a8c0 |
-| destaque | #d9a441 | #9c6b1f | #c9b26b | #c6a8e8 |
-| sucesso | #7fb069 | #4f7a3a | #8cc084 | #7fc4a8 |
-| perigo | #d0675b | #a8473b | #d97a6c | #e08a8a |
-| mana | #6c8fd4 | #3f6e96 | #7fa3d9 | #8fa8f0 |
-| vigor | #d99a4a | #a0651c | #d4a95a | #e0b070 |
+| texto terciário | #9d907b | #715f4a | #8a9884 | #8c92ac |
+| destaque | #d9a441 | #835a1a | #c9b26b | #c6a8e8 |
+| destaque claro | #ecc271 | #875812 | #e0cc8a | #dcc4f5 |
+| texto sobre destaque | #241a0c | #fbf5e8 | #1c1a0c | #1c1430 |
+| sucesso | #7fb069 | #466b33 | #8cc084 | #7fc4a8 |
+| perigo | #d5786d | #a14439 | #d97a6c | #e08a8a |
+| mana | #6f91d5 | #3a658a | #7fa3d9 | #8fa8f0 |
+| vigor | #d99a4a | #885618 | #d4a95a | #e0b070 |
+| informação | #6c9bc4 | #2f6080 | #7fb0c9 | #8fb8e0 |
+
+Raridades (Comum, Incomum, Raro, Épico, Lendário): Taverna `#b0a696 #8cbf73 #7aa6dc #b98fd8 #e3a94f`;
+Pergaminho `#6a6154 #416b2f #2f5f9e #7a4aa8 #8c560f`; Bosque `#b0b4a6 #8cc084 #7fa8dc #b993d8 #e3ac55`;
+Noite `#aab0c4 #8cc49a #8fb0f0 #c49ae8 #e8b060`.
 
 - Primeiro acesso: Pergaminho se o sistema prefere tema claro; senão Taverna. Troca em
-  Configurações, aplicada na hora.
+  Configurações (Mais), aplicada na hora; o tema é do dispositivo, fora do save.
 - Texto deve ter contraste ≥ 4,5:1 com o fundo em todos os temas (CA verificável com ferramenta de
-  contraste).
+  contraste). **Fase 11:** o teste `src/data/temas.test.js` aplica a fórmula da WCAG 2 a **toda cor
+  usada como texto** (texto, secundário, terciário, destaque, sucesso, perigo, mana, vigor,
+  informação e raridades) sobre fundo, superfície e elevado, e ao texto do botão principal sobre o
+  destaque. Os valores originais desta tabela não passavam em vários pares (no Pergaminho, todas as
+  cores de destaque; no Taverna, terciário e perigo); foram ajustados o mínimo (escurecidos no claro,
+  clareados nos escuros) até ≥ 4,5:1.
 - Cores de raridade mantidas, levemente dessaturadas, com rótulo de texto (não só cor).
+- A **arena de batalha** usa sempre as cores do Taverna (a arte do cenário é escura), em qualquer tema.
+- As cores dos **elementos** (`CORES_ELEMENTO`) foram pensadas para fundo escuro: fora da arena elas
+  aparecem só num marcador ◆ decorativo ao lado do nome, que fica na cor de texto do tema.
 
 ### 7.6 Packs candidatos (licenças verificadas em 23/10/2026)
 
@@ -1047,7 +1147,17 @@ Tokens no `@theme` com quatro temas; o atual (preto/ouro saturado) é suavizado.
 | Interface Sounds — Kenney | sons de UI | CC0 | — | https://kenney.nl/assets/interface-sounds |
 | Músicas medievais — RandomMind (OpenGameArt) | cidade/taverna | CC0 | loops | https://opengameart.org/content/medieval-the-old-tower-inn |
 
-- Música de batalha: candidato ainda não definido (pesquisar na Fase 11).
+- Música de batalha: escolhida na Fase 11, **Medieval: Battle — RandomMind** (CC0,
+  https://opengameart.org/content/medieval-battle).
+- **Áudio em uso (Fase 11, detalhes em CREDITS.md):** 12 efeitos de Kenney RPG Audio e Interface
+  Sounds (CC0) em `src/assets/audio/efeitos/`; música da cidade (The Old Tower Inn) e de batalha
+  (Medieval: Battle), ambas de RandomMind (CC0), em `src/assets/audio/musica/`.
+- **Como o som funciona:** música da cidade em todas as telas fora da batalha e de batalha na
+  arena, em loop; efeitos por evento da batalha (golpe de corte/perfuração, impacto, magia, crítico,
+  errou, cura, nocaute, status, item), vitória e derrota no resultado e um clique nos botões. Cada
+  som toca uma vez por passo da animação (golpe em área não empilha). Nada toca antes do primeiro
+  gesto do jogador (regra dos navegadores). Volumes de efeitos e música de 0 a 100% nas
+  Configurações (0 = mudo); padrão 60% e 40%.
 - **Não usar:** assets LPC (CC-BY-SA/GPL — compartilhamento obrigatório, fora das licenças
   permitidas) e packs com licença própria não-CC sem aprovação.
 - Antes de baixar, conferir a licença na página do pack; registrar em `CREDITS.md` junto com o asset.
@@ -1127,17 +1237,17 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
 - [x] Expedições com rolagens, vagas progressivas, cancelar e coletar
 
 ### Fase 9 — Taverna e cozinha
-- [ ] Ingredientes, receitas, preparo por tempo, refeição ativa por encontros
+- [x] Ingredientes, receitas, preparo por tempo, refeição ativa por encontros
 
 ### Fase 10 — Ferraria, relíquias e coleção
-- [ ] Forjar, aprimorar (+1 a +5), relíquias de chefe, tela de coleção
+- [x] Forjar, aprimorar (+1 a +5), relíquias de chefe, tela de coleção
 
 ### Fase 11 — Polimento
-- [ ] 4 temas de cor selecionáveis com contraste verificado
-- [ ] Efeitos sonoros e música com controle de volume
-- [ ] Revisão de responsividade, acessibilidade (teclado, foco, rótulos) e textos
+- [x] 4 temas de cor selecionáveis com contraste verificado
+- [x] Efeitos sonoros e música com controle de volume
+- [x] Revisão de responsividade, acessibilidade (teclado, foco, rótulos) e textos
 
-### Pendências conhecidas (após a Fase 8)
+### Pendências conhecidas (após a Fase 11)
 - A vida dos heróis durante uma masmorra só aparece na tela da masmorra; o mapa não mostra.
 - Chefes exclusivos de masmorra não existem: o chefe da masmorra é o chefe da zona fortalecido
   (decisão da Fase 6, §3.5; ideia registrada em §9).
@@ -1152,10 +1262,21 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
   `primeiro`); recrutas e heróis vindos da reserva entram no fim.
 - Treinar exige tirar o herói do grupo; com o grupo inicial de 2, isso deixa 1 herói lutando até
   contratar alguém. Reavaliar se ficar incômodo.
-- Empilháveis não ocupam os 50 espaços do inventário (só o limite da pilha, 99 ou 999). Se a ideia
-  for "1 espaço por tipo", é uma mudança de modelo e de save ainda não feita.
-- A campanha da economia (§4.9) não inclui consumíveis, loja nem cozinha; os 15 encontros por dia
-  são uma hipótese. Reavaliar quando a cozinha (Fase 9) e a ferraria (Fase 10) gastarem materiais.
+- Relíquias não aparecem na batalha (ícone ou texto); o efeito só é visto na Coleção e no resultado.
+- **Áudio (Fase 11):** as músicas somam 5,5 MB (a de batalha em 320 kbps) e não há codificador no
+  ambiente para reduzir; os efeitos são OGG, que Safari antigo não toca; os efeitos foram escolhidos
+  pelo nome do arquivo no pack e precisam de uma revisão por ouvido.
+- **Balanceamento (prioridade):** simular o consumo de materiais da ferraria (forjar e aprimorar até
+  +5 em cada zona); revisar a fórmula do aprimoramento, cujo mínimo de +1 por nível dá ganhos
+  desproporcionais em bônus pequenos (bônus 1 vira 6 em +5). A fórmula só muda depois de uma
+  alternativa validada que preserve o CA de §3.11.
+- **Melhorias futuras (decididas, não implementadas):** segunda panela comprada com recursos;
+  bônus passivos acumulados (relíquias e refeição) na tela do Grupo; receitas como categoria da
+  Coleção, com percentual e receitas desconhecidas; simulação econômica com cozinha, loja,
+  consumíveis e bônus das refeições.
+- **Decisões definitivas (25/10/2026):** refeições só se comem na Taverna; os 50 espaços do inventário
+  são só de equipamentos (empilháveis seguem o limite da pilha, sem migração); relíquias continuam
+  automáticas e não equipáveis.
 
 ---
 

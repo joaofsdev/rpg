@@ -8,6 +8,7 @@ import { criarHeroi, adicionarHeroi } from "../engine/herois";
 import { xpParaProximoNivel } from "../engine/progressao";
 import { criarSaveVazio } from "./formato";
 import { adicionarCompanheiro, adicionarConsumiveisIniciais } from "./novoJogo";
+import { comReliquiasDosChefesVencidos } from "../engine/reliquias";
 
 export const CHAVE_LEGADO = "rpg_users";
 
@@ -144,7 +145,7 @@ export function migrarContaV1(username, conta, { agora, rng }) {
   });
   save = adicionarConsumiveisIniciais(save);
 
-  return {
+  return comReliquiasDosChefesVencidos({
     ...save,
     ouro: personagem.ouro || 0,
     progresso: converterProgresso(save, personagem),
@@ -153,5 +154,5 @@ export function migrarContaV1(username, conta, { agora, rng }) {
       ...save.estatisticas,
       encontrosVencidos: personagem.batalhasVencidas || 0,
     },
-  };
+  });
 }

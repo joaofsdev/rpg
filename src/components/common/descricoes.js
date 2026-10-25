@@ -2,6 +2,7 @@ import { NOMES_SLOT, NOMES_ARMA, NOMES_PESO, NOMES_ATRIBUTO } from "../../data/t
 import { golpes } from "../../data/golpes";
 import { itens } from "../../data/itens";
 import { buscarZona } from "../../data/zonas";
+import { receitas } from "../../data/receitas";
 import { TAXA_PONTO } from "../../data/constants";
 
 // "espada", "peito, leve"…
@@ -13,10 +14,15 @@ export function tipoDoEquipamento(e) {
 export const CATEGORIAS_ATIVIDADE = [
   { id: "expedicao", nome: "Expedições", tipos: ["expedicao"] },
   { id: "treino", nome: "Treino", tipos: ["treinoAtributo", "treinoGolpe"] },
+  { id: "cozinha", nome: "Cozinha", tipos: ["cozinha"] },
 ];
 
-// "Treino de Força", "Treino de golpe: Lança de Gelo", "Expedição: Cemitério Antigo"
+// "Treino de Força", "Treino de golpe: Lança de Gelo", "Expedição: Cemitério Antigo",
+// "Panela: Ensopado do Coveiro ×3"
 export function descreverAtividade(atividade) {
+  if (atividade.tipo === "cozinha") {
+    return `Panela: ${receitas[atividade.parametros.receitaId].nome} ×${atividade.parametros.porcoes}`;
+  }
   if (atividade.tipo === "expedicao") return `Expedição: ${buscarZona(atividade.parametros.zonaId).nome}`;
   if (atividade.tipo === "treinoGolpe") return `Treino de golpe: ${golpes[atividade.parametros.golpeId].nome}`;
   return `Treino de ${NOMES_ATRIBUTO[atividade.parametros.atributo]}`;
@@ -32,6 +38,10 @@ export function descreverItens(contagem) {
 
 // "2 pontos de Força (+4)", "aprende Lança de Gelo", "5 Osso Antigo… · 40 ouro · 624 XP", "nada ainda"
 export function descreverGanho(ganho) {
+  if (ganho.tipo === "cozinha") {
+    if (ganho.porcoes === 0) return "nada ainda";
+    return `${ganho.porcoes} ${receitas[ganho.receitaId].nome}`;
+  }
   if (ganho.tipo === "expedicao") {
     if (ganho.rolagens === 0) return "nada ainda";
     return `${descreverItens(ganho.itens)} · ${ganho.ouro} ouro · ${ganho.xp} XP`;
@@ -40,4 +50,9 @@ export function descreverGanho(ganho) {
   if (ganho.pontos === 0) return "nada ainda";
   const pontos = ganho.pontos === 1 ? "1 ponto" : `${ganho.pontos} pontos`;
   return `${pontos} de ${NOMES_ATRIBUTO[ganho.atributo]} (+${ganho.pontos * TAXA_PONTO[ganho.atributo]})`;
+}
+
+// "Espada Simples de Ferro +3" (aprimoramento aparece no nome, SPEC.md §3.11)
+export function nomeDoEquipamento(e) {
+  return e.aprimoramento > 0 ? `${e.nome} +${e.aprimoramento}` : e.nome;
 }

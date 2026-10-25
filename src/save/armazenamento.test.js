@@ -9,6 +9,9 @@ import {
   apagarSlot,
   chaveSlot,
   CHAVE_INDICE,
+  CHAVE_CONFIG,
+  lerConfig,
+  gravarConfig,
 } from "./armazenamento";
 import { CHAVE_LEGADO } from "./migracaoV1";
 import { criarNovoJogo } from "./novoJogo";
@@ -105,5 +108,24 @@ describe("slots", () => {
     const save = { ...novoSave(), versao: 99 };
     const storage = criarStorageMemoria({ [chaveSlot(2)]: JSON.stringify(save) });
     expect(lerSlot(storage, 2).status).toBe("danificado");
+  });
+});
+
+describe("configurações do dispositivo", () => {
+  it("primeiro acesso usa o tema padrão pedido (claro ou escuro) e volumes padrão", () => {
+    const config = lerConfig(criarStorageMemoria({}), { temaPadrao: "pergaminho" });
+    expect(config).toMatchObject({ tema: "pergaminho", volumeEfeitos: 0.6, volumeMusica: 0.4 });
+    expect(lerConfig(criarStorageMemoria({})).tema).toBe("taverna");
+  });
+
+  it("o tema gravado vale mais que o padrão do sistema", () => {
+    const storage = criarStorageMemoria({});
+    gravarConfig(storage, { tema: "noite", volumeMusica: 0 });
+    expect(lerConfig(storage, { temaPadrao: "pergaminho" })).toMatchObject({ tema: "noite", volumeMusica: 0, volumeEfeitos: 0.6 });
+  });
+
+  it("config antiga (sem volumes) ganha os padrões e tema desconhecido volta para Taverna", () => {
+    const storage = criarStorageMemoria({ [CHAVE_CONFIG]: JSON.stringify({ velocidadeAnimacao: 2, tema: "neon" }) });
+    expect(lerConfig(storage)).toMatchObject({ velocidadeAnimacao: 2, tema: "taverna", volumeEfeitos: 0.6, volumeMusica: 0.4 });
   });
 });

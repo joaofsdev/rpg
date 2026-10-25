@@ -9,7 +9,7 @@ import { podeEquipar, precoVenda } from "../../engine/itens";
 import { donoDoEquipamento, equipamentosLivres } from "../../engine/inventario";
 import { bonusDoEquipamento } from "../../engine/atributos";
 import { classeRaridade } from "../common/cores";
-import { tipoDoEquipamento } from "../common/descricoes";
+import { tipoDoEquipamento, nomeDoEquipamento } from "../common/descricoes";
 import Botao from "../common/Botao";
 
 const CATEGORIAS = { consumivel: "Consumíveis", material: "Materiais", ingrediente: "Ingredientes" };
@@ -63,7 +63,7 @@ function DetalheEquipamento({ save, item, acoes }) {
   return (
     <section className="painel p-4" aria-labelledby="titulo-item">
       <h2 id="titulo-item" className={`titulo text-lg ${classeRaridade(item.raridade)}`}>
-        {item.nome}
+        {nomeDoEquipamento(item)}
       </h2>
       <p className="mb-3 text-sm text-texto-2">
         {item.raridade}, {tipoDoEquipamento(item)}, nível {item.nivel}
@@ -88,7 +88,7 @@ function DetalheEquipamento({ save, item, acoes }) {
 
       <Bonus item={item} comparado={atual && atual.id !== item.id ? atual : null} />
       {atual && atual.id !== item.id && (
-        <p className="mt-1 text-xs text-texto-3">Entre parênteses: diferença para {atual.nome}.</p>
+        <p className="mt-1 text-xs text-texto-3">Entre parênteses: diferença para {nomeDoEquipamento(atual)}.</p>
       )}
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -151,7 +151,7 @@ export default function TelaInventario() {
                     aria-current={e.id === selecionadoId ? "true" : undefined}
                     className={`flex w-full items-baseline gap-2 px-3 py-2 text-left ${e.id === selecionadoId ? "bg-elevado" : "hover:bg-elevado/60"}`}
                   >
-                    <span className={`flex-1 truncate ${classeRaridade(e.raridade)}`}>{e.nome}</span>
+                    <span className={`flex-1 truncate ${classeRaridade(e.raridade)}`}>{nomeDoEquipamento(e)}</span>
                     <span className="hidden text-sm text-texto-3 sm:inline">{tipoDoEquipamento(e)}</span>
                     <span className="w-12 text-right text-sm text-texto-2">nv {e.nivel}</span>
                     {dono && <span className="w-20 truncate text-right text-xs text-texto-3">{dono.nome}</span>}

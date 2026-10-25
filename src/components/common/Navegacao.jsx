@@ -8,12 +8,12 @@ const ABAS = [
   { tela: "atividades", nome: "Atividades", curto: "Ativ." },
   { tela: "taverna", nome: "Taverna" },
   { tela: "inventario", nome: "Inventário", curto: "Itens" },
-  { tela: "mais", nome: "Mais", inclui: ["mais", "loja", "bestiario"] },
+  { tela: "mais", nome: "Mais", inclui: ["mais", "loja", "bestiario", "ferraria", "colecao"] },
 ];
 
 function Selo({ valor, rotulo }) {
   return (
-    <span className="rounded bg-destaque px-1.5 text-xs text-[#241a0c]" aria-label={rotulo}>
+    <span className="rounded bg-destaque px-1.5 text-xs text-sobre-destaque" aria-label={rotulo}>
       {valor}
     </span>
   );
@@ -24,7 +24,9 @@ export default function Navegacao() {
   const acoes = useAcoes();
   const agora = useAgoraDoJogo(save);
   const pontosLivres = Object.values(save.herois).reduce((soma, h) => soma + h.pontosLivres, 0);
-  const prontas = atividadesConcluidas(save, agora).length;
+  const prontas = atividadesConcluidas(save, agora);
+  const prontasAtividades = prontas.filter((a) => a.tipo !== "cozinha").length;
+  const prontasCozinha = prontas.length - prontasAtividades;
   // A taverna precisa conferir o mural ao abrir (renovação a cada 24 h)
   const abrir = (aba) => (aba === "taverna" ? acoes.abrirTaverna() : acoes.navegar(aba));
 
@@ -53,7 +55,10 @@ export default function Navegacao() {
                 <span className="truncate">{aba.nome}</span>
               )}
               {aba.tela === "grupo" && pontosLivres > 0 && <Selo valor={pontosLivres} rotulo={`${pontosLivres} pontos livres`} />}
-              {aba.tela === "atividades" && prontas > 0 && <Selo valor={prontas} rotulo={`${prontas} atividades prontas`} />}
+              {aba.tela === "atividades" && prontasAtividades > 0 && (
+                <Selo valor={prontasAtividades} rotulo={`${prontasAtividades} atividades prontas`} />
+              )}
+              {aba.tela === "taverna" && prontasCozinha > 0 && <Selo valor="✓" rotulo="Panela pronta" />}
             </button>
           );
         })}

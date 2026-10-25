@@ -13,9 +13,12 @@ import TelaMais from "./components/screens/TelaMais";
 import TelaMasmorra from "./components/screens/TelaMasmorra";
 import TelaAtividades from "./components/screens/TelaAtividades";
 import TelaTaverna from "./components/screens/TelaTaverna";
+import TelaFerraria from "./components/screens/TelaFerraria";
+import TelaColecao from "./components/screens/TelaColecao";
 import Navegacao from "./components/common/Navegacao";
 import Aviso from "./components/common/Aviso";
 import ResumoRetorno from "./components/common/ResumoRetorno";
+import TrilhaSonora from "./components/common/TrilhaSonora";
 
 const TELAS = {
   slots: TelaSlots,
@@ -31,9 +34,11 @@ const TELAS = {
   masmorra: TelaMasmorra,
   atividades: TelaAtividades,
   taverna: TelaTaverna,
+  ferraria: TelaFerraria,
+  colecao: TelaColecao,
 };
 
-const TELAS_COM_NAVEGACAO = ["mapa", "grupo", "atividades", "taverna", "inventario", "loja", "bestiario", "mais", "masmorra"];
+const TELAS_COM_NAVEGACAO = ["mapa", "grupo", "atividades", "taverna", "inventario", "loja", "bestiario", "mais", "masmorra", "ferraria", "colecao"];
 
 function Roteador() {
   const { tela, retorno } = useEstado();
@@ -56,6 +61,7 @@ function Roteador() {
 export default function App() {
   return (
     <GameProvider>
+      <TrilhaSonora />
       <Roteador />
     </GameProvider>
   );

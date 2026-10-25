@@ -3,7 +3,7 @@
 Situação do projeto fase a fase. O design completo está no [SPEC.md](SPEC.md) e as regras de
 trabalho no [CLAUDE.md](CLAUDE.md); este arquivo resume o que já foi feito e o que vem a seguir.
 
-**Última atualização:** 24/10/2026, ao fim da Fase 8.
+**Última atualização:** 25/10/2026, ao fim da Fase 11.
 
 ## Fases concluídas
 
@@ -18,8 +18,11 @@ trabalho no [CLAUDE.md](CLAUDE.md); este arquivo resume o que já foi feito e o 
 | 6 | Masmorras por andares (10), fogueiras, ganhos por andar, save v3 | testes + navegador |
 | 7 | Grupo e reserva, mural de recrutas, dispensar herói, atividades por tempo, treino de atributo e de golpe, resumo "Bem-vindo de volta", save v4, calibração da economia de ouro | testes + navegador |
 | 8 | Expedições com rolagens de 15 min, vagas progressivas, prévia do que foi achado, cancelar e coletar, resumo por categoria | testes + navegador |
+| 9 | Cozinha na Taverna: 10 receitas, panela por tempo, refeição ativa por encontros, receita ensinada pelo chefe e vendida na loja | testes + navegador |
+| 10 | Ferraria (forjar e aprimorar até +5), 10 relíquias de chefe, coleção com percentual, save v5 | testes + navegador |
+| 11 | 4 temas com contraste verificado, efeitos sonoros e música com volume, revisão de acessibilidade e responsividade | testes + navegador |
 
-Estado ao fim da Fase 8: 607 testes passando (29 arquivos), `npm run lint` sem erros nem
+Estado ao fim da Fase 11: 761 testes passando (34 arquivos), `npm run lint` sem erros nem
 avisos, `npm run build` ok.
 
 ## Decisões tomadas
@@ -82,6 +85,46 @@ registradas no SPEC.md.
   renda. Recalibrado: ouro por rolagem 5 → 3, recruta 25 → 35 por nível, treino 10 → 7 por nível
   e hora. Metas novas: expedições ≤ 75% do ouro dos encontros; 1 treino de 8 h por dia entre 20% e
   90% da renda do dia. Todas as metas passam. (§4.9)
+- **Fase 9, receitas:** as 3 iniciais usam ingredientes das zonas 1 a 3 (os exemplos do SPEC pediam
+  ingredientes das zonas 4 a 8, impossíveis no começo). As outras 7 vêm do chefe de cada zona (4 a
+  10) e da loja (uma por semana, `150 × número da zona` ouro). `receitasConhecidas` guarda só as
+  aprendidas, então o save continua na v4. (§3.7, §3.11)
+- **Fase 9, preparo e refeição:** ingredientes saem no início; tirar do fogo entrega as porções
+  prontas e devolve os ingredientes do resto; não se come com batalha salva; o contador desce em
+  vitória, derrota e fuga. Efeitos: vida máx., força e magia, defesa e resistência, recurso inicial,
+  XP e ouro. (§3.7)
+- **Fase 9, correção:** a validação do save rejeitava atividades sem herói, o que marcava como
+  "danificado" um save com a panela no fogo. Achado no teste de navegador; agora só valida o herói
+  quando a atividade tem um, com teste de regressão.
+- **Fase 10, ferraria:** forjar qualquer slot e tipo com os 2 materiais da zona (principal e
+  secundário) + `15 × nível máximo` ouro; o item sai no nível máximo, Incomum ou melhor. Aprimorar
+  para +N custa `2N` + `N` materiais da zona do nível do item e `3 × nível × N` ouro (recalibrado
+  de 5 pela meta de economia). (§3.11, §4.9)
+- **Fase 10, regra do aprimoramento:** +8% por nível com **mínimo de +1** em cada bônus. O teste no
+  navegador mostrou que, só com os 8%, itens Comuns (bônus 1) não mudavam ao aprimorar, o que
+  quebrava o CA "+2 → +3 aumenta os bônus exibidos". Também passou a usar a soma sem erro de ponto
+  flutuante (50 em +2 dava 57). Um teste da Fase 3 que registrava o comportamento antigo foi
+  atualizado. (§3.11)
+- **Fase 10, relíquias:** não se equipam; ter já ativa o efeito para o grupo (somado à refeição).
+  Garantida na primeira vitória sobre o chefe da zona; 5% nas revanches só enquanto não tiver. O
+  combate passou a receber uma lista de efeitos (refeição + relíquias). (§3.11)
+- **Fase 10, coleção e save v5:** registro em toda entrada de item (inclusive o vendido na hora).
+  A migração v4 → v5 preenche a coleção com o que o save tem e entrega as relíquias dos chefes já
+  vencidos; a migração das contas antigas faz o mesmo com as relíquias. (§3.10, §5.5)
+- **Fase 11, temas:** `src/data/temas.js` é a fonte única; o tema é do dispositivo (fora do save, sem
+  migração). A tabela de §7.5 não passava em vários pares de contraste (todo o destaque do Pergaminho;
+  terciário e perigo do Taverna); as cores foram ajustadas o mínimo e um teste aplica a fórmula da WCAG
+  a toda cor usada como texto, nos 4 temas. A arena usa sempre o Taverna (arte escura); as cores dos
+  elementos viraram um marcador ◆ ao lado do nome. (§7.5)
+- **Fase 11, som:** Kenney RPG Audio e Interface Sounds (12 efeitos) e duas músicas de RandomMind,
+  todas CC0 (licenças conferidas na página e no zip; registradas em CREDITS.md). A música de batalha
+  ficou com "Medieval: Battle", que o SPEC deixava para esta fase. Nenhuma dependência nova. (§7.6)
+- **Fase 11, revisão:** auditoria automática no navegador em todas as telas (controles sem nome,
+  imagens sem alt, campos sem rótulo, abas, ids, marcos, foco por teclado e largura a 375 px).
+  Correções: a Batalha ganhou `<main>`; os botões 1×/2×/3× usavam `aria-labelledby`, que trocava o
+  nome dos três por "Animação" (agora `aria-describedby`); a reação a elementos no Bestiário
+  transbordava o painel (2 colunas). A revisão de textos foi a das telas percorridas, sem uma
+  varredura de todos os textos do jogo.
 - **Fase 7, recrutas:** custo `100 + 35 × nível` (era 25, recalibrado na Fase 8); Cavaleiro, Arqueiro e Mago desde o início, Bardo,
   Assassino e Bárbaro após os chefes das zonas 1, 2 e 3 (e classes que o jogador já tem); recruta
   chega com os pontos livres do nível e entra no grupo se houver espaço. (§3.2)
@@ -90,9 +133,41 @@ registradas no SPEC.md.
 - **Fase 7, navegação:** abas novas Atividades (treino; expedições na Fase 8) e Taverna (mural;
   cozinha na Fase 9). No celular, "Atividades" e "Inventário" aparecem como "Ativ." e "Itens".
 
-## Pendências conhecidas
+## Decisões, melhorias futuras e pendências
 
-A lista oficial está no SPEC.md, seção "Pendências conhecidas (após a Fase 7)":
+Decisões tomadas pelo autor ao aprovar a Fase 10 (25/10/2026). A lista técnica completa está no
+SPEC.md, seção "Pendências conhecidas (após a Fase 10)".
+
+### Decisões definitivas
+
+- **Refeições só na Taverna:** comer continua exclusivo da Taverna; faz parte da preparação antes das
+  aventuras. Não haverá botão "Comer" no Inventário. (§3.7)
+- **Inventário:** os 50 espaços são exclusivos para equipamentos. Consumíveis, materiais,
+  ingredientes e refeições não ocupam esses espaços e seguem só o limite da pilha (99 ou 999). Não
+  haverá migração de save por causa disso; é o modelo que já existe. (§4.8)
+- **Relíquias automáticas:** continuam não equipáveis; ter a relíquia já ativa o efeito. (§3.11)
+
+### Melhorias futuras (registradas, não implementar agora)
+
+- **Segunda panela:** comprada com recursos (ouro e/ou materiais). Hoje há 1 panela. (§3.7)
+- **Bônus passivos no Grupo:** mostrar na tela do Grupo a soma dos efeitos ativos (relíquias e
+  refeição). (§3.11)
+- **Receitas na Coleção:** categoria própria, com percentual de descoberta e as receitas ainda
+  desconhecidas indicadas. (§3.10)
+- **Simulação econômica completa:** incluir cozinha, loja, consumíveis e os bônus das refeições
+  (XP, ouro) e o impacto deles na progressão. (§4.9)
+
+### Pendências de balanceamento (prioridade)
+
+- **Consumo de materiais da ferraria:** simular se dá para forjar e aprimorar até +5 em cada zona
+  com os materiais que o jogador junta (drops e expedições).
+- **Fórmula do aprimoramento:** o mínimo de +1 por nível em cada bônus dá ganhos desproporcionais em
+  atributos pequenos (bônus 1 vira 6 em +5). Revisar para garantir progressão real do item **sem**
+  exigir +1 em todos os atributos por nível, preservando o CA "+2 → +3 aumenta os bônus exibidos" e
+  com testes de balanceamento para itens de vários níveis e raridades. **A fórmula atual só muda
+  depois de uma alternativa validada.**
+
+### Outras pendências conhecidas
 
 - vida dos heróis da masmorra visível só na tela da masmorra;
 - sem chefes exclusivos de masmorra;
@@ -102,15 +177,16 @@ A lista oficial está no SPEC.md, seção "Pendências conhecidas (após a Fase 
 - 9 vulnerabilidades do `npm audit` em dependências de desenvolvimento;
 - sem como reordenar o grupo;
 - treinar exige tirar o herói do grupo (com 2 heróis, sobra 1 lutando até contratar alguém);
-- empilháveis não ocupam os 50 espaços do inventário (mudança de modelo pendente de decisão);
-- a economia simulada não inclui consumíveis, loja nem cozinha; 15 encontros por dia é hipótese.
+- relíquias não aparecem na tela de batalha;
+- áudio: músicas com 5,5 MB (sem codificador para reduzir), efeitos em OGG (Safari antigo não toca),
+  efeitos escolhidos pelo nome e ainda sem revisão por ouvido.
 
 ## Como testar
 
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm test         # 607 testes (a simulação de balanceamento leva ~20 s)
+npm test         # 761 testes (a simulação de balanceamento leva ~20 s)
 npm run lint
 npm run build
 ```
@@ -191,19 +267,66 @@ location.reload();
    as atividades): "Continuar" abre o resumo com "Expedições: pronto para coletar" e "Treino de
    …: faltam 3h" em andamento.
 
-## Escopo da Fase 9 — Taverna e cozinha
+### Cozinha (Fase 9)
+Para ter ingredientes, no console (fora do slot, nos espaços de save):
 
-Roadmap do SPEC.md §8; regras em §3.7 e §4.10.
+```js
+const s = JSON.parse(localStorage.getItem("magichill:slot:0"));
+s.inventario.itens.erva_da_nevoa = 7;
+localStorage.setItem("magichill:slot:0", JSON.stringify(s)); location.reload();
+```
 
-- **Receitas:** 3 conhecidas desde o início; novas por drops de chefe e na loja (rotação semanal).
-- **Preparo:** receita e porções (1–5); tempo = `receita.minutos × porções`; 1 panela. Porções
-  prontas vão para o inventário. É mais um tipo de atividade (sem herói) a registrar em
-  `engine/coleta.js`, como as expedições.
-- **Refeição ativa:** comer fora de batalha ativa a refeição para o grupo; 1 por vez (trocar pede
-  confirmação); dura em encontros, não em tempo. O motor já desconta encontros em
-  `aplicarResultadoBatalha`; falta aplicar os efeitos (vida máx., XP, recurso inicial).
-- **Fora da Fase 9:** ferraria e relíquias (Fase 10).
+1. **Taverna → Cozinha:** em Ensopado do Coveiro, as porções 4 e 5 ficam desabilitadas (7 ervas só
+   dão 3). Escolha 3 → "Preparar (30 min)". A panela mostra "0/3 porções prontas" e as ervas caem
+   para 1.
+2. **Voltar 40 min depois:** recue o início da atividade e `ultimaVisita` em `40 * 60000` (mesmo
+   comando das expedições). "Continuar" mostra "Cozinha: pronto para coletar" com
+   "Panela: Ensopado do Coveiro ×3". "Coletar tudo" avisa "Ensopado do Coveiro: 3 porções prontas."
+3. **Comer:** em "Pratos prontos", "Comer". A Taverna e o mapa mostram "Vida máxima +10%, mais 5
+   encontros". Explore, fuja do encontro: o contador cai para 4.
+4. **Trocar:** com outro prato no inventário (`s.inventario.itens.sopa_de_alga = 1`), "Comer" pede
+   confirmação ("Trocar a refeição?").
+5. **Loja:** "Receita da semana" fica vazia com só a zona 1 aberta; com zonas desbloqueadas aparece
+   uma receita para aprender.
 
-Critérios de aceite a cumprir (SPEC §3.7): 3 porções de uma receita de 10 min, vistas depois de
-40 min, aparecem prontas no resumo de retorno; com "Ensopado do Coveiro" ativo, a vida máxima na
-batalha é 10% maior e o contador desce 1 por encontro concluído (vitória, derrota ou fuga).
+### Ferraria, relíquias e coleção (Fase 10)
+Para ter materiais e ouro, no console (nos espaços de save):
+
+```js
+const s = JSON.parse(localStorage.getItem("magichill:slot:0"));
+s.ouro = 20000; s.inventario.itens.osso_antigo = 200; s.inventario.itens.pano_mortuario = 200;
+localStorage.setItem("magichill:slot:0", JSON.stringify(s)); location.reload();
+```
+
+1. **Mais → Coleção:** um jogo novo já mostra o conjunto Comum e os consumíveis iniciais, e 0/10
+   relíquias.
+2. **Mais → Ferraria → Forjar:** escolha zona, peça e tipo; o custo mostra "8 Osso Antigo",
+   "4 Pano Mortuário" e "150 ouro" para uma arma do Cemitério. "Forjar" avisa "Forjado: … (Incomum)"
+   ou melhor.
+3. **Aprimorar:** escolha um item, "Aprimorar para +1", "+2", "+3". A tabela mostra o bônus atual e
+   o próximo; de +2 para +3 todos os bônus sobem (inclusive nos itens Comuns). O nome ganha "+3"
+   no Inventário e no Grupo.
+4. **Relíquia de save antigo:** no console, `s.versao = 4; s.colecao = { equipamentos: {}, itens:
+   [], reliquias: [] }; s.progresso.zonas.cemiterio.chefeDerrotado = true;` e recarregue. A
+   Coleção mostra "Coroa do Guardião — Dano de luz +10%" e o resto preenchido.
+5. **Relíquia em jogo:** vença o Guardião da Cripta pela primeira vez; o resultado mostra
+   "Relíquia obtida: Coroa do Guardião".
+
+### Temas, som e acessibilidade (Fase 11)
+1. **Mais → Configurações → Tema de cor:** Taverna, Pergaminho, Bosque e Noite trocam na hora e
+   continuam depois de recarregar. Num navegador com o sistema em tema claro, o primeiro acesso já
+   abre no Pergaminho.
+2. **Batalha no Pergaminho:** a arena continua escura e legível; no menu, o elemento do golpe aparece
+   como "◆ fogo" em texto escuro.
+3. **Som:** depois do primeiro clique, a música da cidade toca; ao entrar numa batalha troca para a
+   de batalha. Golpes, erros, curas e nocautes têm som; o resultado toca vitória ou derrota.
+   "Volume dos efeitos" e "Volume da música" vão de 0 (mudo) a 100%.
+4. **Teclado:** Tab percorre os botões com contorno visível; na batalha, 1–4, B, D, setas, Enter e Esc
+   continuam funcionando.
+5. **Celular (375 px):** nenhuma tela rola na horizontal.
+
+## Próximos passos
+
+O roadmap do SPEC §8 termina na Fase 11. O que vem depois é decisão do autor; as prioridades já
+registradas são as **pendências de balanceamento** (fórmula do aprimoramento e simulação de consumo de
+materiais da ferraria), seguidas das melhorias futuras listadas acima.

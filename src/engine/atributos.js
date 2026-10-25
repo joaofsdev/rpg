@@ -25,11 +25,16 @@ export function escalarChefe(base, nivel) {
   return escalar(base, nivel, CRESCIMENTO_CHEFE);
 }
 
+// Bônus com aprimoramento (SPEC.md §3.11): cada nível soma MULT_APRIMORAMENTO a cada bônus diferente
+// de zero, com no mínimo +1 por nível. Assim todo aprimoramento aumenta os bônus exibidos, mesmo nos
+// itens de bônus pequenos (1 × 1,24 ainda seria 1).
 export function bonusDoEquipamento(equipamento) {
-  const mult = 1 + MULT_APRIMORAMENTO * (equipamento.aprimoramento || 0);
+  const nivel = equipamento.aprimoramento || 0;
   const bonus = {};
   for (const atributo of ATRIBUTOS) {
-    bonus[atributo] = Math.floor((equipamento.bonus?.[atributo] || 0) * mult);
+    const base = equipamento.bonus?.[atributo] || 0;
+    const ganho = aumentarPercentual(base, MULT_APRIMORAMENTO * nivel) - base;
+    bonus[atributo] = base > 0 ? base + Math.max(nivel, ganho) : base;
   }
   return bonus;
 }
@@ -70,4 +75,9 @@ export function calcularAtributosInimigo(dadosInimigo, nivel) {
     resultado[atributo] = escala(dadosInimigo.atributosBase[atributo], nivel);
   }
   return resultado;
+}
+
+// valor × (1 + fração), arredondado para baixo sem o erro do ponto flutuante (100 × 1,15 = 115)
+export function aumentarPercentual(valor, fracao) {
+  return Math.floor(Math.round(valor * (1 + fracao) * 1e6) / 1e6);
 }

@@ -69,3 +69,19 @@ export const NOMES_ARMA = {
   maca_pesada: "maça pesada",
   lanca: "lança",
 };
+
+// Efeitos de refeições e relíquias: "Vida máxima +10%", "Recurso inicial +20", "Dano de luz +10%"
+const ROTULO_EFEITO = {
+  vidaMax: "Vida máxima",
+  ataque: "Força e magia",
+  defesa: "Defesa e resistência",
+  recursoInicial: "Recurso inicial",
+  xp: "XP",
+  ouro: "Ouro",
+};
+
+export function descreverEfeito({ tipo, valor, elemento }) {
+  if (tipo === "danoElemento") return `Dano de ${NOMES_ELEMENTO[elemento]} +${Math.round(valor * 100)}%`;
+  const quanto = tipo === "recursoInicial" ? `+${valor}` : `+${Math.round(valor * 100)}%`;
+  return `${ROTULO_EFEITO[tipo]} ${quanto}`;
+}

@@ -1,11 +1,15 @@
+import { useEffect } from "react";
 import { useEstado, useAcoes } from "../../state/contextos";
 import { itens } from "../../data/itens";
 import { golpes } from "../../data/golpes";
-import { NOMES_SLOT } from "../../data/textos";
+import { receitas } from "../../data/receitas";
+import { reliquias } from "../../data/reliquias";
+import { NOMES_SLOT, descreverEfeito } from "../../data/textos";
 import { PONTOS_POR_NIVEL } from "../../data/constants";
 import { descreverItens } from "../common/descricoes";
 import { classeRaridade } from "../common/cores";
 import Botao from "../common/Botao";
+import { tocarEfeito } from "../common/som";
 
 const TITULOS = {
   vitoria: "Vitória",
@@ -45,6 +49,11 @@ function textos(r) {
 export default function TelaResultado() {
   const { resumoBatalha: r, save } = useEstado();
   const acoes = useAcoes();
+  const resultado = r?.resultado;
+  useEffect(() => {
+    if (resultado === "vitoria") tocarEfeito("vitoria");
+    else if (resultado === "derrota") tocarEfeito("derrota");
+  }, [resultado]);
   if (!r) return null;
 
   const podeContinuar = r.origem?.tipo === "zona" && !r.origem.chefe && r.resultado !== "derrota";
@@ -118,6 +127,20 @@ export default function TelaResultado() {
               </li>
             ))}
           </ul>
+        )}
+
+        {r.reliquiaNova && (
+          <p className="mt-4 border-t border-borda pt-3">
+            Relíquia obtida: <span className="text-destaque">{reliquias[r.reliquiaNova].nome}</span> (
+            <span className="text-sucesso">{descreverEfeito(reliquias[r.reliquiaNova].efeito)}</span>, para o grupo todo).
+          </p>
+        )}
+
+        {r.receitaNova && (
+          <p className="mt-4 border-t border-borda pt-3">
+            O chefe ensinou a receita <span className="text-destaque">{receitas[r.receitaNova].nome}</span>. Prepare na
+            cozinha da Taverna.
+          </p>
         )}
 
         <div className="mt-6 flex flex-wrap gap-2">

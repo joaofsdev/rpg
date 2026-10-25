@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calcularAtributosHeroi, calcularAtributosInimigo, bonusDoEquipamento } from "./atributos";
+import { calcularAtributosHeroi, calcularAtributosInimigo, bonusDoEquipamento, aumentarPercentual } from "./atributos";
 import { criarHeroi } from "./herois";
 import { inimigos } from "../data/inimigos";
 
@@ -29,8 +29,9 @@ describe("atributos de herói", () => {
       e1: { id: "e1", slot: "arma", bonus: { forca: 10, velocidade: 2 }, aprimoramento: 5 },
     };
     const atributos = calcularAtributosHeroi(heroi, equipamentos);
-    expect(atributos.forca).toBe(16 + 14);
-    expect(atributos.velocidade).toBe(8 + 2);
+    // +5: cada bônus sobe 8% por nível, com no mínimo +1 por nível (10 → 15, 2 → 7)
+    expect(atributos.forca).toBe(16 + 15);
+    expect(atributos.velocidade).toBe(8 + 7);
   });
 
   it("calcula mana máxima só para classes de mana", () => {
@@ -54,5 +55,31 @@ describe("atributos de inimigo", () => {
   it("escala chefe com 8% por nível", () => {
     const atributos = calcularAtributosInimigo(inimigos.guardiao_cripta, 10);
     expect(atributos.vida).toBe(Math.floor(1125 * 1.72));
+  });
+});
+
+describe("aumentarPercentual", () => {
+  it("não sofre com o ponto flutuante", () => {
+    expect(aumentarPercentual(100, 0.15)).toBe(115);
+    expect(aumentarPercentual(20, 0.15)).toBe(23);
+    expect(aumentarPercentual(215, 0.1)).toBe(236);
+    expect(aumentarPercentual(7, 0)).toBe(7);
+  });
+});
+
+describe("bonusDoEquipamento com aprimoramento", () => {
+  it("cada nível soma 8% sem erro de ponto flutuante (50 em +2 = 58)", () => {
+    const item = { bonus: { forca: 50, vida: 0, magia: 0, defesa: 0, resistencia: 0, velocidade: 0 }, aprimoramento: 2 };
+    expect(bonusDoEquipamento(item).forca).toBe(58);
+    expect(bonusDoEquipamento({ ...item, aprimoramento: 0 }).forca).toBe(50);
+  });
+
+  it("bônus pequenos sobem pelo menos 1 por nível; bônus zero continua zero", () => {
+    const item = { bonus: { vida: 1, forca: 12, magia: 0, defesa: 0, resistencia: 0, velocidade: 0 }, aprimoramento: 0 };
+    const vida = [0, 1, 2, 3, 4, 5].map((n) => bonusDoEquipamento({ ...item, aprimoramento: n }).vida);
+    expect(vida).toEqual([1, 2, 3, 4, 5, 6]);
+    const forca = [0, 1, 2, 3, 4, 5].map((n) => bonusDoEquipamento({ ...item, aprimoramento: n }).forca);
+    for (let n = 1; n <= 5; n++) expect(forca[n]).toBeGreaterThan(forca[n - 1]);
+    expect(bonusDoEquipamento({ ...item, aprimoramento: 5 }).magia).toBe(0);
   });
 });

@@ -5,6 +5,7 @@ import { simularCampanha, ENCONTROS_POR_DIA } from "./__fixtures__/economia";
 import { custoDoRecruta } from "./recrutamento";
 import { custoTreinoAtributo } from "./treino";
 import { recompensaDaExpedicao } from "./expedicoes";
+import { custoDaForja, custoDoAprimoramento } from "./ferraria";
 import { classesHeroi } from "../data/classesHeroi";
 import { golpes } from "../data/golpes";
 import { NIVEIS_ABAIXO_DO_GRUPO } from "../data/recrutamento";
@@ -21,6 +22,8 @@ const TREINO_GOLPE_ENCONTROS = [4, 12]; // golpe avançado, na zona em que ele f
 const EXPEDICAO_8H_ENCONTROS = [2, 10]; // uma expedição de 8 h, em encontros de ouro da zona
 const EXPEDICOES_SOBRE_ENCONTROS_MAX = 0.75; // expedições complementam o combate, não o substituem
 const TREINO_DIARIO_SOBRE_RENDA = [0.2, 0.9]; // 1 treino de 8 h por dia cabe na renda de um dia
+const FORJA_ENCONTROS = [2, 10]; // ouro para forjar uma arma na zona
+const APRIMORAR_ATE_5_ENCONTROS = [5, 25]; // ouro para levar um item da zona de +0 a +5
 
 const campanhas = SEMENTES.map((s) => simularCampanha(s));
 const todasAsZonas = campanhas.flatMap((c) => c.zonas);
@@ -98,5 +101,19 @@ describe("economia: expedições", () => {
 describe("economia: gastos", () => {
   it("mesmo pagando o treino diário, dá para contratar reserva para as 5 vagas (3 de expedição e 2 de treino)", () => {
     for (const { contratacoes } of campanhas) expect(contratacoes).toHaveLength(5);
+  });
+});
+
+describe("economia: ferraria", () => {
+  it("forjar uma arma custa o ouro de 2 a 10 encontros de renda da zona", () => {
+    for (const z of todasAsZonas) dentro(custoDaForja(z.zona, "arma").ouro / z.rendaPorEncontro, FORJA_ENCONTROS, z.zona.id);
+  });
+
+  it("levar um item do nível da zona de +0 a +5 custa o ouro de 5 a 25 encontros de renda", () => {
+    for (const z of todasAsZonas) {
+      let ouro = 0;
+      for (let n = 0; n < 5; n++) ouro += custoDoAprimoramento({ nivel: z.zona.nivelMax, aprimoramento: n }).ouro;
+      dentro(ouro / z.rendaPorEncontro, APRIMORAR_ATE_5_ENCONTROS, z.zona.id);
+    }
   });
 });

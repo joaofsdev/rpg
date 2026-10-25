@@ -3,6 +3,7 @@
 import { MAX_EQUIPAMENTOS_INVENTARIO, FRACAO_PRECO_VENDA } from "../data/constants";
 import { itens as dadosItens } from "../data/itens";
 import { podeEquipar, precoVenda } from "./itens";
+import { registrarNaColecao } from "./colecao";
 
 export function heroisEmBatalha(save) {
   if (!save.batalha) return [];
@@ -96,7 +97,8 @@ export function precoVendaItem(itemId) {
 
 // Único caminho de entrada de itens no inventário (SPEC.md §4.8). Equipamentos ocupam 1 dos
 // MAX_EQUIPAMENTOS_INVENTARIO espaços livres; empilháveis respeitam o limite da pilha (empilhaAte).
-// O que não couber é vendido na hora pelo preço de venda.
+// O que não couber é vendido na hora pelo preço de venda. Tudo o que entra (guardado ou vendido)
+// fica registrado na coleção.
 // Retorna { save, guardados: { itens, equipamentos }, vendidos: { itens: [{ itemId, qtd, valor }],
 // equipamentos: [{ item, valor }] }, ouroDasVendas }.
 export function guardarNoInventario(save, { itens: novosItens = {}, equipamentos: novosEquipamentos = [] }) {
@@ -128,7 +130,10 @@ export function guardarNoInventario(save, { itens: novosItens = {}, equipamentos
 
   const ouroDasVendas = [...vendidos.itens, ...vendidos.equipamentos].reduce((s, v) => s + v.valor, 0);
   return {
-    save: { ...save, ouro: save.ouro + ouroDasVendas, inventario: { ...save.inventario, itens, equipamentos } },
+    save: registrarNaColecao(
+      { ...save, ouro: save.ouro + ouroDasVendas, inventario: { ...save.inventario, itens, equipamentos } },
+      { equipamentos: novosEquipamentos, itens: novosItens },
+    ),
     guardados,
     vendidos,
     ouroDasVendas,

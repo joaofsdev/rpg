@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useEstado, useAcoes } from "../../state/contextos";
 import { itens } from "../../data/itens";
 import { golpes } from "../../data/golpes";
@@ -8,6 +9,7 @@ import { PONTOS_POR_NIVEL } from "../../data/constants";
 import { descreverItens } from "../common/descricoes";
 import { classeRaridade } from "../common/cores";
 import Botao from "../common/Botao";
+import { tocarEfeito } from "../common/som";
 
 const TITULOS = {
   vitoria: "Vitória",
@@ -47,6 +49,11 @@ function textos(r) {
 export default function TelaResultado() {
   const { resumoBatalha: r, save } = useEstado();
   const acoes = useAcoes();
+  const resultado = r?.resultado;
+  useEffect(() => {
+    if (resultado === "vitoria") tocarEfeito("vitoria");
+    else if (resultado === "derrota") tocarEfeito("derrota");
+  }, [resultado]);
   if (!r) return null;
 
   const podeContinuar = r.origem?.tipo === "zona" && !r.origem.chefe && r.resultado !== "derrota";

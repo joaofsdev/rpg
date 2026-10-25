@@ -39,6 +39,48 @@ mesmo commit em que é adicionado ao projeto.
 | `itens/antidoto.png` | `flask_green` |
 | `itens/erva_revigorante.png` | `flask_big_green` |
 
+## Áudio
+
+Licenças conferidas em 25/10/2026 na página de cada pack e no `License.txt` dentro dos zips da Kenney.
+
+### RPG Audio — Kenney (Kenney Vleugels)
+- **Licença:** CC0 1.0 (domínio público)
+- **Origem:** https://kenney.nl/assets/rpg-audio (arquivo `kenney_rpg-audio.zip`)
+- **Uso:** efeitos de batalha, em `src/assets/audio/efeitos/`.
+
+| Arquivo no projeto | Arquivo original |
+|---|---|
+| `golpe_corte.ogg` | `knifeSlice.ogg` |
+| `golpe_impacto.ogg` | `chop.ogg` |
+| `critico.ogg` | `knifeSlice2.ogg` |
+| `errou.ogg` | `cloth2.ogg` |
+| `nocaute.ogg` | `dropLeather.ogg` |
+| `item.ogg` | `handleSmallLeather.ogg` |
+
+### Interface Sounds — Kenney (Kenney Vleugels)
+- **Licença:** CC0 1.0 (domínio público)
+- **Origem:** https://kenney.nl/assets/interface-sounds (arquivo `kenney_interface-sounds.zip`)
+- **Uso:** sons de interface e de magia, em `src/assets/audio/efeitos/`.
+
+| Arquivo no projeto | Arquivo original |
+|---|---|
+| `clique.ogg` | `click_002.ogg` |
+| `golpe_magia.ogg` | `maximize_006.ogg` |
+| `cura.ogg` | `confirmation_002.ogg` |
+| `status.ogg` | `pluck_001.ogg` |
+| `vitoria.ogg` | `confirmation_004.ogg` |
+| `derrota.ogg` | `minimize_006.ogg` |
+
+### Medieval: The Old Tower Inn — RandomMind
+- **Licença:** CC0 1.0 (domínio público)
+- **Origem:** https://opengameart.org/content/medieval-the-old-tower-inn (arquivo `The_Old_Tower_Inn.mp3`)
+- **Uso:** música da cidade (todas as telas fora da batalha), `src/assets/audio/musica/cidade.mp3`.
+
+### Medieval: Battle — RandomMind
+- **Licença:** CC0 1.0 (domínio público)
+- **Origem:** https://opengameart.org/content/medieval-battle (arquivo `battle_7.mp3`)
+- **Uso:** música de batalha, `src/assets/audio/musica/batalha.mp3`.
+
 ## Fontes
 
 Carregadas do Google Fonts.

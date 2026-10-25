@@ -3,7 +3,7 @@
 Situação do projeto fase a fase. O design completo está no [SPEC.md](SPEC.md) e as regras de
 trabalho no [CLAUDE.md](CLAUDE.md); este arquivo resume o que já foi feito e o que vem a seguir.
 
-**Última atualização:** 25/10/2026, ao fim da Fase 10.
+**Última atualização:** 25/10/2026, ao fim da Fase 11.
 
 ## Fases concluídas
 
@@ -20,8 +20,9 @@ trabalho no [CLAUDE.md](CLAUDE.md); este arquivo resume o que já foi feito e o 
 | 8 | Expedições com rolagens de 15 min, vagas progressivas, prévia do que foi achado, cancelar e coletar, resumo por categoria | testes + navegador |
 | 9 | Cozinha na Taverna: 10 receitas, panela por tempo, refeição ativa por encontros, receita ensinada pelo chefe e vendida na loja | testes + navegador |
 | 10 | Ferraria (forjar e aprimorar até +5), 10 relíquias de chefe, coleção com percentual, save v5 | testes + navegador |
+| 11 | 4 temas com contraste verificado, efeitos sonoros e música com volume, revisão de acessibilidade e responsividade | testes + navegador |
 
-Estado ao fim da Fase 10: 687 testes passando (33 arquivos), `npm run lint` sem erros nem
+Estado ao fim da Fase 11: 761 testes passando (34 arquivos), `npm run lint` sem erros nem
 avisos, `npm run build` ok.
 
 ## Decisões tomadas
@@ -110,6 +111,20 @@ registradas no SPEC.md.
 - **Fase 10, coleção e save v5:** registro em toda entrada de item (inclusive o vendido na hora).
   A migração v4 → v5 preenche a coleção com o que o save tem e entrega as relíquias dos chefes já
   vencidos; a migração das contas antigas faz o mesmo com as relíquias. (§3.10, §5.5)
+- **Fase 11, temas:** `src/data/temas.js` é a fonte única; o tema é do dispositivo (fora do save, sem
+  migração). A tabela de §7.5 não passava em vários pares de contraste (todo o destaque do Pergaminho;
+  terciário e perigo do Taverna); as cores foram ajustadas o mínimo e um teste aplica a fórmula da WCAG
+  a toda cor usada como texto, nos 4 temas. A arena usa sempre o Taverna (arte escura); as cores dos
+  elementos viraram um marcador ◆ ao lado do nome. (§7.5)
+- **Fase 11, som:** Kenney RPG Audio e Interface Sounds (12 efeitos) e duas músicas de RandomMind,
+  todas CC0 (licenças conferidas na página e no zip; registradas em CREDITS.md). A música de batalha
+  ficou com "Medieval: Battle", que o SPEC deixava para esta fase. Nenhuma dependência nova. (§7.6)
+- **Fase 11, revisão:** auditoria automática no navegador em todas as telas (controles sem nome,
+  imagens sem alt, campos sem rótulo, abas, ids, marcos, foco por teclado e largura a 375 px).
+  Correções: a Batalha ganhou `<main>`; os botões 1×/2×/3× usavam `aria-labelledby`, que trocava o
+  nome dos três por "Animação" (agora `aria-describedby`); a reação a elementos no Bestiário
+  transbordava o painel (2 colunas). A revisão de textos foi a das telas percorridas, sem uma
+  varredura de todos os textos do jogo.
 - **Fase 7, recrutas:** custo `100 + 35 × nível` (era 25, recalibrado na Fase 8); Cavaleiro, Arqueiro e Mago desde o início, Bardo,
   Assassino e Bárbaro após os chefes das zonas 1, 2 e 3 (e classes que o jogador já tem); recruta
   chega com os pontos livres do nível e entra no grupo se houver espaço. (§3.2)
@@ -162,14 +177,16 @@ SPEC.md, seção "Pendências conhecidas (após a Fase 10)".
 - 9 vulnerabilidades do `npm audit` em dependências de desenvolvimento;
 - sem como reordenar o grupo;
 - treinar exige tirar o herói do grupo (com 2 heróis, sobra 1 lutando até contratar alguém);
-- relíquias não aparecem na tela de batalha.
+- relíquias não aparecem na tela de batalha;
+- áudio: músicas com 5,5 MB (sem codificador para reduzir), efeitos em OGG (Safari antigo não toca),
+  efeitos escolhidos pelo nome e ainda sem revisão por ouvido.
 
 ## Como testar
 
 ```bash
 npm install
 npm run dev      # http://localhost:5173
-npm test         # 687 testes (a simulação de balanceamento leva ~20 s)
+npm test         # 761 testes (a simulação de balanceamento leva ~20 s)
 npm run lint
 npm run build
 ```
@@ -295,14 +312,21 @@ localStorage.setItem("magichill:slot:0", JSON.stringify(s)); location.reload();
 5. **Relíquia em jogo:** vença o Guardião da Cripta pela primeira vez; o resultado mostra
    "Relíquia obtida: Coroa do Guardião".
 
-## Escopo da Fase 11 — Polimento
+### Temas, som e acessibilidade (Fase 11)
+1. **Mais → Configurações → Tema de cor:** Taverna, Pergaminho, Bosque e Noite trocam na hora e
+   continuam depois de recarregar. Num navegador com o sistema em tema claro, o primeiro acesso já
+   abre no Pergaminho.
+2. **Batalha no Pergaminho:** a arena continua escura e legível; no menu, o elemento do golpe aparece
+   como "◆ fogo" em texto escuro.
+3. **Som:** depois do primeiro clique, a música da cidade toca; ao entrar numa batalha troca para a
+   de batalha. Golpes, erros, curas e nocautes têm som; o resultado toca vitória ou derrota.
+   "Volume dos efeitos" e "Volume da música" vão de 0 (mudo) a 100%.
+4. **Teclado:** Tab percorre os botões com contorno visível; na batalha, 1–4, B, D, setas, Enter e Esc
+   continuam funcionando.
+5. **Celular (375 px):** nenhuma tela rola na horizontal.
 
-Roadmap do SPEC.md §8; direção visual em §7.
+## Próximos passos
 
-- **Temas:** 4 temas de cor selecionáveis (Taverna, Pergaminho, Bosque, Noite), com contraste de
-  texto ≥ 4,5:1 verificado (§7.5).
-- **Som:** efeitos e música com controle de volume (só assets CC0/CC-BY, registrados em CREDITS.md;
-  candidatos em §7.6).
-- **Revisão:** responsividade, acessibilidade (teclado, foco, rótulos) e textos.
-- As pendências das Fases 7 a 10 continuam registradas no SPEC §8; não entram na Fase 11 a menos que
-  bloqueiem algum desses itens.
+O roadmap do SPEC §8 termina na Fase 11. O que vem depois é decisão do autor; as prioridades já
+registradas são as **pendências de balanceamento** (fórmula do aprimoramento e simulação de consumo de
+materiais da ferraria), seguidas das melhorias futuras listadas acima.

@@ -3,7 +3,7 @@
 > Fonte da verdade do design. Mudanças de design são propostas aqui **antes** de qualquer código.
 > Valores numéricos são iniciais e serão calibrados com testes de simulação do motor (§4.9).
 
-**Status:** Fase 10 concluída — aguardando aprovação.
+**Status:** Fase 11 concluída — aguardando aprovação.
 
 ---
 
@@ -820,6 +820,7 @@ localStorage:
   magichill:slot:<n> → Save
   magichill:config   → { tema, velocidadeAnimacao: 1|2|3, volumeEfeitos, volumeMusica,
                           reduzirMovimento }          // por dispositivo, fora do save
+                      // volumes de 0 a 1 (padrão 0,6 e 0,4); tema: taverna | pergaminho | bosque | noite
 
 ResumoSlot { nome, criadoEm, atualizadoEm, nivelMaisAlto, classePrincipal, tempoJogado }
 
@@ -1092,7 +1093,9 @@ Configurações, Slots).
 
 ### 7.5 Paleta e temas
 
-Tokens no `@theme` com quatro temas; o atual (preto/ouro saturado) é suavizado.
+Fonte única: `src/data/temas.js`. O `@theme` de `src/index.css` repete o tema Taverna (o Tailwind
+precisa dele para gerar as classes) e um teste confere que os dois batem. Os outros temas trocam as
+variáveis `--color-*` na raiz da página em tempo de execução.
 
 | Token | Taverna (padrão, escuro) | Pergaminho (claro) | Bosque (escuro) | Noite (escuro) |
 |---|---|---|---|---|
@@ -1100,19 +1103,36 @@ Tokens no `@theme` com quatro temas; o atual (preto/ouro saturado) é suavizado.
 | superfície | #26201a | #fbf5e8 | #1b231e | #1b2033 |
 | elevado | #2f281f | #eadfc8 | #232d26 | #232a40 |
 | borda | #3d3428 | #d6c6a6 | #2e3a31 | #2f3752 |
+| borda forte | #5c4a35 | #b9a47e | #46574a | #46507a |
 | texto | #ece3d3 | #3b2f22 | #e3eadf | #e4e6f0 |
 | texto secundário | #b5a68e | #6b5a45 | #a3b09c | #a2a8c0 |
-| destaque | #d9a441 | #9c6b1f | #c9b26b | #c6a8e8 |
-| sucesso | #7fb069 | #4f7a3a | #8cc084 | #7fc4a8 |
-| perigo | #d0675b | #a8473b | #d97a6c | #e08a8a |
-| mana | #6c8fd4 | #3f6e96 | #7fa3d9 | #8fa8f0 |
-| vigor | #d99a4a | #a0651c | #d4a95a | #e0b070 |
+| texto terciário | #9d907b | #715f4a | #8a9884 | #8c92ac |
+| destaque | #d9a441 | #835a1a | #c9b26b | #c6a8e8 |
+| destaque claro | #ecc271 | #875812 | #e0cc8a | #dcc4f5 |
+| texto sobre destaque | #241a0c | #fbf5e8 | #1c1a0c | #1c1430 |
+| sucesso | #7fb069 | #466b33 | #8cc084 | #7fc4a8 |
+| perigo | #d5786d | #a14439 | #d97a6c | #e08a8a |
+| mana | #6f91d5 | #3a658a | #7fa3d9 | #8fa8f0 |
+| vigor | #d99a4a | #885618 | #d4a95a | #e0b070 |
+| informação | #6c9bc4 | #2f6080 | #7fb0c9 | #8fb8e0 |
+
+Raridades (Comum, Incomum, Raro, Épico, Lendário): Taverna `#b0a696 #8cbf73 #7aa6dc #b98fd8 #e3a94f`;
+Pergaminho `#6a6154 #416b2f #2f5f9e #7a4aa8 #8c560f`; Bosque `#b0b4a6 #8cc084 #7fa8dc #b993d8 #e3ac55`;
+Noite `#aab0c4 #8cc49a #8fb0f0 #c49ae8 #e8b060`.
 
 - Primeiro acesso: Pergaminho se o sistema prefere tema claro; senão Taverna. Troca em
-  Configurações, aplicada na hora.
+  Configurações (Mais), aplicada na hora; o tema é do dispositivo, fora do save.
 - Texto deve ter contraste ≥ 4,5:1 com o fundo em todos os temas (CA verificável com ferramenta de
-  contraste).
+  contraste). **Fase 11:** o teste `src/data/temas.test.js` aplica a fórmula da WCAG 2 a **toda cor
+  usada como texto** (texto, secundário, terciário, destaque, sucesso, perigo, mana, vigor,
+  informação e raridades) sobre fundo, superfície e elevado, e ao texto do botão principal sobre o
+  destaque. Os valores originais desta tabela não passavam em vários pares (no Pergaminho, todas as
+  cores de destaque; no Taverna, terciário e perigo); foram ajustados o mínimo (escurecidos no claro,
+  clareados nos escuros) até ≥ 4,5:1.
 - Cores de raridade mantidas, levemente dessaturadas, com rótulo de texto (não só cor).
+- A **arena de batalha** usa sempre as cores do Taverna (a arte do cenário é escura), em qualquer tema.
+- As cores dos **elementos** (`CORES_ELEMENTO`) foram pensadas para fundo escuro: fora da arena elas
+  aparecem só num marcador ◆ decorativo ao lado do nome, que fica na cor de texto do tema.
 
 ### 7.6 Packs candidatos (licenças verificadas em 23/10/2026)
 
@@ -1127,7 +1147,17 @@ Tokens no `@theme` com quatro temas; o atual (preto/ouro saturado) é suavizado.
 | Interface Sounds — Kenney | sons de UI | CC0 | — | https://kenney.nl/assets/interface-sounds |
 | Músicas medievais — RandomMind (OpenGameArt) | cidade/taverna | CC0 | loops | https://opengameart.org/content/medieval-the-old-tower-inn |
 
-- Música de batalha: candidato ainda não definido (pesquisar na Fase 11).
+- Música de batalha: escolhida na Fase 11, **Medieval: Battle — RandomMind** (CC0,
+  https://opengameart.org/content/medieval-battle).
+- **Áudio em uso (Fase 11, detalhes em CREDITS.md):** 12 efeitos de Kenney RPG Audio e Interface
+  Sounds (CC0) em `src/assets/audio/efeitos/`; música da cidade (The Old Tower Inn) e de batalha
+  (Medieval: Battle), ambas de RandomMind (CC0), em `src/assets/audio/musica/`.
+- **Como o som funciona:** música da cidade em todas as telas fora da batalha e de batalha na
+  arena, em loop; efeitos por evento da batalha (golpe de corte/perfuração, impacto, magia, crítico,
+  errou, cura, nocaute, status, item), vitória e derrota no resultado e um clique nos botões. Cada
+  som toca uma vez por passo da animação (golpe em área não empilha). Nada toca antes do primeiro
+  gesto do jogador (regra dos navegadores). Volumes de efeitos e música de 0 a 100% nas
+  Configurações (0 = mudo); padrão 60% e 40%.
 - **Não usar:** assets LPC (CC-BY-SA/GPL — compartilhamento obrigatório, fora das licenças
   permitidas) e packs com licença própria não-CC sem aprovação.
 - Antes de baixar, conferir a licença na página do pack; registrar em `CREDITS.md` junto com o asset.
@@ -1213,11 +1243,11 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
 - [x] Forjar, aprimorar (+1 a +5), relíquias de chefe, tela de coleção
 
 ### Fase 11 — Polimento
-- [ ] 4 temas de cor selecionáveis com contraste verificado
-- [ ] Efeitos sonoros e música com controle de volume
-- [ ] Revisão de responsividade, acessibilidade (teclado, foco, rótulos) e textos
+- [x] 4 temas de cor selecionáveis com contraste verificado
+- [x] Efeitos sonoros e música com controle de volume
+- [x] Revisão de responsividade, acessibilidade (teclado, foco, rótulos) e textos
 
-### Pendências conhecidas (após a Fase 10)
+### Pendências conhecidas (após a Fase 11)
 - A vida dos heróis durante uma masmorra só aparece na tela da masmorra; o mapa não mostra.
 - Chefes exclusivos de masmorra não existem: o chefe da masmorra é o chefe da zona fortalecido
   (decisão da Fase 6, §3.5; ideia registrada em §9).
@@ -1233,6 +1263,9 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
 - Treinar exige tirar o herói do grupo; com o grupo inicial de 2, isso deixa 1 herói lutando até
   contratar alguém. Reavaliar se ficar incômodo.
 - Relíquias não aparecem na batalha (ícone ou texto); o efeito só é visto na Coleção e no resultado.
+- **Áudio (Fase 11):** as músicas somam 5,5 MB (a de batalha em 320 kbps) e não há codificador no
+  ambiente para reduzir; os efeitos são OGG, que Safari antigo não toca; os efeitos foram escolhidos
+  pelo nome do arquivo no pack e precisam de uma revisão por ouvido.
 - **Balanceamento (prioridade):** simular o consumo de materiais da ferraria (forjar e aprimorar até
   +5 em cada zona); revisar a fórmula do aprimoramento, cujo mínimo de +1 por nível dá ganhos
   desproporcionais em bônus pequenos (bônus 1 vira 6 em +5). A fórmula só muda depois de uma

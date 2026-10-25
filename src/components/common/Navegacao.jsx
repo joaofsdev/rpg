@@ -13,7 +13,7 @@ const ABAS = [
 
 function Selo({ valor, rotulo }) {
   return (
-    <span className="rounded bg-destaque px-1.5 text-xs text-[#241a0c]" aria-label={rotulo}>
+    <span className="rounded bg-destaque px-1.5 text-xs text-sobre-destaque" aria-label={rotulo}>
       {valor}
     </span>
   );

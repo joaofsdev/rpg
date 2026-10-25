@@ -1,6 +1,7 @@
 import { golpes } from "../../data/golpes";
 import { iconesItens } from "../../data/sprites";
-import { NOMES_ELEMENTO, DESCRICAO_ALVO, CORES_ELEMENTO } from "../../data/textos";
+import { DESCRICAO_ALVO } from "../../data/textos";
+import Elemento from "../common/Elemento";
 import { corRecurso } from "../common/cores";
 import Botao from "../common/Botao";
 
@@ -37,7 +38,9 @@ function CartaoGolpe({ opcao, atalho, selecionado, bloqueado, aoEscolher }) {
       </span>
       <span className="text-xs text-texto-2">
         {elemento && (
-          <span style={{ color: CORES_ELEMENTO[elemento] }}>{NOMES_ELEMENTO[elemento]} </span>
+          <>
+            <Elemento elemento={elemento} />{" "}
+          </>
         )}
         {golpe.poder ? `poder ${golpe.poder}${golpe.acertos > 1 ? ` ×${golpe.acertos}` : ""}, ` : ""}
         {DESCRICAO_ALVO[golpe.alvo]}

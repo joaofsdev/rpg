@@ -9,6 +9,7 @@ import {
   duracaoEvento,
   descreverEvento,
   PAUSA_ENTRE_ACOES_MS,
+  somDoEvento,
 } from "./exibicao";
 
 const LINHAS_REGISTRO = 6;
@@ -21,16 +22,19 @@ function registroDoLog(batalha, exibicao) {
 }
 
 // base: batalha antes dos eventos; final: batalha estável atual (ou encerrada)
-export function useReproducao({ base, final, eventos, velocidade, aoConcluir }) {
+// aoSom(nome): toca um efeito sonoro; cada som toca uma vez por passo da animação
+export function useReproducao({ base, final, eventos, velocidade, aoConcluir, aoSom }) {
   const [estado, setEstado] = useState(() => {
     const exibicao = criarExibicao(final);
     return { exibicao, efeitos: [], reproduzindo: false, registro: registroDoLog(final, exibicao) };
   });
   const velocidadeRef = useRef(velocidade);
   const aoConcluirRef = useRef(aoConcluir);
+  const aoSomRef = useRef(aoSom);
   const adiantarRef = useRef(() => {});
   velocidadeRef.current = velocidade;
   aoConcluirRef.current = aoConcluir;
+  aoSomRef.current = aoSom;
 
   useEffect(() => {
     if (eventos.length === 0) {
@@ -65,11 +69,14 @@ export function useReproducao({ base, final, eventos, velocidade, aoConcluir }) 
     const passo = () => {
       if (encerrado) return;
       const novos = [];
+      const sons = new Set();
       let espera = 0;
       // Eventos sem duração (recurso, intenção…) são aplicados juntos com o próximo
       while (indice < eventos.length && espera === 0) {
         const evento = eventos[indice++];
         processar(evento);
+        const som = somDoEvento(evento);
+        if (som) sons.add(som);
         espera = duracaoEvento(evento, velocidadeRef.current);
         const duracaoEfeito = Math.max(espera, 700 / velocidadeRef.current);
         for (const efeito of efeitosDoEvento(evento)) {
@@ -79,6 +86,7 @@ export function useReproducao({ base, final, eventos, velocidade, aoConcluir }) 
           espera += PAUSA_ENTRE_ACOES_MS / velocidadeRef.current;
         }
       }
+      for (const som of sons) aoSomRef.current?.(som);
       setEstado((s) => ({ ...s, exibicao, registro, efeitos: [...s.efeitos.slice(-30), ...novos] }));
       if (indice >= eventos.length) timer = setTimeout(concluir, espera);
       else timer = setTimeout(passo, espera);

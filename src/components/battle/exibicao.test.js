@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { criarExibicao, aplicarEvento, efeitosDoEvento, descreverEvento, duracaoEvento } from "./exibicao";
+import { criarExibicao, aplicarEvento, efeitosDoEvento, descreverEvento, duracaoEvento, somDoEvento } from "./exibicao";
 import { aplicarAcao, acoesDisponiveis } from "../../engine/combate";
 import { batalhaTeste, heroiTeste } from "../../engine/__fixtures__/batalhas";
 
@@ -77,5 +77,33 @@ describe("efeitos e textos", () => {
   it("acelerar divide a duração", () => {
     expect(duracaoEvento({ tipo: "dano" }, 2)).toBe(duracaoEvento({ tipo: "dano" }, 1) / 2);
     expect(duracaoEvento({ tipo: "recurso" }, 1)).toBe(0);
+  });
+});
+
+describe("sons da batalha", () => {
+  it("dano toca o som do tipo do golpe; crítico tem som próprio", () => {
+    expect(somDoEvento({ tipo: "dano", valor: 10, elemento: "corte" })).toBe("golpeCorte");
+    expect(somDoEvento({ tipo: "dano", valor: 10, elemento: "perfuracao" })).toBe("golpeCorte");
+    expect(somDoEvento({ tipo: "dano", valor: 10, elemento: "impacto" })).toBe("golpeImpacto");
+    expect(somDoEvento({ tipo: "dano", valor: 10, elemento: "fogo" })).toBe("golpeMagia");
+    expect(somDoEvento({ tipo: "dano", valor: 10, elemento: "fogo", critico: true })).toBe("critico");
+  });
+
+  it("dano zero (imune) e custo de vida próprio ficam em silêncio", () => {
+    expect(somDoEvento({ tipo: "dano", valor: 0, elemento: "luz" })).toBeNull();
+    expect(somDoEvento({ tipo: "dano", valor: 5, elemento: "impacto", autoDano: true })).toBeNull();
+    expect(somDoEvento({ tipo: "statusTick", valor: -5 })).toBeNull();
+    expect(somDoEvento({ tipo: "turnoIniciado" })).toBeNull();
+  });
+
+  it("errou, cura, nocaute, status e item têm sons", () => {
+    expect(["errou", "cura", "nocaute", "statusAplicado", "itemUsado", "reviveu"].map((tipo) => somDoEvento({ tipo }))).toEqual([
+      "errou",
+      "cura",
+      "nocaute",
+      "status",
+      "item",
+      "cura",
+    ]);
   });
 });

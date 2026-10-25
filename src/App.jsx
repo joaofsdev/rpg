@@ -18,6 +18,7 @@ import TelaColecao from "./components/screens/TelaColecao";
 import Navegacao from "./components/common/Navegacao";
 import Aviso from "./components/common/Aviso";
 import ResumoRetorno from "./components/common/ResumoRetorno";
+import TrilhaSonora from "./components/common/TrilhaSonora";
 
 const TELAS = {
   slots: TelaSlots,
@@ -60,6 +61,7 @@ function Roteador() {
 export default function App() {
   return (
     <GameProvider>
+      <TrilhaSonora />
       <Roteador />
     </GameProvider>
   );

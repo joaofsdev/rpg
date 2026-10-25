@@ -1,5 +1,6 @@
 import { useEstado, useAcoes } from "../../state/contextos";
 import Botao from "../common/Botao";
+import { temas } from "../../data/temas";
 import { progressoDaColecao } from "../../engine/colecao";
 
 function Atalho({ titulo, descricao, aoAbrir }) {
@@ -65,6 +66,45 @@ export default function TelaMais() {
               </button>
             ))}
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="w-48 text-texto-2" id="rotulo-tema">
+              Tema de cor
+            </span>
+            {Object.values(temas).map((t) => (
+              <button
+                key={t.id}
+                aria-describedby="rotulo-tema"
+                aria-pressed={config.tema === t.id}
+                onClick={() => acoes.alterarConfig({ tema: t.id })}
+                className={`botao min-h-8 gap-2 px-3 ${config.tema === t.id ? "botao-secundario text-destaque" : "botao-discreto"}`}
+              >
+                <span
+                  aria-hidden="true"
+                  className="inline-block h-4 w-4 rounded-sm border border-borda-forte"
+                  style={{ background: `linear-gradient(135deg, ${t.cores.fundo} 50%, ${t.cores.destaque} 50%)` }}
+                />
+                {t.nome}
+              </button>
+            ))}
+          </div>
+          {[
+            ["volumeEfeitos", "Volume dos efeitos"],
+            ["volumeMusica", "Volume da música"],
+          ].map(([chave, rotulo]) => (
+            <label key={chave} className="flex flex-wrap items-center gap-2">
+              <span className="w-48 text-texto-2">{rotulo}</span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="10"
+                value={Math.round(config[chave] * 100)}
+                onChange={(e) => acoes.alterarConfig({ [chave]: Number(e.target.value) / 100 })}
+                className="w-40 accent-[var(--color-destaque)]"
+              />
+              <span className="w-12 text-sm">{config[chave] > 0 ? `${Math.round(config[chave] * 100)}%` : "mudo"}</span>
+            </label>
+          ))}
           <label className="flex items-center gap-2">
             <input
               type="checkbox"

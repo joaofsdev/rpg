@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-/* Tema Taverna (SPEC.md §7.5). Outros temas sobrescrevem estas variáveis na Fase 11. */
+/* Tema Taverna (SPEC.md §7.5). Os outros temas trocam estas variáveis em tempo de execução
+   (src/data/temas.js, fonte única; um teste confere que este bloco bate com o tema Taverna). */
 @theme {
   --color-fundo: #1c1814;
   --color-superficie: #26201a;
@@ -9,12 +10,13 @@
   --color-borda-forte: #5c4a35;
   --color-texto: #ece3d3;
   --color-texto-2: #b5a68e;
-  --color-texto-3: #968871;
+  --color-texto-3: #9d907b;
   --color-destaque: #d9a441;
   --color-destaque-claro: #ecc271;
+  --color-sobre-destaque: #241a0c;
   --color-sucesso: #7fb069;
-  --color-perigo: #d0675b;
-  --color-mana: #6c8fd4;
+  --color-perigo: #d5786d;
+  --color-mana: #6f91d5;
   --color-vigor: #d99a4a;
   --color-info: #6c9bc4;
 
@@ -87,8 +89,8 @@ body {
   }
   .botao-primario {
     background: var(--color-destaque);
-    color: #241a0c;
-    border-color: #f0c66f40;
+    color: var(--color-sobre-destaque);
+    border-color: color-mix(in srgb, var(--color-destaque-claro) 25%, transparent);
     box-shadow: inset 0 -2px 0 #00000033;
   }
   .botao-primario:not(:disabled):hover {
@@ -112,10 +114,10 @@ body {
   .botao-perigo {
     background: transparent;
     color: var(--color-perigo);
-    border-color: #d0675b66;
+    border-color: color-mix(in srgb, var(--color-perigo) 40%, transparent);
   }
   .botao-perigo:not(:disabled):hover {
-    background: #d0675b1a;
+    background: color-mix(in srgb, var(--color-perigo) 10%, transparent);
   }
 
   .titulo {
@@ -255,7 +257,7 @@ body {
 /* Alvo selecionável */
 .alvo-valido {
   cursor: pointer;
-  outline: 2px dashed #d9a44199;
+  outline: 2px dashed color-mix(in srgb, var(--color-destaque) 60%, transparent);
   outline-offset: 4px;
   border-radius: 6px;
 }

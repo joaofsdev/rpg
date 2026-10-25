@@ -4,6 +4,7 @@ import { itensDeBatalha } from "../../state/seletores";
 import { buscarZona } from "../../data/zonas";
 import { golpes } from "../../data/golpes";
 import { cenario } from "../../data/sprites";
+import { variaveisDoTema, TEMA_PADRAO } from "../../data/temas";
 import { acoesDisponiveis, alvosParaItem } from "../../engine/combate";
 import { useReproducao } from "../battle/useReproducao";
 import Combatente from "../battle/Combatente";
@@ -11,6 +12,7 @@ import BarraOrdem from "../battle/BarraOrdem";
 import MenuAcoes from "../battle/MenuAcoes";
 import Previa from "../battle/Previa";
 import Botao from "../common/Botao";
+import { tocarEfeito } from "../common/som";
 
 const ALVO_UNICO = ["inimigo", "aliado"];
 
@@ -34,6 +36,9 @@ function fundoDaArena(escala) {
     backgroundRepeat: camadas.map((c) => c[2]).join(", "),
     backgroundPosition: camadas.map((c) => c[3]).join(", "),
     imageRendering: "pixelated",
+    // A arte da arena é escura: dentro dela, as cores são sempre as do tema Taverna
+    ...variaveisDoTema(TEMA_PADRAO),
+    color: "var(--color-texto)",
   };
 }
 
@@ -62,6 +67,7 @@ export default function TelaBatalha() {
     eventos: batalhaUi.eventos,
     velocidade: config.velocidadeAnimacao,
     aoConcluir: acoes.filaConcluida,
+    aoSom: tocarEfeito,
   });
 
   const [aba, setAba] = useState("golpes");
@@ -169,7 +175,7 @@ export default function TelaBatalha() {
   const alvoDaPrevia = alvoEscolhido ?? alvoFoco;
 
   return (
-    <div className="flex min-h-full flex-col" data-movimento={config.reduzirMovimento ? "reduzido" : undefined}>
+    <main className="flex min-h-full flex-col" data-movimento={config.reduzirMovimento ? "reduzido" : undefined}>
       <header className="border-b-2 border-borda bg-superficie">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2">
           <h1 className="titulo text-destaque">
@@ -185,7 +191,7 @@ export default function TelaBatalha() {
             {[1, 2, 3].map((v) => (
               <button
                 key={v}
-                aria-labelledby="rotulo-velocidade"
+                aria-describedby="rotulo-velocidade"
                 aria-pressed={config.velocidadeAnimacao === v}
                 onClick={() => acoes.alterarConfig({ velocidadeAnimacao: v })}
                 className={`botao min-h-8 px-2 ${config.velocidadeAnimacao === v ? "botao-secundario text-destaque" : "botao-discreto"}`}
@@ -313,6 +319,6 @@ export default function TelaBatalha() {
           </ol>
         </section>
       </div>
-    </div>
+    </main>
   );
 }

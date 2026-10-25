@@ -5,6 +5,7 @@ import { golpes } from "../../data/golpes";
 import { itens } from "../../data/itens";
 import { status as dadosStatus } from "../../data/status";
 import { NOMES_ATRIBUTO, NOMES_ELEMENTO } from "../../data/textos";
+import { ELEMENTOS_FISICOS } from "../../data/constants";
 
 // Duração de cada evento em ms na velocidade 1×
 const DURACAO = {
@@ -215,6 +216,31 @@ export function descreverEvento(evento, exibicao) {
         : null;
     case "fimBatalha":
       return { vitoria: "Vitória!", derrota: "O grupo recuou.", fuga: "O grupo fugiu." }[evento.resultado];
+    default:
+      return null;
+  }
+}
+
+// Som de cada evento (nome de um efeito de src/components/common/som.js), ou null.
+// Dano de status (veneno, queimadura) e de custo próprio não toca nada, para não cansar.
+export function somDoEvento(evento) {
+  switch (evento.tipo) {
+    case "dano":
+      if (evento.autoDano || evento.valor === 0) return null;
+      if (evento.critico) return "critico";
+      if (ELEMENTOS_FISICOS.includes(evento.elemento)) return evento.elemento === "impacto" ? "golpeImpacto" : "golpeCorte";
+      return "golpeMagia";
+    case "errou":
+      return "errou";
+    case "cura":
+    case "reviveu":
+      return "cura";
+    case "nocaute":
+      return "nocaute";
+    case "statusAplicado":
+      return "status";
+    case "itemUsado":
+      return "item";
     default:
       return null;
   }

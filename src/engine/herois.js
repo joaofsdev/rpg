@@ -3,6 +3,7 @@ import { nomesHerois } from "../data/nomesHerois";
 import { SLOTS_EQUIPAMENTO, ATRIBUTOS, MAX_GOLPES_EQUIPADOS } from "../data/constants";
 import { escolher, gerarId } from "./rng";
 import { conjuntoComum } from "./itens";
+import { registrarNaColecao } from "./colecao";
 
 function pontosVazios() {
   return { vida: 0, forca: 0, magia: 0, defesa: 0, resistencia: 0, velocidade: 0, manaMax: 0 };
@@ -58,12 +59,15 @@ export function criarCompanheiro(rng, { excluirClasseId, nivel, nomesEmUso = [] 
 export function adicionarHeroi(save, heroi, equipamentos = [], { noGrupo = true } = {}) {
   const novosEquipamentos = { ...save.inventario.equipamentos };
   for (const item of equipamentos) novosEquipamentos[item.id] = item;
-  return {
-    ...save,
-    herois: { ...save.herois, [heroi.id]: heroi },
-    grupo: noGrupo ? [...save.grupo, heroi.id] : save.grupo,
-    inventario: { ...save.inventario, equipamentos: novosEquipamentos },
-  };
+  return registrarNaColecao(
+    {
+      ...save,
+      herois: { ...save.herois, [heroi.id]: heroi },
+      grupo: noGrupo ? [...save.grupo, heroi.id] : save.grupo,
+      inventario: { ...save.inventario, equipamentos: novosEquipamentos },
+    },
+    { equipamentos },
+  );
 }
 
 // Atributos em que o herói pode colocar pontos (manaMax só para classes de mana)

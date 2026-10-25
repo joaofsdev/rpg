@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { itens } from "../../data/itens";
 import { receitas, receitaDoPrato, VAGAS_COZINHA, PORCOES_MAX } from "../../data/receitas";
-import { descreverEfeitoRefeicao } from "../../data/textos";
+import { descreverEfeito } from "../../data/textos";
 import { atividadeConcluida, decorrido, tempoRestante } from "../../engine/atividades";
 import {
   receitasConhecidas,
@@ -20,7 +20,7 @@ import { formatarDuracao } from "../common/tempo";
 const MINUTO_MS = 60 * 1000;
 
 function efeitoEDuracao(receita) {
-  return `${descreverEfeitoRefeicao(receita.efeito)} por ${receita.duracaoEncontros} encontros`;
+  return `${descreverEfeito(receita.efeito)} por ${receita.duracaoEncontros} encontros`;
 }
 
 function Panela({ atividade, agora, acoes }) {
@@ -217,7 +217,7 @@ export default function Cozinha({ save, agora, acoes }) {
           {ativa ? (
             <p className="text-sm">
               <span className="titulo">{ativa.nome}</span>:{" "}
-              <span className="text-sucesso">{descreverEfeitoRefeicao(ativa.efeito)}</span>, mais{" "}
+              <span className="text-sucesso">{descreverEfeito(ativa.efeito)}</span>, mais{" "}
               {save.refeicaoAtiva.encontrosRestantes} {save.refeicaoAtiva.encontrosRestantes === 1 ? "encontro" : "encontros"}.
             </p>
           ) : (

@@ -4,7 +4,7 @@ import { zonas } from "../data/zonas";
 import { classesHeroi } from "../data/classesHeroi";
 import { MAX_GRUPO, SLOTS_EQUIPAMENTO } from "../data/constants";
 
-export const VERSAO_SAVE = 4;
+export const VERSAO_SAVE = 5;
 
 function progressoInicial() {
   const progresso = { zonas: {}, masmorras: {} };
@@ -67,6 +67,13 @@ export function validarSave(save) {
     erros.push("Grupo referencia herói inexistente.");
   } else if (new Set(save.grupo).size !== save.grupo.length) {
     erros.push("Grupo com herói repetido.");
+  }
+  if (
+    !ehObjeto(save.colecao?.equipamentos) ||
+    !Array.isArray(save.colecao?.itens) ||
+    !Array.isArray(save.colecao?.reliquias)
+  ) {
+    erros.push("Coleção inválida.");
   }
   if (!ehObjeto(save.atividades)) {
     erros.push("Atividades inválidas.");

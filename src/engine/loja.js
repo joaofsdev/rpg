@@ -11,6 +11,7 @@ import {
 import { sortearEquipamento, precoCompra } from "./itens";
 import { nivelMedio } from "./encontros";
 import { equipamentosLivres } from "./inventario";
+import { registrarNaColecao } from "./colecao";
 import { prazoVencido, tempoAtePrazo } from "./relogio";
 import { heroisDoGrupo } from "./grupo";
 
@@ -69,17 +70,16 @@ export function comprarEquipamento(save, indice) {
   }
   const { preco, ...item } = oferta;
   const vendidos = save.loja.vendidos.map((v, i) => (i === indice ? true : v));
-  return {
-    save: {
-      ...save,
-      ouro: save.ouro - preco,
-      loja: { ...save.loja, vendidos },
-      inventario: {
-        ...save.inventario,
-        equipamentos: { ...save.inventario.equipamentos, [item.id]: item },
-      },
+  const comprado = {
+    ...save,
+    ouro: save.ouro - preco,
+    loja: { ...save.loja, vendidos },
+    inventario: {
+      ...save.inventario,
+      equipamentos: { ...save.inventario.equipamentos, [item.id]: item },
     },
   };
+  return { save: registrarNaColecao(comprado, { equipamentos: [item] }) };
 }
 
 export function comprarItem(save, itemId, quantidade = 1) {
@@ -91,10 +91,13 @@ export function comprarItem(save, itemId, quantidade = 1) {
   const total = item.preco * quantidade;
   if (save.ouro < total) return { erro: "Ouro insuficiente." };
   return {
-    save: {
-      ...save,
-      ouro: save.ouro - total,
-      inventario: { ...save.inventario, itens: { ...save.inventario.itens, [itemId]: atual + quantidade } },
-    },
+    save: registrarNaColecao(
+      {
+        ...save,
+        ouro: save.ouro - total,
+        inventario: { ...save.inventario, itens: { ...save.inventario.itens, [itemId]: atual + quantidade } },
+      },
+      { itens: [itemId] },
+    ),
   };
 }

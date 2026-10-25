@@ -6,7 +6,7 @@ import { inimigos } from "../../data/inimigos";
 import { spritesInimigos, spritesHerois } from "../../data/sprites";
 import { ANDARES_MASMORRA } from "../../data/constants";
 import { receitaDoPrato } from "../../data/receitas";
-import { descreverEfeitoRefeicao } from "../../data/textos";
+import { descreverEfeito } from "../../data/textos";
 import Sprite from "../battle/Sprite";
 import BarraValor from "../common/BarraValor";
 import Botao from "../common/Botao";
@@ -163,7 +163,7 @@ export default function TelaMapa() {
         {refeicao && (
           <p className="text-sm text-texto-2">
             Refeição: <span className="text-texto">{refeicao.nome}</span> ·{" "}
-            <span className="text-sucesso">{descreverEfeitoRefeicao(refeicao.efeito)}</span> · mais{" "}
+            <span className="text-sucesso">{descreverEfeito(refeicao.efeito)}</span> · mais{" "}
             {save.refeicaoAtiva.encontrosRestantes} {save.refeicaoAtiva.encontrosRestantes === 1 ? "encontro" : "encontros"}
           </p>
         )}

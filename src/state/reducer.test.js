@@ -385,3 +385,52 @@ describe("cozinha", () => {
     expect(reducer(jogoNovo(), { type: "COMPRAR_RECEITA", agora: 1 }).aviso).toBe("Não há receita à venda esta semana.");
   });
 });
+
+describe("ferraria, relíquias e coleção", () => {
+  function comMateriais() {
+    const state = jogoNovo();
+    const itens = { ...state.save.inventario.itens, osso_antigo: 100, pano_mortuario: 100 };
+    return { ...state, save: { ...state.save, ouro: 10000, inventario: { ...state.save.inventario, itens } } };
+  }
+
+  it("forja um item, avisa e registra na coleção", () => {
+    const state = reducer(comMateriais(), { type: "FORJAR", zonaId: "cemiterio", slot: "arma", tipo: "espada", semente: 4 });
+    const novo = Object.values(state.save.inventario.equipamentos).find((e) => e.tipoArma === "espada" && e.nivel === 10);
+    expect(novo).toBeDefined();
+    expect(state.aviso).toBe(`Forjado: ${novo.nome} (${novo.raridade}).`);
+    expect(state.save.colecao.equipamentos["arma:espada"]).toContain(novo.raridade);
+  });
+
+  it("aprimora um item equipado e recusa zona bloqueada na forja", () => {
+    let state = comMateriais();
+    const armaId = state.save.herois[state.save.grupo[0]].equipamento.arma;
+    state = reducer(state, { type: "APRIMORAR", equipamentoId: armaId });
+    expect(state.save.inventario.equipamentos[armaId].aprimoramento).toBe(1);
+    expect(state.aviso).toMatch(/agora é \+1\.$/);
+    expect(reducer(state, { type: "FORJAR", zonaId: "minas", slot: "arma", tipo: "espada", semente: 1 }).aviso).toMatch(/Desbloqueie/);
+  });
+
+  it("vencer o chefe pela primeira vez entrega a relíquia e mostra no resumo", () => {
+    let state = jogoNovo();
+    const zonas = { ...state.save.progresso.zonas, cemiterio: { ...state.save.progresso.zonas.cemiterio, encontrosVencidos: 10 } };
+    state = { ...state, save: { ...state.save, progresso: { ...state.save.progresso, zonas } } };
+    state = terminarAnimacao(reducer(state, { type: "INICIAR_ENCONTRO", zonaId: "cemiterio", chefe: true, semente: 2 }));
+    // Heróis fortíssimos para garantir a vitória
+    const combatentes = structuredClone(state.save.batalha.combatentes);
+    for (const c of Object.values(combatentes)) if (c.lado === "herois") Object.assign(c.atributos, { forca: 99999, magia: 99999, velocidade: 999 });
+    state = { ...state, save: { ...state.save, batalha: { ...state.save.batalha, combatentes } } };
+    for (let i = 0; i < 60 && state.save.batalha; i++) {
+      const b = state.save.batalha;
+      const alvo = Object.values(b.combatentes).find((c) => c.lado === "inimigos" && !c.nocauteado);
+      state = terminarAnimacao(reducer(state, { type: "ACAO_BATALHA", acao: { tipo: "golpe", golpeId: b.combatentes[b.ativoId].golpeBasico, alvoId: alvo.id } }));
+    }
+    expect(state.resumoBatalha.resultado).toBe("vitoria");
+    expect(state.resumoBatalha.reliquiaNova).toBe("coroa_do_guardiao");
+    expect(state.save.colecao.reliquias).toEqual(["coroa_do_guardiao"]);
+  });
+
+  it("navega para Ferraria e Coleção", () => {
+    expect(reducer(jogoNovo(), { type: "NAVEGAR", tela: "ferraria" }).tela).toBe("ferraria");
+    expect(reducer(jogoNovo(), { type: "NAVEGAR", tela: "colecao" }).tela).toBe("colecao");
+  });
+});

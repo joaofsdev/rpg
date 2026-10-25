@@ -1,5 +1,6 @@
 import { useEstado, useAcoes } from "../../state/contextos";
 import Botao from "../common/Botao";
+import { progressoDaColecao } from "../../engine/colecao";
 
 function Atalho({ titulo, descricao, aoAbrir }) {
   return (
@@ -16,6 +17,7 @@ export default function TelaMais() {
   const { config, save } = useEstado();
   const acoes = useAcoes();
   const vistos = Object.values(save.bestiario).filter((e) => e.visto).length;
+  const colecao = progressoDaColecao(save);
 
   return (
     <main className="mx-auto max-w-3xl px-3 py-4 pb-24 sm:pb-6">
@@ -29,6 +31,16 @@ export default function TelaMais() {
           titulo="Bestiário"
           descricao={`${vistos} criaturas registradas. Fraquezas, drops e marcos de derrotas.`}
           aoAbrir={() => acoes.navegar("bestiario")}
+        />
+        <Atalho
+          titulo="Ferraria"
+          descricao="Forje equipamentos com materiais das zonas e aprimore até +5, sem falhar."
+          aoAbrir={() => acoes.navegar("ferraria")}
+        />
+        <Atalho
+          titulo="Coleção"
+          descricao={`${colecao.total.percentual}% concluída. Equipamentos, itens e ${colecao.reliquias.obtidos}/${colecao.reliquias.total} relíquias.`}
+          aoAbrir={() => acoes.navegar("colecao")}
         />
       </ul>
 

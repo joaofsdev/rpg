@@ -115,7 +115,7 @@ describe("refeição ativa", () => {
       inimigos: [{ id: "rato_tumba", nivel: 1 }],
       origem: { tipo: "zona", zonaId: "cemiterio" },
       semente: 1,
-      refeicao: efeitoDaRefeicao(save),
+      efeitos: [efeitoDaRefeicao(save)],
     });
     expect(batalha.combatentes.h0.hpMax).toBe(aumentarPercentual(vida, 0.1));
   });
@@ -124,8 +124,8 @@ describe("refeição ativa", () => {
     const save = jogo();
     const heroi = save.herois[save.grupo[0]];
     const base = calcularAtributosHeroi(heroi, save.inventario.equipamentos);
-    const criar = (refeicao) =>
-      criarBatalha({ herois: [heroi], equipamentos: save.inventario.equipamentos, inimigos: [{ id: "rato_tumba", nivel: 1 }], origem: { tipo: "zona", zonaId: "cemiterio" }, semente: 1, refeicao })
+    const criar = (efeito) =>
+      criarBatalha({ herois: [heroi], equipamentos: save.inventario.equipamentos, inimigos: [{ id: "rato_tumba", nivel: 1 }], origem: { tipo: "zona", zonaId: "cemiterio" }, semente: 1, efeitos: [efeito] })
         .inicial.combatentes.h0;
     expect(criar({ tipo: "ataque", valor: 0.1 }).atributos.forca).toBe(aumentarPercentual(base.forca, 0.1));
     expect(criar({ tipo: "defesa", valor: 0.1 }).atributos.resistencia).toBe(aumentarPercentual(base.resistencia, 0.1));

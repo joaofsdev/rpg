@@ -220,6 +220,14 @@ export function criarAcoes(dispatch, storage) {
       dispatch({ type: "COMPRAR_RECEITA", agora: Date.now() });
     },
 
+    forjar(zonaId, slot, tipo) {
+      dispatch({ type: "FORJAR", zonaId, slot, tipo, semente: novaSemente() });
+    },
+
+    aprimorar(equipamentoId) {
+      dispatch({ type: "APRIMORAR", equipamentoId });
+    },
+
     colocarNoGrupo(heroiId) {
       dispatch({ type: "COLOCAR_NO_GRUPO", heroiId });
     },

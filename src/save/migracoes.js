@@ -2,6 +2,8 @@
 // e deve ser uma função pura com teste e fixture próprios.
 
 import { VERSAO_SAVE, validarSave } from "./formato";
+import { colecaoDoQueOSaveTem } from "../engine/colecao";
+import { comReliquiasDosChefesVencidos } from "../engine/reliquias";
 
 export const MIGRACOES = {
   // v2 → v3 (Fase 6): masmorraAtual ganhou vida, ganhos e fogueira. Nenhum save v2 tinha
@@ -19,6 +21,22 @@ export const MIGRACOES = {
       delete migrado.herois[id].atividade;
     }
     return migrado;
+  },
+
+  // v4 → v5 (Fase 10): a coleção passa a ser registrada. Saves antigos começam com o que já têm
+  // (equipamentos e itens do inventário) e com as relíquias dos chefes já vencidos, porque a
+  // "primeira vitória" deles aconteceu antes de as relíquias existirem.
+  4: (save) => {
+    const base = {
+      ...save,
+      versao: 5,
+      colecao: {
+        equipamentos: { ...(save.colecao?.equipamentos ?? {}) },
+        itens: [...(save.colecao?.itens ?? [])],
+        reliquias: [...(save.colecao?.reliquias ?? [])],
+      },
+    };
+    return comReliquiasDosChefesVencidos(colecaoDoQueOSaveTem(base));
   },
 };
 

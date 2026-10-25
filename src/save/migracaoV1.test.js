@@ -84,6 +84,15 @@ describe("migração v1 → v2", () => {
     expect(save.estatisticas.encontrosVencidos).toBe(87);
   });
 
+  it("dá a relíquia do chefe já vencido e registra na coleção o que a conta tinha", () => {
+    const save = migrar("aldric");
+    expect(save.colecao.reliquias).toEqual(["coroa_do_guardiao"]);
+    expect(migrar("mira").colecao.reliquias).toEqual([]);
+    const registrados = Object.values(save.colecao.equipamentos).reduce((s, r) => s + r.length, 0);
+    expect(registrados).toBeGreaterThan(0);
+    expect(save.colecao.itens).toContain("pocao_pequena");
+  });
+
   it("adiciona um companheiro de outra classe, 2 níveis abaixo e equipado", () => {
     const save = migrar("aldric");
     expect(save.grupo).toHaveLength(2);

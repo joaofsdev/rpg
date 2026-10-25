@@ -51,3 +51,8 @@ export function descreverGanho(ganho) {
   const pontos = ganho.pontos === 1 ? "1 ponto" : `${ganho.pontos} pontos`;
   return `${pontos} de ${NOMES_ATRIBUTO[ganho.atributo]} (+${ganho.pontos * TAXA_PONTO[ganho.atributo]})`;
 }
+
+// "Espada Simples de Ferro +3" (aprimoramento aparece no nome, SPEC.md §3.11)
+export function nomeDoEquipamento(e) {
+  return e.aprimoramento > 0 ? `${e.nome} +${e.aprimoramento}` : e.nome;
+}

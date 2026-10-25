@@ -16,6 +16,8 @@ import { CLASSES_RECRUTAVEIS, RECRUTAS_NO_MURAL } from "./recrutamento";
 import { DURACOES_TREINO_HORAS, ZONAS_QUE_LIBERAM_VAGA_TREINO } from "./treino";
 import { nomesHerois } from "./nomesHerois";
 import { receitas, PORCOES_MAX } from "./receitas";
+import { reliquias } from "./reliquias";
+import { materiaisDaZona } from "../engine/ferraria";
 import { DURACOES_EXPEDICAO_MINUTOS, MINUTOS_POR_ROLAGEM, ZONAS_QUE_LIBERAM_VAGA_EXPEDICAO } from "./expedicoes";
 
 const CATEGORIAS = ["fisico", "magico", "suporte"];
@@ -232,5 +234,26 @@ describe("conteúdo da Fase 9", () => {
     const zonasComReceita = Object.values(receitas).filter((r) => r.zonaId).map((r) => r.zonaId);
     expect(new Set(zonasComReceita).size).toBe(zonasComReceita.length);
     for (const r of Object.values(receitas)) expect(itens[r.resultado].preco).toBeGreaterThan(0);
+  });
+});
+
+describe("conteúdo da Fase 10", () => {
+  const EFEITOS_RELIQUIA = ["danoElemento", "vidaMax", "ataque", "defesa", "xp", "ouro"];
+
+  it("ids de relíquia batem com as chaves", () => chavesBatemComIds(reliquias));
+
+  it("cada zona tem exatamente uma relíquia, com efeito válido", () => {
+    expect(Object.values(reliquias).map((r) => r.zonaId).sort()).toEqual(zonas.map((z) => z.id).sort());
+    for (const r of Object.values(reliquias)) {
+      expect(EFEITOS_RELIQUIA).toContain(r.efeito.tipo);
+      expect(r.efeito.valor).toBeGreaterThan(0);
+      if (r.efeito.tipo === "danoElemento") expect(ELEMENTOS).toContain(r.efeito.elemento);
+    }
+  });
+
+  it.each(zonas)("$id tem 2 materiais com preço para a ferraria", (zona) => {
+    const materiais = materiaisDaZona(zona);
+    expect(materiais).toHaveLength(2);
+    for (const id of materiais) expect(itens[id].preco).toBeGreaterThan(0);
   });
 });

@@ -10,7 +10,11 @@ import {
 import { guardarNoInventario } from "./inventario";
 import { aumentarPercentual } from "./atributos";
 import { aprenderGolpesDoNivel } from "./herois";
-import { efeitoDaRefeicao, receitaDoChefe, aprenderReceita } from "./cozinha";
+import { receitaDoChefe, aprenderReceita } from "./cozinha";
+import { efeitosDoGrupo, reliquiaDaVitoria } from "./reliquias";
+import { somaDosEfeitos } from "./efeitos";
+import { adicionarReliquia } from "./colecao";
+import { criarRng } from "./rng";
 
 // Marcos do bestiário (SPEC.md §3.10)
 export const DERROTAS_PARA_REVELAR_AFINIDADES = 10;
@@ -100,10 +104,10 @@ function atualizarProgressoZona(progresso, origem, resultado) {
 export function aplicarResultadoBatalha(save, batalha) {
   if (batalha.fase !== "fim") throw new Error("A batalha ainda não terminou.");
 
-  // Refeição de XP ou de ouro aumenta as recompensas desta batalha (SPEC.md §3.7)
-  const refeicao = efeitoDaRefeicao(save);
-  const bonusXp = refeicao?.tipo === "xp" ? refeicao.valor : 0;
-  const bonusOuro = refeicao?.tipo === "ouro" ? refeicao.valor : 0;
+  // Refeição e relíquias de XP ou de ouro aumentam as recompensas desta batalha (SPEC.md §3.7, §3.11)
+  const efeitos = efeitosDoGrupo(save);
+  const bonusXp = somaDosEfeitos(efeitos, "xp");
+  const bonusOuro = somaDosEfeitos(efeitos, "ouro");
   const recompensas = {
     ...batalha.recompensas,
     xp: aumentarPercentual(batalha.recompensas.xp, bonusXp),
@@ -119,6 +123,7 @@ export function aplicarResultadoBatalha(save, batalha) {
     itensVendidos: [],
     niveis: [],
     receitaNova: null,
+    reliquiaNova: null,
   };
 
   const herois = { ...save.herois };
@@ -162,6 +167,13 @@ export function aplicarResultadoBatalha(save, batalha) {
     const receita = receitaDoChefe(origem.zonaId);
     comReceita = aprenderReceita(guardado.save, receita?.id);
     if (comReceita !== guardado.save) resumo.receitaNova = receita.id;
+  }
+
+  // Relíquia do chefe da zona; o sorteio das revanches usa o estado final do RNG da batalha
+  const reliquiaId = reliquiaDaVitoria(save, batalha, criarRng(batalha.semente ?? 0));
+  if (reliquiaId) {
+    comReceita = adicionarReliquia(comReceita, reliquiaId);
+    resumo.reliquiaNova = reliquiaId;
   }
 
   return {

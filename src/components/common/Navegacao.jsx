@@ -8,7 +8,7 @@ const ABAS = [
   { tela: "atividades", nome: "Atividades", curto: "Ativ." },
   { tela: "taverna", nome: "Taverna" },
   { tela: "inventario", nome: "Inventário", curto: "Itens" },
-  { tela: "mais", nome: "Mais", inclui: ["mais", "loja", "bestiario"] },
+  { tela: "mais", nome: "Mais", inclui: ["mais", "loja", "bestiario", "ferraria", "colecao"] },
 ];
 
 function Selo({ valor, rotulo }) {

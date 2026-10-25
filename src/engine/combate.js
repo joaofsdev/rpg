@@ -28,6 +28,7 @@ import {
 } from "../data/constants";
 import { criarRng, chance, escolher, gerarId } from "./rng";
 import { calcularAtributosHeroi, calcularAtributosInimigo, aumentarPercentual } from "./atributos";
+import { somaDosEfeitos, bonusPorElemento } from "./efeitos";
 import {
   calcularDano,
   faixaDano,
@@ -59,27 +60,30 @@ const ALVOS_UNICOS = ["inimigo", "aliado"];
 // Criação
 // ---------------------------------------------------------------------------
 
-// Refeição ativa (SPEC.md §3.7): multiplica atributos no início da batalha
-const ATRIBUTOS_DA_REFEICAO = { vidaMax: ["vida"], ataque: ["forca", "magia"], defesa: ["defesa", "resistencia"] };
+// Efeitos do grupo (refeição e relíquias, SPEC.md §3.7 e §3.11): multiplicam atributos no início
+// da batalha; efeitos do mesmo tipo se somam
+const ATRIBUTOS_DO_EFEITO = { vidaMax: ["vida"], ataque: ["forca", "magia"], defesa: ["defesa", "resistencia"] };
 
-function atributosComRefeicao(atributos, refeicao) {
-  const afetados = refeicao ? ATRIBUTOS_DA_REFEICAO[refeicao.tipo] : null;
-  if (!afetados) return atributos;
+function atributosComEfeitos(atributos, efeitos) {
   const resultado = { ...atributos };
-  for (const a of afetados) resultado[a] = aumentarPercentual(atributos[a], refeicao.valor);
+  for (const [tipo, afetados] of Object.entries(ATRIBUTOS_DO_EFEITO)) {
+    const fracao = somaDosEfeitos(efeitos, tipo);
+    if (fracao === 0) continue;
+    for (const a of afetados) resultado[a] = aumentarPercentual(atributos[a], fracao);
+  }
   return resultado;
 }
 
-function recursoInicial(classe, manaMax, refeicao) {
-  const extra = refeicao?.tipo === "recursoInicial" ? refeicao.valor : 0;
+function recursoInicial(classe, manaMax, efeitos) {
+  const extra = somaDosEfeitos(efeitos, "recursoInicial");
   if (classe.recurso === "vigor") return { tipo: "vigor", atual: Math.min(VIGOR.max, VIGOR.inicial + extra), max: VIGOR.max };
   return { tipo: "mana", atual: manaMax + extra, max: manaMax + extra };
 }
 
-function criarCombatenteHeroi(heroi, posicao, equipamentos, vidaInicial, refeicao) {
+function criarCombatenteHeroi(heroi, posicao, equipamentos, vidaInicial, efeitos) {
   const classe = classesHeroi[heroi.classeId];
   const { manaMax, ...base } = calcularAtributosHeroi(heroi, equipamentos);
-  const atributos = atributosComRefeicao(base, refeicao);
+  const atributos = atributosComEfeitos(base, efeitos);
   const arma = heroi.equipamento.arma ? equipamentos[heroi.equipamento.arma] : null;
   return {
     id: `h${posicao}`,
@@ -93,7 +97,7 @@ function criarCombatenteHeroi(heroi, posicao, equipamentos, vidaInicial, refeica
     atributos,
     hpMax: atributos.vida,
     hpAtual: vidaInicial === undefined ? atributos.vida : Math.max(0, Math.min(atributos.vida, vidaInicial)),
-    recurso: recursoInicial(classe, manaMax, refeicao),
+    recurso: recursoInicial(classe, manaMax, efeitos),
     golpes: [...heroi.golpesEquipados],
     golpeBasico: classe.golpeBasico,
     elementoBasico: arma ? elementoPorArma[arma.tipoArma] : ELEMENTO_SEM_ARMA,
@@ -101,6 +105,7 @@ function criarCombatenteHeroi(heroi, posicao, equipamentos, vidaInicial, refeica
     defendendo: false,
     nocauteado: vidaInicial !== undefined && vidaInicial <= 0,
     causouDano: false,
+    bonusElemento: bonusPorElemento(efeitos), // relíquias: dano causado por elemento
   };
 }
 
@@ -143,12 +148,12 @@ export function criarBatalha({
   afinidadesConhecidas = {},
   bonusDrop = [],
   vidaInicial = {},
-  refeicao = null, // { tipo, valor } da refeição ativa
+  efeitos = [], // [{ tipo, valor, elemento? }] da refeição ativa e das relíquias
 }) {
   const rng = criarRng(semente);
   const combatentes = {};
   herois.forEach((heroi, i) => {
-    const c = criarCombatenteHeroi(heroi, i, equipamentos, vidaInicial[heroi.id], refeicao);
+    const c = criarCombatenteHeroi(heroi, i, equipamentos, vidaInicial[heroi.id], efeitos);
     combatentes[c.id] = c;
   });
   listaInimigos.forEach((inimigo, i) => {
@@ -308,6 +313,7 @@ function modificadorDano(atacante, alvo, golpe) {
   const passivo = passivoDe(atacante);
   if (passivo?.tipo === "danoAlto" && golpe.poder >= passivo.limiar) mult *= 1 + passivo.valor;
   if (passivo?.tipo === "primeiroGolpe" && !atacante.causouDano) mult *= 1 + passivo.valor;
+  mult *= 1 + (atacante.bonusElemento?.[elementoDoGolpe(atacante, golpe)] || 0);
   if (alvo.defendendo) mult *= MULT_DEFENDER;
   mult *= multDanoRecebido(alvo);
   const passivoAlvo = passivoDe(alvo);

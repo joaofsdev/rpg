@@ -4,7 +4,7 @@ import { itens } from "../../data/itens";
 import { iconesItens } from "../../data/sprites";
 import { CONSUMIVEIS_A_VENDA } from "../../data/loja";
 import { ATRIBUTOS } from "../../data/constants";
-import { NOMES_ATRIBUTO, descreverEfeitoRefeicao } from "../../data/textos";
+import { NOMES_ATRIBUTO, descreverEfeito } from "../../data/textos";
 import { tempoAteRenovar, custoRenovar } from "../../engine/loja";
 import { receitaDaSemana, precoDaReceita } from "../../engine/cozinha";
 import { DURACAO_ROTACAO_RECEITA_MS } from "../../data/receitas";
@@ -31,7 +31,7 @@ function ReceitaDaSemana({ save, agora, acoes }) {
           <span className="min-w-48 flex-1">
             <span className="titulo block">{receita.nome}</span>
             <span className="text-sm text-sucesso">
-              {descreverEfeitoRefeicao(receita.efeito)} por {receita.duracaoEncontros} encontros.
+              {descreverEfeito(receita.efeito)} por {receita.duracaoEncontros} encontros.
             </span>
             <span className="block text-sm text-texto-2">
               Ingredientes: {receita.ingredientes.map(({ itemId, qtd }) => `${qtd} ${itens[itemId].nome}`).join(", ")}.

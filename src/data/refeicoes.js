@@ -2,7 +2,7 @@
 // duração fiquem num lugar só. preco é a referência para a venda quando a pilha transborda.
 
 import { receitas } from "./receitas";
-import { descreverEfeitoRefeicao } from "./textos";
+import { descreverEfeito } from "./textos";
 
 const PRECO_PRATO = {
   ensopado_do_coveiro: 20,
@@ -23,7 +23,7 @@ export const refeicoes = Object.fromEntries(
     {
       id: r.resultado,
       nome: r.nome,
-      descricao: `${descreverEfeitoRefeicao(r.efeito)} por ${r.duracaoEncontros} encontros.`,
+      descricao: `${descreverEfeito(r.efeito)} por ${r.duracaoEncontros} encontros.`,
       categoria: "refeicao",
       preco: PRECO_PRATO[r.resultado],
       empilhaAte: 99,

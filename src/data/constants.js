@@ -59,6 +59,8 @@ export const MAX_GRUPO = 4;
 export const MAX_HEROIS = 12;
 export const MAX_SLOTS = 3;
 export const MAX_EQUIPAMENTOS_INVENTARIO = 50;
+// Com até tantos espaços livres, o inventário avisa que está quase cheio
+export const ESPACOS_AVISO_INVENTARIO = 5;
 export const MAX_GOLPES_EQUIPADOS = 4;
 export const MAX_INIMIGOS_ENCONTRO = 3;
 export const TAMANHO_NOME_MAX = 16;
@@ -73,6 +75,8 @@ export const MULT_OURO_CHEFE = 3;
 export const MULT_XP_CHEFE = 3;
 export const MULT_DROP_MARCO = 1.1;
 export const FRACAO_PRECO_VENDA = 0.4;
+// Vender equipamento desta raridade para cima (ou aprimorado) pede confirmação no inventário
+export const RARIDADE_CONFIRMAR_VENDA = "Raro";
 
 export const SLOTS_EQUIPAMENTO = ["capacete", "peitoral", "luvas", "botas", "arma"];
 

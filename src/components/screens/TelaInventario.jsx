@@ -1,206 +1,281 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useEstado, useAcoes } from "../../state/contextos";
-import { todosOsHerois, itensEmpilhaveis, heroiTravado } from "../../state/seletores";
-import { classesHeroi } from "../../data/classesHeroi";
-import { iconesItens } from "../../data/sprites";
-import { ATRIBUTOS, MAX_EQUIPAMENTOS_INVENTARIO } from "../../data/constants";
-import { NOMES_ATRIBUTO } from "../../data/textos";
-import { podeEquipar, precoVenda } from "../../engine/itens";
-import { donoDoEquipamento, equipamentosLivres } from "../../engine/inventario";
-import { bonusDoEquipamento } from "../../engine/atributos";
-import { classeRaridade } from "../common/cores";
-import { tipoDoEquipamento, nomeDoEquipamento } from "../common/descricoes";
+import {
+  FILTROS_PADRAO,
+  alterarFiltro,
+  filtrosAlterados,
+  listarEquipamentos,
+  heroiParaComparar,
+} from "../../state/seletoresInventario";
+import { inventarioLembrado, lembrarInventario } from "../../state/memoriaInventario";
+import { MAX_EQUIPAMENTOS_INVENTARIO, ESPACOS_AVISO_INVENTARIO } from "../../data/constants";
+import { precoVenda } from "../../engine/itens";
+import { equipamentosLivres } from "../../engine/inventario";
+import { nomeDoEquipamento } from "../common/descricoes";
 import Botao from "../common/Botao";
+import FiltrosEquipamentos from "../inventario/FiltrosEquipamentos";
+import ListaEquipamentos from "../inventario/ListaEquipamentos";
+import DetalheEquipamento from "../inventario/DetalheEquipamento";
+import AbaItens from "../inventario/AbaItens";
 
-const CATEGORIAS = { consumivel: "Consumíveis", material: "Materiais", ingrediente: "Ingredientes" };
+const ABAS = ["equipamentos", "itens"];
 
+// A partir desta largura a lista e os detalhes ficam lado a lado (o "md" do Tailwind)
+const MEDIA_TELA_LARGA = "(min-width: 48rem)";
 
-function Bonus({ item, comparado }) {
-  const bonus = bonusDoEquipamento(item);
-  const outro = comparado ? bonusDoEquipamento(comparado) : null;
-  const linhas = ATRIBUTOS.filter((a) => bonus[a] !== 0 || (outro && outro[a] !== 0));
-  if (linhas.length === 0) return <p className="text-sm text-texto-3">Sem bônus.</p>;
-  return (
-    <ul className="text-sm">
-      {linhas.map((a) => {
-        const diferenca = outro ? bonus[a] - outro[a] : 0;
-        return (
-          <li key={a} className="flex justify-between">
-            <span className="text-texto-2">{NOMES_ATRIBUTO[a]}</span>
-            <span>
-              +{bonus[a]}
-              {outro && diferenca !== 0 && (
-                <span className={diferenca > 0 ? "text-sucesso" : "text-perigo"}>
-                  {" "}
-                  ({diferenca > 0 ? "+" : ""}
-                  {diferenca})
-                </span>
-              )}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
-  );
+function telaLarga() {
+  return window.matchMedia?.(MEDIA_TELA_LARGA).matches ?? true;
 }
 
-function DetalheEquipamento({ save, item, acoes }) {
-  const herois = todosOsHerois(save);
-  const dono = donoDoEquipamento(save, item.id);
-  const [heroiId, setHeroiId] = useState(
-    herois.find((h) => podeEquipar(h.classeId, item) && h.id !== dono?.id)?.id ?? herois[0].id,
-  );
-  const heroi = save.herois[heroiId];
-  const atual = heroi.equipamento[item.slot] ? save.inventario.equipamentos[heroi.equipamento[item.slot]] : null;
-  const compativel = podeEquipar(heroi.classeId, item);
-  const travado = heroiTravado(save, heroi.id) || (dono && heroiTravado(save, dono.id));
-
-  let motivo = null;
-  if (dono?.id === heroi.id) motivo = `${heroi.nome} já usa este item.`;
-  else if (!compativel) motivo = `${classesHeroi[heroi.classeId].nome} não usa ${tipoDoEquipamento(item)}.`;
-  else if (travado) motivo = "Heróis em batalha não trocam equipamento.";
-
+function Espacos({ livres, emUso }) {
+  const restantes = MAX_EQUIPAMENTOS_INVENTARIO - livres;
   return (
-    <section className="painel p-4" aria-labelledby="titulo-item">
-      <h2 id="titulo-item" className={`titulo text-lg ${classeRaridade(item.raridade)}`}>
-        {nomeDoEquipamento(item)}
-      </h2>
-      <p className="mb-3 text-sm text-texto-2">
-        {item.raridade}, {tipoDoEquipamento(item)}, nível {item.nivel}
-        {dono ? `. Usado por ${dono.nome}.` : "."}
-      </p>
-
-      <fieldset className="mb-3">
-        <legend className="mb-1 text-sm text-texto-2">Comparar com</legend>
-        <div className="flex flex-wrap gap-1">
-          {herois.map((h) => (
-            <button
-              key={h.id}
-              aria-pressed={h.id === heroiId}
-              onClick={() => setHeroiId(h.id)}
-              className={`botao min-h-8 px-2 ${h.id === heroiId ? "botao-secundario text-destaque" : "botao-discreto"}`}
-            >
-              {h.nome}
-            </button>
-          ))}
-        </div>
-      </fieldset>
-
-      <Bonus item={item} comparado={atual && atual.id !== item.id ? atual : null} />
-      {atual && atual.id !== item.id && (
-        <p className="mt-1 text-xs text-texto-3">Entre parênteses: diferença para {nomeDoEquipamento(atual)}.</p>
+    <p className="text-sm text-texto-2">
+      Espaços ocupados: <span className="text-texto">{livres}</span> de {MAX_EQUIPAMENTOS_INVENTARIO}
+      {emUso > 0 && ` · ${emUso} em uso pelos heróis (não ocupam espaço)`}
+      {restantes < 0 && (
+        // Save antigo acima do limite: nada é descartado; só não dá para guardar mais nada
+        <span className="block text-vigor">
+          Acima do limite: venda ou equipe {-restantes} {restantes === -1 ? "equipamento" : "equipamentos"} para voltar aos{" "}
+          {MAX_EQUIPAMENTOS_INVENTARIO}. Até lá, não dá para tirar itens dos heróis e os novos são vendidos na hora.
+        </span>
       )}
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Botao variante="primario" disabled={Boolean(motivo)} onClick={() => acoes.equipar(heroi.id, item.id)}>
-          Equipar em {heroi.nome}
-        </Botao>
-        <Botao disabled={Boolean(dono)} onClick={() => acoes.venderEquipamento(item.id)}>
-          Vender por {precoVenda(item)} ouro
-        </Botao>
-      </div>
-      {motivo && <p className="mt-2 text-sm text-texto-3">{motivo}</p>}
-      {dono && <p className="mt-1 text-sm text-texto-3">Para vender, tire o item de {dono.nome} antes.</p>}
-    </section>
+      {restantes >= 0 && restantes <= ESPACOS_AVISO_INVENTARIO && (
+        <span className="block text-vigor">
+          {restantes === 0 ? "Inventário cheio" : `Quase cheio (${restantes} livres)`}: o que não couber será vendido na hora.
+        </span>
+      )}
+    </p>
   );
 }
 
 export default function TelaInventario() {
-  const { save } = useEstado();
+  const { save, slotAtivo } = useEstado();
   const acoes = useAcoes();
-  const [aba, setAba] = useState("equipamentos");
-  const equipamentos = Object.values(save.inventario.equipamentos).sort(
-    (a, b) => b.nivel - a.nivel || a.nome.localeCompare(b.nome),
-  );
-  const [selecionadoId, setSelecionadoId] = useState(equipamentos[0]?.id ?? null);
-  const selecionado = save.inventario.equipamentos[selecionadoId] ?? null;
+  // Sair e voltar ao inventário na mesma sessão mantém busca, filtros, ordem e escolhas
+  const [lembrado] = useState(() => inventarioLembrado(slotAtivo, save));
+  const [aba, setAba] = useState(lembrado.aba);
+  const [filtros, setFiltros] = useState(lembrado.filtros);
+  const [ordem, setOrdem] = useState(lembrado.ordem);
+  const [selecionadoId, setSelecionadoId] = useState(lembrado.selecionadoId);
+  const [heroiEscolhido, setHeroiEscolhido] = useState(lembrado.heroiEscolhido);
+  // Celular: os detalhes ocupam a tela no lugar da lista
+  const [detalheAberto, setDetalheAberto] = useState(false);
+  const [mensagem, setMensagem] = useState("");
+  const [foco, setFoco] = useState(null); // { alvo: "titulo" | itemId, rolagem? }
+  const listaRef = useRef(null);
+  const tituloRef = useRef(null);
+  const rolagemDaLista = useRef(0);
+
+  const { entradas, total } = listarEquipamentos(save, filtros, ordem);
+  // O item escolhido continua à vista depois de uma ação, mesmo que saia do filtro
+  const selecionado = save.inventario.equipamentos[selecionadoId] ?? entradas[0]?.item ?? null;
+  const heroiId =
+    selecionado &&
+    (heroiEscolhido && save.herois[heroiEscolhido] ? heroiEscolhido : heroiParaComparar(save, selecionado, filtros.heroiId));
   const livres = equipamentosLivres(save).length;
-  const empilhaveis = itensEmpilhaveis(save);
+  const alterados = filtrosAlterados(filtros);
+
+  useEffect(() => {
+    lembrarInventario(slotAtivo, save, { aba, filtros, ordem, heroiEscolhido, selecionadoId });
+  }, [slotAtivo, save, aba, filtros, ordem, heroiEscolhido, selecionadoId]);
+
+  // Foco e rolagem ao abrir e fechar os detalhes no celular e depois de vender
+  useEffect(() => {
+    if (!foco) return;
+    if (foco.alvo === "titulo") {
+      window.scrollTo(0, 0);
+      tituloRef.current?.focus({ preventScroll: true });
+    } else {
+      if (foco.rolagem !== undefined) window.scrollTo(0, foco.rolagem);
+      listaRef.current
+        ?.querySelector(`[data-item-id="${foco.alvo}"]`)
+        ?.focus({ preventScroll: foco.rolagem !== undefined });
+    }
+    setFoco(null);
+  }, [foco]);
+
+  const mudarFiltro = (campo, valor) => {
+    setFiltros((f) => alterarFiltro(f, campo, valor));
+    setSelecionadoId(null);
+    setMensagem("");
+    if (campo === "heroiId") setHeroiEscolhido(null);
+  };
+  const limparFiltros = () => {
+    setFiltros(FILTROS_PADRAO);
+    setSelecionadoId(null);
+    setMensagem("");
+  };
+
+  const escolher = (id, { abrir }) => {
+    setSelecionadoId(id);
+    setMensagem("");
+    if (abrir && !telaLarga()) {
+      rolagemDaLista.current = window.scrollY;
+      setDetalheAberto(true);
+      setFoco({ alvo: "titulo" });
+    }
+  };
+  const voltar = () => {
+    if (!detalheAberto) return;
+    setDetalheAberto(false);
+    if (selecionado) setFoco({ alvo: selecionado.id, rolagem: rolagemDaLista.current });
+  };
+
+  const equipar = (heroi, item) => {
+    acoes.equipar(heroi.id, item.id);
+    setMensagem(`${heroi.nome} agora usa ${nomeDoEquipamento(item)}.`);
+  };
+  const tirar = (dono, item) => {
+    acoes.desequipar(dono.id, item.slot);
+    setMensagem(`${nomeDoEquipamento(item)} saiu de ${dono.nome} e voltou ao inventário.`);
+  };
+  // Depois de vender, a seleção passa para o vizinho na lista (vender vários fica rápido)
+  const vender = (item) => {
+    const indice = entradas.findIndex((e) => e.item.id === item.id);
+    const vizinho = entradas[indice + 1] ?? entradas[indice - 1] ?? null;
+    acoes.venderEquipamento(item.id);
+    setMensagem(`Vendido: ${nomeDoEquipamento(item)} por ${precoVenda(item)} ouro.`);
+    setSelecionadoId(vizinho?.item.id ?? null);
+    if (vizinho) setFoco({ alvo: vizinho.item.id, rolagem: detalheAberto ? rolagemDaLista.current : undefined });
+    setDetalheAberto(false);
+  };
+
+  const aoTeclarAbas = (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const proxima = ABAS[(ABAS.indexOf(aba) + (e.key === "ArrowRight" ? 1 : ABAS.length - 1)) % ABAS.length];
+    setAba(proxima);
+    document.getElementById(`aba-${proxima}`)?.focus();
+  };
+
+  const classeAba = (id) => `botao ${aba === id ? "botao-secundario text-destaque" : "botao-discreto"}`;
+  const naLista = detalheAberto ? "hidden md:block" : "";
 
   return (
     <main className="mx-auto max-w-5xl px-3 py-4 pb-24 sm:pb-6">
-      <div role="tablist" aria-label="Inventário" className="mb-3 flex gap-1">
-        <button
-          role="tab"
-          aria-selected={aba === "equipamentos"}
-          onClick={() => setAba("equipamentos")}
-          className={`botao ${aba === "equipamentos" ? "botao-secundario text-destaque" : "botao-discreto"}`}
-        >
-          Equipamentos ({livres}/{MAX_EQUIPAMENTOS_INVENTARIO})
-        </button>
-        <button
-          role="tab"
-          aria-selected={aba === "itens"}
-          onClick={() => setAba("itens")}
-          className={`botao ${aba === "itens" ? "botao-secundario text-destaque" : "botao-discreto"}`}
-        >
-          Itens
-        </button>
-        <span className="ml-auto self-center text-destaque-claro">{save.ouro} ouro</span>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div role="tablist" aria-label="Inventário" className="flex gap-1" onKeyDown={aoTeclarAbas}>
+          <button
+            id="aba-equipamentos"
+            role="tab"
+            aria-selected={aba === "equipamentos"}
+            aria-controls="painel-equipamentos"
+            tabIndex={aba === "equipamentos" ? 0 : -1}
+            onClick={() => setAba("equipamentos")}
+            className={classeAba("equipamentos")}
+          >
+            Equipamentos
+            <span className="font-normal text-texto-2">
+              {livres}/{MAX_EQUIPAMENTOS_INVENTARIO}
+            </span>
+          </button>
+          <button
+            id="aba-itens"
+            role="tab"
+            aria-selected={aba === "itens"}
+            aria-controls="painel-itens"
+            tabIndex={aba === "itens" ? 0 : -1}
+            onClick={() => setAba("itens")}
+            className={classeAba("itens")}
+          >
+            Itens
+          </button>
+        </div>
+        <span className="ml-auto text-destaque-claro">{save.ouro} ouro</span>
       </div>
 
       {aba === "equipamentos" && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_20rem]">
-          <ul className="painel max-h-[60vh] overflow-y-auto" aria-label="Equipamentos">
-            {equipamentos.map((e) => {
-              const dono = donoDoEquipamento(save, e.id);
-              return (
-                <li key={e.id} className="border-b border-borda last:border-b-0">
-                  <button
-                    onClick={() => setSelecionadoId(e.id)}
-                    aria-current={e.id === selecionadoId ? "true" : undefined}
-                    className={`flex w-full items-baseline gap-2 px-3 py-2 text-left ${e.id === selecionadoId ? "bg-elevado" : "hover:bg-elevado/60"}`}
-                  >
-                    <span className={`flex-1 truncate ${classeRaridade(e.raridade)}`}>{nomeDoEquipamento(e)}</span>
-                    <span className="hidden text-sm text-texto-3 sm:inline">{tipoDoEquipamento(e)}</span>
-                    <span className="w-12 text-right text-sm text-texto-2">nv {e.nivel}</span>
-                    {dono && <span className="w-20 truncate text-right text-xs text-texto-3">{dono.nome}</span>}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-          {selecionado ? (
-            <DetalheEquipamento key={selecionado.id} save={save} item={selecionado} acoes={acoes} />
+        <div role="tabpanel" id="painel-equipamentos" aria-labelledby="aba-equipamentos" className="space-y-3">
+          <Espacos livres={livres} emUso={total - livres} />
+
+          {total === 0 ? (
+            <section className="painel space-y-3 p-5" aria-labelledby="titulo-vazio">
+              <h2 id="titulo-vazio" className="titulo text-lg">
+                Nenhum equipamento ainda
+              </h2>
+              <p className="text-texto-2">Equipamentos caem dos inimigos, saem da Ferraria e ficam à venda na Loja.</p>
+              <div className="flex flex-wrap gap-2">
+                <Botao variante="primario" onClick={() => acoes.navegar("mapa")}>
+                  Explorar o mapa
+                </Botao>
+                <Botao onClick={() => acoes.navegar("loja")}>Ir à Loja</Botao>
+              </div>
+            </section>
           ) : (
-            <p className="text-texto-2">Nenhum equipamento ainda. Eles caem dos inimigos.</p>
+            <>
+              <div className={naLista}>
+                <FiltrosEquipamentos
+                  save={save}
+                  filtros={filtros}
+                  ordem={ordem}
+                  aoMudar={mudarFiltro}
+                  aoOrdenar={setOrdem}
+                />
+              </div>
+
+              <p role="status" className={mensagem ? "rounded border border-sucesso/50 px-3 py-1.5 text-sm" : "sr-only"}>
+                {mensagem && <span aria-hidden="true" className="text-sucesso">✓ </span>}
+                {mensagem}
+              </p>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_22rem]">
+                <div className={naLista}>
+                  <div className="mb-2 flex min-h-10 flex-wrap items-center gap-x-3">
+                    <p aria-live="polite" className="text-sm text-texto-2">
+                      {entradas.length === total ? `${total} equipamentos` : `${entradas.length} de ${total} equipamentos`}
+                    </p>
+                    {alterados.length > 0 && (
+                      <Botao variante="discreto" className="px-2" onClick={limparFiltros}>
+                        Limpar filtros
+                      </Botao>
+                    )}
+                  </div>
+                  {entradas.length > 0 ? (
+                    <ListaEquipamentos
+                      entradas={entradas}
+                      selecionadoId={selecionado?.id}
+                      aoEscolher={escolher}
+                      listaRef={listaRef}
+                    />
+                  ) : (
+                    <div className="painel space-y-2 p-4">
+                      <p className="font-semibold">Nenhum equipamento com esses filtros.</p>
+                      <p className="text-sm text-texto-2">Tente outro nome ou tire algum filtro.</p>
+                      <Botao onClick={limparFiltros}>Limpar filtros</Botao>
+                    </div>
+                  )}
+                  <p id="dica-lista" className="sr-only">
+                    Use as setas para cima e para baixo para percorrer a lista.
+                  </p>
+                </div>
+
+                <div className={detalheAberto ? "" : "hidden md:block"}>
+                  {selecionado ? (
+                    <DetalheEquipamento
+                      key={selecionado.id}
+                      save={save}
+                      item={selecionado}
+                      heroiId={heroiId}
+                      aoEscolherHeroi={setHeroiEscolhido}
+                      aoEquipar={equipar}
+                      aoTirar={tirar}
+                      aoVender={vender}
+                      aoVoltar={voltar}
+                      tituloRef={tituloRef}
+                    />
+                  ) : (
+                    <p className="painel p-4 text-texto-2">Escolha um equipamento da lista para ver os detalhes.</p>
+                  )}
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}
 
       {aba === "itens" && (
-        <div className="space-y-4">
-          {Object.entries(CATEGORIAS).map(([categoria, titulo]) => {
-            const lista = empilhaveis.filter((i) => i.item.categoria === categoria);
-            return (
-              <section key={categoria} className="painel p-4" aria-labelledby={`cat-${categoria}`}>
-                <h2 id={`cat-${categoria}`} className="titulo mb-2 text-sm">
-                  {titulo}
-                </h2>
-                {lista.length === 0 ? (
-                  <p className="text-sm text-texto-3">Nada por enquanto.</p>
-                ) : (
-                  <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    {lista.map(({ item, quantidade }) => (
-                      <li key={item.id} className="flex items-center gap-2">
-                        {iconesItens[item.id] ? (
-                          <img src={iconesItens[item.id]} alt="" className="h-8 w-8" style={{ imageRendering: "pixelated" }} />
-                        ) : (
-                          <span className="h-8 w-8" />
-                        )}
-                        <span>
-                          <span className="block">
-                            {item.nome} <span className="text-texto-2">×{quantidade}</span>
-                          </span>
-                          <span className="text-sm text-texto-3">{item.descricao}</span>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            );
-          })}
+        <div role="tabpanel" id="painel-itens" aria-labelledby="aba-itens">
+          <AbaItens save={save} />
         </div>
       )}
     </main>

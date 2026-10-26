@@ -52,6 +52,14 @@ export const DESCRICAO_ALVO = {
 
 export const NOMES_PESO = { pesada: "pesada", media: "média", leve: "leve", pano: "pano" };
 
+// Tipo de armadura por extenso (inventário): "armadura leve", "armadura de pano"
+export const NOMES_TIPO_ARMADURA = {
+  pesada: "armadura pesada",
+  media: "armadura média",
+  leve: "armadura leve",
+  pano: "armadura de pano",
+};
+
 export const NOMES_ARMA = {
   espada: "espada",
   maca: "maça",

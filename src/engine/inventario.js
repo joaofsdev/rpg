@@ -51,6 +51,18 @@ export function equipar(save, heroiId, equipamentoId) {
     if (bloqueioDono) return { erro: bloqueioDono };
   }
 
+  // Capacidade (SPEC.md §4.8): o item que o herói usa no espaço volta aos livres (+1); o novo sai
+  // dos livres (−1), a não ser que viesse de outro herói. Só é recusado o que aumentaria os
+  // livres além do limite; trocas que mantêm ou reduzem a contagem valem até em saves acima dele.
+  const idAtual = heroi.equipamento[item.slot];
+  const variacao = (idAtual && idAtual !== equipamentoId ? 1 : 0) - (dono ? 0 : 1);
+  if (variacao > 0 && equipamentosLivres(save).length + variacao > MAX_EQUIPAMENTOS_INVENTARIO) {
+    const atual = save.inventario.equipamentos[idAtual];
+    return {
+      erro: `Inventário cheio: ${atual?.nome ?? "o item atual"} sairia de ${heroi.nome} e não há espaço para guardá-lo. Venda algum equipamento antes.`,
+    };
+  }
+
   const herois = { ...save.herois };
   if (dono) {
     herois[dono.id] = { ...dono, equipamento: { ...dono.equipamento, [item.slot]: null } };

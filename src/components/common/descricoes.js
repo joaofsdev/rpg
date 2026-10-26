@@ -1,4 +1,4 @@
-import { NOMES_SLOT, NOMES_ARMA, NOMES_PESO, NOMES_ATRIBUTO } from "../../data/textos";
+import { NOMES_SLOT, NOMES_ARMA, NOMES_PESO, NOMES_ATRIBUTO, NOMES_TIPO_ARMADURA } from "../../data/textos";
 import { golpes } from "../../data/golpes";
 import { itens } from "../../data/itens";
 import { buscarZona } from "../../data/zonas";
@@ -8,6 +8,12 @@ import { TAXA_PONTO } from "../../data/constants";
 // "espada", "peito, leve"…
 export function tipoDoEquipamento(e) {
   return e.slot === "arma" ? NOMES_ARMA[e.tipoArma] : `${NOMES_SLOT[e.slot].toLowerCase()}, ${NOMES_PESO[e.pesoArmadura]}`;
+}
+
+// { categoria: "Arma", tipo: "espada" } ou { categoria: "Cabeça", tipo: "armadura leve" }
+export function categoriaDoEquipamento(e) {
+  if (e.slot === "arma") return { categoria: NOMES_SLOT.arma, tipo: NOMES_ARMA[e.tipoArma] };
+  return { categoria: NOMES_SLOT[e.slot], tipo: NOMES_TIPO_ARMADURA[e.pesoArmadura] ?? "armadura" };
 }
 
 // Categorias do resumo de retorno e da tela Atividades, na ordem exibida

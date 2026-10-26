@@ -628,6 +628,13 @@ entrada de itens (engine/inventario.guardarNoInventario, único caminho):
   (inclusive andares de masmorra), aviso da coleta da expedição. Recruta chega com o conjunto
   equipado, então não ocupa espaço livre. Ações do jogador (comprar, desequipar, dispensar) são
   recusadas quando não cabe, em vez de vender.
+equipar (26/10/2026): o item que o herói usa no espaço volta aos livres (+1) e o novo sai deles
+  (−1), a não ser que venha de outro herói. Só é recusado o que aumentaria os livres além de 50:
+  passar um item de um herói a outro que já usa algo no espaço, com o inventário cheio. Trocar
+  por um item livre ou passar para um herói com o espaço vazio continuam valendo.
+save acima do limite (saves antigos, ou de antes desta regra): nada é descartado nem migrado.
+  Vender e equipar seguem possíveis; tirar, passar entre heróis com o espaço ocupado, comprar,
+  forjar e dispensar ficam recusados até voltar aos 50; o que entra é vendido na hora.
 ```
 
 ### 4.9 Calibração
@@ -992,6 +999,12 @@ que leem `Date.now()`.
   dependência) e manter `react-hooks`.
 - **Dependências novas propostas:** apenas `vitest` (dev). Nada de biblioteca de animação, estado,
   roteamento, datas ou RNG.
+- **Divisão por telas (26/10/2026):** `App.jsx` carrega as telas com `React.lazy`, exceto Slots e
+  Mapa (as primeiras a aparecer). O pacote principal caiu de 500 kB para 392 kB (gzip 161 → 133 kB)
+  e cada tela virou um arquivo de 3 a 28 kB. Logo após a primeira tela, todas são baixadas
+  (`precarregarTelas`), para a navegação não esperar a rede nem quebrar depois de uma publicação
+  nova. Motor, dados e estado continuam no pacote principal (o reducer precisa deles desde o
+  início); a maior parte do resto é o `react-dom`.
 
 ---
 
@@ -1087,9 +1100,36 @@ Configurações, Slots).
 
 **Inventário**
 ```
- Filtros: [Equip.] [Consumíveis] [Materiais] [Ingredientes]   Ordenar: nível | raridade
- Grade de itens (50) · painel de detalhes: comparação com o equipado do herói selecionado
+ [Equipamentos 23/50] [Itens]                                              1.250 ouro
+ ┌ Buscar pelo nome… ──────────┐ Ordenar: [Nível ↓ ▾]   [Filtros (2)]  Limpar filtros
+ Categoria: [Todas][Armas][Cabeça][Peito][Mãos][Pés]   Situação: [Todos][Em uso][Livres]
+ Tipo [▾]  Raridade [▾]  Nível [faixa da zona ▾]  Serve para [herói ▾]
+ 12 de 30 equipamentos
+ ┌ lista ────────────────────────────────┐ ┌ detalhes (fixo ao rolar) ─────────────────┐
+ ▌Espada Larga de Ferro +2        nv 12 │ │ Raro · Espada Larga de Ferro +2 · nv 12  │
+ ▌Arma · espada · Raro    Em uso: Aldric│ │ Quem usa: Cavaleiro · Em uso por Aldric   │
+ ▌Elmo Simples de Couro            nv 9 │ │ Comparar com [Mira ▾]  atributo/este/atual/± │
+ └────────────────────────────────────────┘ │ [Equipar em Mira] [Tirar] [Vender por 40]  │
+                                            └────────────────────────────────────────────┘
 ```
+- Filtros combináveis (categoria, tipo de arma ou peso, raridade, faixa de nível das zonas,
+  situação, "serve para" um herói) e busca pelo nome sem diferenciar maiúsculas nem acentos.
+  Só mudam a exibição; nada fica no save. Aba, busca, filtros, ordem, item e herói escolhidos
+  ficam na memória da página (`state/memoriaInventario.js`): sair do inventário e voltar mantém
+  tudo; recarregar, trocar de slot ou começar outro jogo volta ao padrão.
+- Ordenar: nível ↓ (padrão), nível ↑, raridade, nome e mais recentes (ordem de entrada no
+  inventário, que é a ordem das chaves de `inventario.equipamentos`). Empates seguem a ordem de
+  entrada, então a lista é estável.
+- A raridade aparece em texto e em uma faixa colorida; "Em uso: herói" aparece em texto.
+- Detalhes: classes que usam o item, bônus, comparação com o item do mesmo espaço do herói
+  escolhido (▲ melhor, ▼ pior, = igual), ações Equipar, Tirar e Vender com o motivo quando
+  indisponíveis (as regras são as do motor). Vender item Raro ou melhor, ou aprimorado, pede
+  confirmação.
+- Celular (< 768 px): busca e categoria à vista; ordenação, situação e os demais filtros ficam em
+  "Ordenar e mais filtros" (com a contagem dos ativos), para a lista aparecer logo. Tocar em um
+  item abre os detalhes em tela cheia com "Voltar à lista" (a posição e os filtros são mantidos).
+- Aba Itens: consumíveis, materiais, ingredientes e refeições, com filtro por categoria. Os
+  empilháveis não ocupam os 50 espaços dos equipamentos (§4.8).
 
 ### 7.5 Paleta e temas
 

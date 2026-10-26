@@ -17,6 +17,19 @@ export function classeRaridade(raridade) {
   return CLASSE_RARIDADE[raridade] || "text-texto";
 }
 
+// Faixa colorida ao lado do nome (decorativa: a raridade também aparece em texto)
+const FUNDO_RARIDADE = {
+  Comum: "bg-raridade-comum",
+  Incomum: "bg-raridade-incomum",
+  Raro: "bg-raridade-raro",
+  Épico: "bg-raridade-epico",
+  Lendário: "bg-raridade-lendario",
+};
+
+export function fundoRaridade(raridade) {
+  return FUNDO_RARIDADE[raridade] || "bg-borda-forte";
+}
+
 export function corRecurso(tipo) {
   return tipo === "mana" ? "var(--color-mana)" : "var(--color-vigor)";
 }

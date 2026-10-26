@@ -179,7 +179,11 @@ SPEC.md, seção "Pendências conhecidas (após a Fase 10)".
 - treinar exige tirar o herói do grupo (com 2 heróis, sobra 1 lutando até contratar alguém);
 - relíquias não aparecem na tela de batalha;
 - áudio: músicas com 5,5 MB (sem codificador para reduzir), efeitos em OGG (Safari antigo não toca),
-  efeitos escolhidos pelo nome e ainda sem revisão por ouvido.
+  efeitos escolhidos pelo nome e ainda sem revisão por ouvido;
+- telas em arquivos separados: se a rede cair logo ao abrir o jogo, antes do pré-carregamento, a
+  primeira ida a uma tela ainda não baixada fica em branco até recarregar;
+- com o inventário cheio, passar um item entre heróis que já usam algo no espaço é recusado; uma
+  troca automática (o item antigo vai para quem cedeu) seria uma mudança de regra e não foi feita.
 
 ## Como testar
 
@@ -343,6 +347,47 @@ localStorage.setItem("magichill:slot:0", JSON.stringify(s)); location.reload();
 abrir um PR para `main` e fazer o merge. A Vercel publica em 1–2 minutos; o `index.html` não fica em
 cache, então os jogadores recebem a versão nova ao recarregar. Mudanças no formato do save continuam
 exigindo versão e migração (CLAUDE.md), porque os testadores já têm saves.
+
+## Inventário reformulado (26/10/2026)
+
+Melhoria pós-beta da tela de Inventário (SPEC §7.4), sem mudar o save nem o balanceamento.
+
+- **Equipamentos:** busca sem acentos; filtros combináveis (categoria, tipo, raridade, faixa de
+  nível das zonas, situação e "serve para" um herói); ordenação estável por nível, raridade, nome
+  ou chegada.
+- **Lista:** raridade em texto e em uma faixa colorida, "Em uso: herói" em texto.
+- **Detalhes:** comparação com o item do herói escolhido (▲ ▼ =) e ações Equipar, Tirar e Vender,
+  com o motivo quando não dá. No celular, os detalhes abrem em tela cheia.
+- **Vender:** pede confirmação (nome e valor) para Raro ou melhor ou aprimorado; Comum sem
+  aprimoramento vende direto.
+- **Memória da sessão:** busca, filtros, ordem, aba, item e herói escolhidos ficam na memória
+  da página ao sair e voltar; recarregar volta ao padrão.
+- **Aba Itens:** filtro por categoria e as refeições, que antes não apareciam.
+- **Capacidade (correção):** passar um item de um herói a outro que já usava algo no espaço
+  devolvia o item antigo ao inventário sem conferir o limite e podia passar de 50 livres. Agora é
+  recusado com o inventário cheio ("Inventário cheio: … sairia de Bia e não há espaço…"). Saves
+  já acima do limite não perdem nada: a tela avisa quantos itens vender ou equipar.
+- **Divisão por telas:** pacote principal de 500 kB para 392 kB; o aviso do Vite sumiu (SPEC §6.9).
+- **Verificação:** 814 testes (37 arquivos), lint e build ok. No navegador, com o build de
+  produção: 46 verificações (desktop, celular 375 px, 4 temas, inventário cheio e acima do
+  limite, todas as telas e a batalha abrindo), sem erros no console.
+
+**Como testar:** Inventário com bastante equipamento.
+1. Busque "agil" (acha "Ágil"), escolha Armas + uma raridade + Livres e confira a contagem
+   "x de y". Use "Limpar filtros".
+2. Vá ao Mapa e volte: busca, filtros, ordem e item escolhido continuam. Recarregue: tudo volta
+   ao padrão.
+3. Selecione um item Raro e clique em Vender: o diálogo mostra nome e valor. Cancelar não muda
+   nada.
+4. Para encher o inventário, no console:
+   ```js
+   const s = JSON.parse(localStorage.getItem("magichill:slot:0"));
+   const base = Object.values(s.inventario.equipamentos)[0];
+   for (let i = 0; i < 60; i++) s.inventario.equipamentos[`teste-${i}`] = { ...base, id: `teste-${i}` };
+   localStorage.setItem("magichill:slot:0", JSON.stringify(s)); location.reload();
+   ```
+   O topo mostra "Acima do limite" e quantos itens vender. "Tirar" e passar um item entre heróis
+   que já usam algo no espaço ficam bloqueados com o motivo. Vender e equipar continuam.
 
 ## Próximos passos
 

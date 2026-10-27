@@ -10,12 +10,12 @@
 ## 1. Visão geral e pilares
 
 MagiChill é um RPG de turnos medieval/fantasia para jogar com calma. O jogador forma um grupo de
-até 4 heróis, enfrenta encontros curtos escolhendo cada ação manualmente e, fora do combate, deixa
+até 4 heróis, enfrenta encontros curtos escolhendo cada ação (ou ligando o Auto opcional, §3.13) e, fora do combate, deixa
 heróis treinando, em expedições ou cozinhando enquanto está longe do jogo.
 
 | Pilar | O que significa na prática |
 |---|---|
-| **Combate tático manual** | Toda ação de herói é escolhida pelo jogador. Ordem de turnos visível, intenções dos inimigos visíveis, fraquezas elementais, status e recursos (mana/vigor). Sem batalha automática, sem repetir automaticamente. |
+| **Combate tático, manual por padrão** | O jogador escolhe as ações dos heróis. Ordem de turnos visível, intenções dos inimigos visíveis, fraquezas elementais, status e recursos (mana/vigor). O Auto (§3.13) é opcional: o jogador liga e para quando quiser; a IA usa as mesmas regras e nada roda com o jogo fechado. |
 | **Ritmo relaxante** | Nenhum cronômetro. A batalha espera o jogador para sempre e pode ser deixada e retomada a qualquer momento. Animações aceleráveis. Encontros de 1 a 3 inimigos, 3 a 6 rodadas. |
 | **Progressão longa** | Níveis com curva crescente, treino limitado pelo nível, bestiário com marcos, coleção, ferraria e relíquias. Sempre há um objetivo de médio e de longo prazo. |
 | **Sem punição dura** | Derrota devolve o grupo à cidade com tudo o que já ganhou. Nada é perdido, nada expira enquanto o jogador está fora. |
@@ -498,6 +498,87 @@ dano de luz +10%"); drop garantido na primeira vitória sobre o chefe, 5% nas se
 
 Empilham até 99. Novo jogo (e save migrado) começa com 3 Poções, 2 Éteres e 2 Tônicos.
 
+### 3.13 Auto (combate automático opcional)
+
+**Descrição.** Botão "Auto" na barra da batalha. Ligado, os heróis escolhem as ações sozinhos e,
+a cada vitória, o próximo encontro repetível começa depois de uma pausa curta, até o jogador parar
+ou uma condição de parada acontecer, também com a página em segundo plano. O combate manual
+continua sendo o padrão e funciona igual. Ligado, a barra mostra "Pausar" e "Parar Auto", as únicas
+ordens de interrupção; o estado aparece no painel do Auto.
+
+**Regras.**
+- **Mesmo motor:** o Auto só dispara as ações que já existem (`ACAO_BATALHA` com uma ação escolhida
+  pela IA, fechar o resultado, `INICIAR_ENCONTRO`, `DESCER_ANDAR`). Dano, cura, RNG, drops, XP, ouro
+  e capacidade do inventário são os mesmos do jogo manual; não há bônus nem penalidade por usar o Auto.
+- **IA dos heróis** (`engine/autoBatalha.js`, pura, sem RNG: o mesmo estado dá a mesma escolha).
+  Só escolhe entre as ações de `acoesDisponiveis` (custo, recurso e alvos válidos) e estima o dano
+  com `preverAcao`, que só conhece as afinidades que o bestiário já revelou: o Auto não sabe mais
+  que o jogador. Não usa itens e nunca foge. Ordem:
+  1. **Cura:** golpe de cura (Canção de Cura) se um aliado vivo estiver abaixo de 35% da vida ou
+     dois abaixo de 60%.
+  2. **Proteção:** se um inimigo anunciou um golpe telegrafado contra aliados sem Proteção, usa o
+     golpe de Proteção que cobre mais desses aliados (empate: menor custo).
+  3. **Ataque:** para cada golpe de dano e alvo, valor = dano esperado limitado à vida do alvo
+     (sem contar dano desperdiçado), + 25% da vida máxima do alvo se o abate for garantido (dano
+     mínimo ≥ vida e acerto ≥ 95%), − custo × (valor do ataque básico ÷ 25 para mana, ÷ 50 para
+     vigor; vigor quase cheio não pesa). Golpes com dano a si mesmo ficam de fora com o herói
+     abaixo de 30% da vida. Vence o maior valor; empates ficam com o primeiro na ordem do menu e
+     dos alvos.
+  4. **Defender** se nenhum ataque causa dano (todos os alvos imunes conhecidos).
+  Golpes de reforço, enfraquecimento, evasão, provocação e regeneração não são usados pelo Auto.
+- **Onde há encontro seguinte:** explorar uma zona (repete "Explorar" sem fim; o chefe nunca é
+  iniciado pelo Auto) e descer os andares de uma masmorra **já iniciada** (nunca entra, sai ou
+  reinicia uma masmorra). Depois do chefe da zona ou da masmorra concluída, o Auto para.
+- **Condições de parada** (o Auto fica pausado com o motivo; o jogador retoma ou para):
+  - obrigatórias: o jogador pausa ou para; derrota; fim da sequência (chefe vencido, masmorra
+    concluída); ação recusada pelo motor ou estado inesperado; sair da batalha, do resultado ou
+    da masmorra para outra tela (aqui o Auto é desligado);
+  - **não param:** mover o mouse, clicar fora dos botões do Auto, perder o foco da janela, trocar de
+    aba, minimizar ou cobrir a janela (o navegador marca a página como oculta nesses casos);
+  - opcionais (Opções do Auto, na config do aparelho): **chefe** à frente (padrão ligado: o chefe da
+    zona acabou de aparecer, ou o próximo andar da masmorra é o do chefe); **inventário cheio**
+    (padrão ligado: 50 equipamentos livres antes de começar outro encontro); **vida baixa**
+    (padrão desligado; 25% ou 50%: durante a batalha, quando um herói vivo fica abaixo do limite, e
+    na masmorra antes de descer, pela vida que passa ao próximo andar; ao retomar, a batalha atual
+    não pausa de novo por isso); **limite** de 10, 25, 50 ou 100 encontros (padrão sem limite; conta
+    a partir de quando foi ligado ou retomado).
+  - Não há encontros com escolha manual obrigatória no jogo hoje (a fogueira da masmorra é
+    automática); se surgirem, o Auto deve parar neles.
+- **Ritmo:** o agendador (`state/agendadorAuto.js`, ligado ao estado por `state/useAutoBatalha.js`)
+  tem no máximo um temporizador por vez: depois que a animação de uma ação termina, espera
+  400 ms ÷ velocidade e pede a próxima ação; no resultado, espera 2 s ÷ velocidade antes do próximo
+  encontro, para dar tempo de ler e parar. Velocidade e "Menos movimento" valem como no manual.
+  Cada disparo faz no máximo um passo, e um disparo atrasado (o estado já mudou) não faz nada.
+- **Página em segundo plano:** o Auto continua. Sem ninguém olhando, ele não espera a animação
+  terminar na tela: encerra a fila depois do tempo que ela levaria, então o ritmo nunca é mais
+  rápido que o da página visível. Enquanto isso, as telas de batalha, resultado e masmorra não são
+  montadas (fica só uma linha "O Auto continua jogando em segundo plano"): sem quadros na tela, o
+  navegador só libera os elementos removidos quando volta a desenhar, e a memória cresceria durante
+  horas. Ao voltar, a tela real aparece no estado atual. Os navegadores atrasam temporizadores de páginas ocultas (cerca de
+  1 por segundo, e menos depois de alguns minutos), então o Auto pode ficar mais lento; se o
+  navegador congelar ou descartar a aba (economia de energia, abas suspensas), nada roda até ele
+  liberar a página, e uma aba descartada é recarregada (o Auto volta pausado). Não há compensação:
+  ao voltar, o jogo mostra só o que foi jogado de fato, sem simular o tempo parado. Não existe farm
+  com o jogo fechado.
+- **Recompensas:** aplicadas pelo fluxo de sempre no instante em que cada batalha termina (o mesmo
+  passo do reducer tira a batalha do save), então recarregar, parar ou falhar nunca as repete.
+- **Sessão** (só na memória, fora do save): estado, encontro atual, vitórias, derrotas, ouro (a
+  diferença real do ouro, inclusive vendas por inventário cheio), XP por herói, itens e
+  equipamentos guardados e tempo desde que foi ligado. Parar encerra a sessão.
+- **Recarregar a página:** a batalha volta como sempre (§6.7). A config do aparelho guarda só em
+  qual jogo (slot e data de criação) o Auto estava ligado; ao voltar à batalha, ao resultado ou à
+  masmorra desse jogo, o Auto aparece **pausado** ("Retomar Auto") com uma sessão nova. Fechar o
+  slot, parar o Auto ou sair para outra tela apaga essa marca; outro slot nunca herda o Auto.
+
+**CA.**
+- Ligar o Auto numa batalha de zona: a batalha termina sem cliques, o resultado mostra as
+  recompensas e o próximo encontro da mesma zona começa sozinho, sem limite.
+- Derrota pausa o Auto com o motivo. Parar mantém tudo o que foi ganho.
+- Recarregar durante o Auto não repete ação nem recompensa e mostra "Retomar Auto".
+- Trocar de aba, minimizar ou cobrir a janela não pausa: ao voltar, o Auto continua ativo e o painel
+  mostra os encontros realmente jogados, com ouro e XP iguais aos do save.
+- Com o mesmo estado de batalha, a IA escolhe sempre a mesma ação.
+
 ---
 
 ## 4. Fórmulas
@@ -826,7 +907,10 @@ localStorage:
                           slots: [ ResumoSlot | null ×3 ] }
   magichill:slot:<n> → Save
   magichill:config   → { tema, velocidadeAnimacao: 1|2|3, volumeEfeitos, volumeMusica,
-                          reduzirMovimento }          // por dispositivo, fora do save
+                          reduzirMovimento,           // por dispositivo, fora do save
+                          autoPararChefe, autoPararInventario,       // Auto (§3.13)
+                          autoVidaMinima: 0|0,25|0,5, autoLimiteEncontros: 0|10|25|50|100,
+                          autoRetomar: { slot, criadoEm } | null }   // jogo com o Auto ligado
                       // volumes de 0 a 1 (padrão 0,6 e 0,4); tema: taverna | pergaminho | bosque | noite
 
 ResumoSlot { nome, criadoEm, atualizadoEm, nivelMaisAlto, classePrincipal, tempoJogado }
@@ -1287,6 +1371,10 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
 - [x] Efeitos sonoros e música com controle de volume
 - [x] Revisão de responsividade, acessibilidade (teclado, foco, rótulos) e textos
 
+### Melhorias pós-beta
+- [x] Inventário reformulado: filtros, busca, comparação, capacidade corrigida (§7.4, §4.8)
+- [x] Auto opcional: IA dos heróis, farm contínuo em zonas e masmorra em curso, paradas e sessão (§3.13)
+
 ### Pendências conhecidas (após a Fase 11)
 - A vida dos heróis durante uma masmorra só aparece na tela da masmorra; o mapa não mostra.
 - Chefes exclusivos de masmorra não existem: o chefe da masmorra é o chefe da zona fortalecido
@@ -1324,7 +1412,8 @@ Durante as Fases 4–5, zonas 2–10 de saves migrados ficam registradas, mas in
 
 - Backend, contas online, sincronização na nuvem, ranking, multiplayer ou PvP.
 - Monetização, gacha, energia/estamina que limite o jogo, anúncios.
-- Batalha automática, repetição automática, cronômetro de turno.
+- Cronômetro de turno; batalha ou repetição automática que o jogador não ligou; batalhas com o
+  jogo fechado (o Auto de §3.13 só roda com a aba visível).
 - Morte permanente ou perda de itens/XP na derrota.
 - TypeScript, app nativo, PWA/instalação offline (reavaliar depois da Fase 11).
 - Outros idiomas além de pt-BR.

@@ -389,6 +389,114 @@ Melhoria pós-beta da tela de Inventário (SPEC §7.4), sem mudar o save nem o b
    O topo mostra "Acima do limite" e quantos itens vender. "Tirar" e passar um item entre heróis
    que já usam algo no espaço ficam bloqueados com o motivo. Vender e equipar continuam.
 
+## Auto: combate automático opcional (26/10/2026)
+
+Pedido do autor depois da beta. Muda uma regra de design: o combate deixa de ser "sempre manual" e
+passa a ser **manual por padrão, com Auto opcional** (CLAUDE.md, SPEC §1, §3.13 e §9 atualizados
+antes do código). Sem mudança no save, no balanceamento ou nas probabilidades.
+
+- **Como funciona:** botão "Auto" na barra da batalha. A IA (`engine/autoBatalha.js`, pura e sem
+  RNG) escolhe entre as ações legais do motor. A ordem é: cura com aliado em perigo, Proteção
+  contra golpe telegrafado e o melhor ataque (dano esperado sem desperdício, abate garantido e
+  custo do recurso). Ela só conhece as afinidades já reveladas, não usa itens e não foge. Depois
+  de cada vitória, o próximo encontro começa sozinho: "Explorar" da mesma zona, sem fim, ou o
+  próximo andar da masmorra já iniciada. O Auto nunca inicia chefe nem entra ou reinicia masmorra.
+- **Paradas:**
+  - obrigatórias: derrota, chefe vencido, masmorra concluída, erro e sair da tela;
+  - opcionais, na config do aparelho: chefe à frente (padrão ligado), inventário cheio (padrão
+    ligado), vida baixa 25%/50% e limite de 10/25/50/100 encontros.
+- **Pausar, retomar, parar:** "Pausar" pausa na hora; "Retomar Auto" continua do estado atual;
+  "Parar Auto" encerra a sessão. A ação que já estava animando termina e nenhuma nova começa.
+  Trocar de aba, minimizar ou cobrir a janela não pausa (ver "Auto em segundo plano" abaixo).
+- **Recompensas e saves:** o Auto só dispara as ações de sempre. As recompensas entram no mesmo
+  passo do reducer que tira a batalha do save, então recarregar não as repete. Depois de recarregar,
+  o Auto volta **pausado** no mesmo jogo (marca `autoRetomar` na config); outro slot ou jogo novo
+  não herdam nada.
+- **Sessão:** encontro atual, vitórias, derrotas, ouro (diferença real), XP, itens e tempo. Fica só
+  na memória; recarregar começa uma sessão nova.
+- **Arquitetura:**
+  - `engine/autoBatalha.js`: IA e decisão do próximo encontro;
+  - `state/autoSessao.js`: sessão;
+  - `state/reducer.js`: ações `AUTO_*`, que reaproveitam `agir`, `iniciarEncontro` e `descerAndar`;
+  - `state/agendadorAuto.js` (ligado ao estado por `state/useAutoBatalha.js`): no máximo um
+    temporizador por vez, só para o ritmo;
+  - componentes `ControleAuto`, `PainelAuto` e `OpcoesAuto`;
+  - `vidaMaximaDoHeroi` extraída de `combate.js` para a parada por vida na masmorra.
+- **Verificação:**
+  - Testes: 852 (39 arquivos). São 38 novos do Auto: IA, paradas, pausa e retomada, parar durante
+    a animação, recarregar, troca de slot, save antigo e uma simulação de 120 encontros seguidos
+    com as contas da sessão batendo com o save. Lint e build ok.
+  - No navegador, com o build de produção: 29 verificações, todas OK, sem erros no console.
+    Cobrem desktop, celular de 375 px nos 4 temas, recarregar, aba oculta, derrota, chefe,
+    inventário cheio e limite de 10 encontros.
+  - Sessão longa de 4 min: 66 vitórias, pausa respondendo em 19 ms, nenhuma tarefa acima de 200 ms.
+
+**Como testar:**
+1. Explore o Cemitério e clique em "Auto" (ou Tab até ele e Enter). A batalha termina sozinha, o
+   resultado aparece com o painel do Auto e, cerca de 2 s depois (÷ velocidade), começa o próximo
+   encontro.
+2. Clique em "Pausar": o Auto pausa e o menu manual volta. Use "Retomar Auto" e depois "Parar Auto";
+   o aviso resume a sessão.
+3. Recarregue a página com o Auto ligado. Em "Continuar" → "Retomar" (batalha), o Auto aparece
+   pausado ("A página foi recarregada…") e nada acontece até "Retomar Auto".
+4. Troque de aba por alguns minutos e volte: o Auto continua ativo e o painel mostra o que foi
+   jogado nesse tempo.
+5. Em "Opções do Auto" (no painel ou em Mais → Configurações), escolha "Parar depois de 10
+   encontros".
+
+### Auto em segundo plano (26/10/2026)
+
+O Auto pausava ao trocar de aba, minimizar ou ao interagir com outra janela. **Causa:** o orquestrador
+ouvia `visibilitychange` e pausava sempre que a página ficava `hidden`. No Windows, o Edge e o
+Chrome também marcam a página como oculta quando outra janela cobre a do navegador, por isso a pausa
+parecia vir de mexer o mouse ou de usar outro programa. Mouse e foco nunca pausaram: não há ouvinte
+deles, e a reprodução no Edge confirmou.
+
+- **Correção:** a pausa por visibilidade saiu. O novo `state/agendadorAuto.js` mantém no máximo um
+  temporizador por vez e ignora disparos atrasados ou repetidos. Com a página oculta, o Auto não
+  espera a animação na tela: encerra a fila depois do tempo que ela levaria, então nunca joga mais
+  rápido do que visível. A visibilidade só serve para reavaliar o próximo passo.
+- **Memória em segundo plano:** com a página oculta, o navegador não desenha quadros e só libera os
+  elementos removidos quando volta a desenhar. Medido no Edge: com as telas montadas a cada
+  encontro, o processo da página crescia cerca de 1 MB por minuto (de 38 para 47 MB em 10 min, e
+  de 390 para 8.818 nós). Por isso, com o Auto ativo e a página oculta, as telas de batalha,
+  resultado e masmorra não são montadas (`App.jsx` e `components/common/usePaginaOculta.js`).
+  Ao voltar, a tela real aparece no estado atual. Depois da mudança, em 6 min ocultos: 420 nós
+  fixos e o processo entre 37 e 39 MB, com +32 vitórias.
+- **Interface:** com o Auto ligado, a barra mostra "Pausar" e "Parar Auto". O antigo "Auto ativo"
+  parecia um indicador de estado, mas pausava ao ser clicado.
+- **Limites do navegador:** páginas ocultas têm os temporizadores atrasados (cerca de 1 por
+  segundo), então o ritmo cai para mais ou menos metade. Se o navegador congelar ou descartar a aba
+  (economia de energia, abas suspensas do Edge), nada roda até ele liberar a página, e uma aba
+  descartada é recarregada com o Auto pausado. Não há compensação do tempo parado nem farm com o
+  jogo fechado.
+- **Verificação:**
+  - 10 testes novos com relógio controlado (`state/agendadorAuto.test.js` e `exibicao.test.js`):
+    mouse e foco, aba oculta jogando vários encontros, volta sem rajada, parar depois de voltar, um temporizador por vez, disparo atrasado ou repetido,
+    navegador limitando a um disparo por minuto, página suspensa, ritmo oculto nunca acima do
+    visível e duração da fila.
+  - No Edge real, controlado só pelo protocolo de depuração (o Playwright força a página visível e
+    desliga a limitação de temporizadores), 12 verificações com o build final: 2,5 min em outra aba
+    deram +12 vitórias (4,8 por minuto, contra 13 por minuto visível, a 2×), com o Auto ativo e o ouro e as vitórias do save
+    iguais aos do painel. Mouse e cliques neutros não pararam o Auto. Depois de "Parar Auto",
+    nenhuma ação nova começou. Com a janela minimizada por 1 min e coberta por outra janela por
+    1 min, o Auto continuou e progrediu. Sem erros no console.
+  - Sessão de 8 min em outra aba: +43 vitórias, ritmo estável (cerca de 5,4 por minuto do começo ao
+    fim, sem queda depois dos 5 min), nenhuma pausa e 72 vitórias e 2012 de ouro na sessão, iguais ao
+    save. Essa sessão é anterior à mudança das telas; o cenário de 2,5 min acima foi repetido depois
+    dela e passou.
+  - O roteiro anterior do Playwright (29 verificações: desktop, recarregar, paradas, celular de
+    375 px nos 4 temas e sessão de 4 min) foi refeito com os novos rótulos e passou inteiro. O caso
+    da aba oculta agora confere que o Auto segue vencendo e continua ativo ao voltar.
+
+### Pendências do Auto
+- O Auto não usa golpes de reforço (força), enfraquecimento, evasão, provocação nem regeneração,
+  nem itens. Usar itens fica como melhoria futura, desligada por padrão.
+- "Vida baixa" nas zonas só vale durante a batalha: toda batalha de zona começa com vida cheia.
+- A sessão não sobrevive a um recarregamento (os números recomeçam; o save não perde nada) e o
+  tempo da sessão conta também o tempo pausado.
+- Em segundo plano o ritmo depende do navegador (ver "Auto em segundo plano").
+
 ## Próximos passos
 
 O roadmap do SPEC §8 termina na Fase 11. O que vem depois é decisão do autor; as prioridades já

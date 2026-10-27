@@ -137,6 +137,32 @@ export function criarAcoes(dispatch, storage) {
       dispatch({ type: "FECHAR_RESULTADO" });
     },
 
+    // Auto (SPEC.md §3.13). autoAgir e autoProximo são pedidos pelo orquestrador (agendadorAuto);
+    // o reducer confere se ainda é a hora e decide tudo pelo motor.
+    ligarAuto() {
+      dispatch({ type: "AUTO_LIGAR", agora: Date.now() });
+    },
+
+    pausarAuto(motivo) {
+      dispatch({ type: "AUTO_PAUSAR", motivo });
+    },
+
+    retomarAuto() {
+      dispatch({ type: "AUTO_RETOMAR", agora: Date.now() });
+    },
+
+    pararAuto() {
+      dispatch({ type: "AUTO_PARAR" });
+    },
+
+    autoAgir() {
+      dispatch({ type: "AUTO_AGIR" });
+    },
+
+    autoProximo() {
+      dispatch({ type: "AUTO_PROXIMO", semente: novaSemente() });
+    },
+
     distribuirPontos(heroiId, pontos) {
       dispatch({ type: "DISTRIBUIR_PONTOS", heroiId, pontos });
     },

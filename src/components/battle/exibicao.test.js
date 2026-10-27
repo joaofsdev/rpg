@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { criarExibicao, aplicarEvento, efeitosDoEvento, descreverEvento, duracaoEvento, somDoEvento } from "./exibicao";
+import { criarExibicao, aplicarEvento, efeitosDoEvento, descreverEvento, duracaoEvento, duracaoDaFila, PAUSA_ENTRE_ACOES_MS, somDoEvento } from "./exibicao";
 import { aplicarAcao, acoesDisponiveis } from "../../engine/combate";
 import { batalhaTeste, heroiTeste } from "../../engine/__fixtures__/batalhas";
 
@@ -77,6 +77,14 @@ describe("efeitos e textos", () => {
   it("acelerar divide a duração", () => {
     expect(duracaoEvento({ tipo: "dano" }, 2)).toBe(duracaoEvento({ tipo: "dano" }, 1) / 2);
     expect(duracaoEvento({ tipo: "recurso" }, 1)).toBe(0);
+  });
+
+  it("duração da fila: soma dos eventos mais a pausa depois de cada golpe, como a reprodução espera", () => {
+    const fila = [{ tipo: "golpeUsado" }, { tipo: "recurso" }, { tipo: "dano" }, { tipo: "nocaute" }];
+    const soma = fila.reduce((t, e) => t + duracaoEvento(e, 1), 0) + PAUSA_ENTRE_ACOES_MS;
+    expect(duracaoDaFila(fila, 1)).toBe(soma);
+    expect(duracaoDaFila(fila, 2)).toBe(soma / 2);
+    expect(duracaoDaFila([], 1)).toBe(0);
   });
 });
 

@@ -80,10 +80,20 @@ function recursoInicial(classe, manaMax, efeitos) {
   return { tipo: "mana", atual: manaMax + extra, max: manaMax + extra };
 }
 
+// Atributos de batalha de um herói: os de fora da batalha com os efeitos do grupo (refeição e relíquias)
+function atributosDeBatalha(heroi, equipamentos, efeitos) {
+  const { manaMax, ...base } = calcularAtributosHeroi(heroi, equipamentos);
+  return { manaMax, atributos: atributosComEfeitos(base, efeitos) };
+}
+
+// Vida máxima com que o herói entra numa batalha (usada pelo Auto para conferir a vida na masmorra)
+export function vidaMaximaDoHeroi(heroi, equipamentos, efeitos = []) {
+  return atributosDeBatalha(heroi, equipamentos, efeitos).atributos.vida;
+}
+
 function criarCombatenteHeroi(heroi, posicao, equipamentos, vidaInicial, efeitos) {
   const classe = classesHeroi[heroi.classeId];
-  const { manaMax, ...base } = calcularAtributosHeroi(heroi, equipamentos);
-  const atributos = atributosComEfeitos(base, efeitos);
+  const { manaMax, atributos } = atributosDeBatalha(heroi, equipamentos, efeitos);
   const arma = heroi.equipamento.arma ? equipamentos[heroi.equipamento.arma] : null;
   return {
     id: `h${posicao}`,

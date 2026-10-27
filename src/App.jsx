@@ -1,12 +1,14 @@
 import { Suspense, lazy, useEffect } from "react";
 import GameProvider from "./state/GameProvider";
 import { useEstado } from "./state/contextos";
+import { useAutoBatalha } from "./state/useAutoBatalha";
 import TelaSlots from "./components/screens/TelaSlots";
 import TelaMapa from "./components/screens/TelaMapa";
 import Navegacao from "./components/common/Navegacao";
 import Aviso from "./components/common/Aviso";
 import ResumoRetorno from "./components/common/ResumoRetorno";
 import TrilhaSonora from "./components/common/TrilhaSonora";
+import { usePaginaOculta } from "./components/common/usePaginaOculta";
 
 // Divisão por telas: a de slots e o mapa (as primeiras que aparecem) vão no pacote principal; as
 // outras viram arquivos separados, baixados logo depois da primeira tela (precarregarTelas) para
@@ -37,15 +39,26 @@ function precarregarTelas() {
   for (const carregar of Object.values(CARREGAR_TELA)) carregar();
 }
 
+// Telas por onde o Auto passa a cada encontro (SPEC.md §3.13)
+const TELAS_DO_AUTO = ["batalha", "resultado", "masmorra"];
+
 const TELAS_COM_NAVEGACAO = ["mapa", "grupo", "atividades", "taverna", "inventario", "loja", "bestiario", "mais", "masmorra", "ferraria", "colecao"];
 
 function Roteador() {
-  const { tela, retorno } = useEstado();
+  const { tela, retorno, auto } = useEstado();
+  const oculta = usePaginaOculta();
+  useAutoBatalha();
   if (tela === "carregando") {
     return <p className="p-6 text-texto-2">Abrindo o livro de registros…</p>;
   }
   const Tela = TELAS[tela];
   const comNavegacao = TELAS_COM_NAVEGACAO.includes(tela);
+  // Auto com a página oculta: o jogo segue no estado, mas as telas não são montadas a cada encontro.
+  // Sem quadros na tela, o navegador só libera os elementos removidos quando volta a desenhar, e a
+  // memória cresceria durante horas em segundo plano.
+  if (oculta && auto.estado === "ativo" && TELAS_DO_AUTO.includes(tela)) {
+    return <p className="p-6 text-texto-2">O Auto continua jogando em segundo plano.</p>;
+  }
   return (
     <>
       {comNavegacao && <Navegacao />}

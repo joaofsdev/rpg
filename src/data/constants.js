@@ -96,3 +96,16 @@ export const NIVEIS_POR_ANDAR = 0.25; // nível dos inimigos: zona.nivelMax + fl
 // Atividades por tempo (SPEC.md §3.8, §3.9, §4.10)
 export const HORA_MS = 60 * 60 * 1000;
 export const TETO_ATIVIDADE_HORAS = 8; // nenhuma atividade dura (nem produz) mais que isso
+
+// Auto: combate automático opcional (SPEC.md §3.13)
+export const AUTO_LIMIAR_CURA_CRITICA = 0.35; // um aliado abaixo disso já pede cura
+export const AUTO_LIMIAR_CURA_GRUPO = 0.6; // ou AUTO_ALIADOS_CURA_GRUPO aliados abaixo disso
+export const AUTO_ALIADOS_CURA_GRUPO = 2;
+export const AUTO_BONUS_ABATE = 0.25; // fração da vida máxima do alvo somada a um abate garantido
+export const AUTO_ACERTO_ABATE_SEGURO = 0.95; // chance de todos os acertos para o abate contar
+export const AUTO_DIVISOR_CUSTO = { mana: 25, vigor: 50 }; // 1 ponto vale (ataque básico ÷ divisor)
+export const AUTO_VIDA_MINIMA_AUTODANO = 0.3; // abaixo disso não usa golpe que fere o próprio herói
+export const AUTO_PAUSA_ACAO_MS = 400; // entre o fim de uma animação e a próxima ação (÷ velocidade)
+export const AUTO_PAUSA_RESULTADO_MS = 2000; // resultado à vista antes do próximo encontro (÷ velocidade)
+export const AUTO_OPCOES_VIDA_MINIMA = [0, 0.25, 0.5]; // 0 = desligado
+export const AUTO_OPCOES_LIMITE = [0, 10, 25, 50, 100]; // 0 = sem limite

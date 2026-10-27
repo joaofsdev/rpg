@@ -125,6 +125,12 @@ export const CONFIG_PADRAO = {
   tema: TEMA_PADRAO,
   volumeEfeitos: 0.6,
   volumeMusica: 0.4,
+  // Auto (SPEC.md §3.13): paradas opcionais e o jogo em que ele estava ligado
+  autoPararChefe: true,
+  autoPararInventario: true,
+  autoVidaMinima: 0,
+  autoLimiteEncontros: 0,
+  autoRetomar: null, // { slot, criadoEm }
 };
 
 // temaPadrao: tema do primeiro acesso (Pergaminho quando o sistema prefere tema claro, §7.5).

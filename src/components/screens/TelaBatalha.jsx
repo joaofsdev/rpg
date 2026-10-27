@@ -11,6 +11,8 @@ import Combatente from "../battle/Combatente";
 import BarraOrdem from "../battle/BarraOrdem";
 import MenuAcoes from "../battle/MenuAcoes";
 import Previa from "../battle/Previa";
+import ControleAuto from "../battle/ControleAuto";
+import PainelAuto from "../battle/PainelAuto";
 import Botao from "../common/Botao";
 import { tocarEfeito } from "../common/som";
 
@@ -55,7 +57,7 @@ function useEscala() {
 }
 
 export default function TelaBatalha() {
-  const { save, batalhaUi, config } = useEstado();
+  const { save, batalhaUi, config, auto } = useEstado();
   const acoes = useAcoes();
   const escala = useEscala();
 
@@ -75,7 +77,9 @@ export default function TelaBatalha() {
   const [alvoFoco, setAlvoFoco] = useState(null);
   const [alvoEscolhido, setAlvoEscolhido] = useState(null);
 
-  const podeAgir = !reproduzindo && atual?.fase === "escolhaAcao" && batalhaUi.eventos.length === 0;
+  // Com o Auto ativo, quem escolhe é a IA (SPEC.md §3.13): o menu manual some até pausar
+  const autoAtivo = auto.estado === "ativo";
+  const podeAgir = !autoAtivo && !reproduzindo && atual?.fase === "escolhaAcao" && batalhaUi.eventos.length === 0;
   const opcoes = useMemo(() => (podeAgir ? acoesDisponiveis(atual) : null), [podeAgir, atual]);
   const ativo = podeAgir ? atual.combatentes[atual.ativoId] : null;
   const itens = itensDeBatalha(save);
@@ -130,7 +134,8 @@ export default function TelaBatalha() {
   useEffect(() => {
     const aoTeclar = (e) => {
       if (e.target.closest?.("input, textarea")) return;
-      if (reproduzindo && (e.key === " " || e.key === "Enter")) {
+      // Espaço e Enter num botão focado (Auto, velocidade, Sair) acionam o botão, não o adiantar
+      if (reproduzindo && (e.key === " " || e.key === "Enter") && !e.target.closest?.("button, select, summary")) {
         e.preventDefault();
         adiantar();
         return;
@@ -184,7 +189,8 @@ export default function TelaBatalha() {
               : `${zona.nome}${atual.origem.chefe ? ", chefe" : ""}`}
           </h1>
           <span className="text-sm text-texto-2">Rodada {exibicao.rodada}</span>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-1">
+            <ControleAuto />
             <span className="text-xs text-texto-3" id="rotulo-velocidade">
               Animação
             </span>
@@ -301,6 +307,11 @@ export default function TelaBatalha() {
                 </div>
               )}
             </>
+          ) : autoAtivo && atual.fase !== "fim" ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-texto-2">O Auto está escolhendo as ações dos heróis.</p>
+              <Botao onClick={() => acoes.pausarAuto()}>Assumir o controle</Botao>
+            </div>
           ) : (
             <p className="text-texto-2" aria-live="polite">
               {atual.fase === "fim" ? "A batalha terminou." : "Resolvendo a rodada…"}
@@ -308,16 +319,19 @@ export default function TelaBatalha() {
           )}
         </section>
 
-        <section aria-label="Registro da batalha" className="painel p-3">
-          <h2 className="titulo mb-1 text-sm text-texto-2">Registro</h2>
-          <ol className="space-y-0.5 text-sm text-texto-2" aria-live="polite">
-            {registro.map((linha, i) => (
-              <li key={`${registro.length}-${i}`} className={i === registro.length - 1 ? "text-texto" : ""}>
-                {linha}
-              </li>
-            ))}
-          </ol>
-        </section>
+        <div className="space-y-3">
+          <PainelAuto />
+          <section aria-label="Registro da batalha" className="painel p-3">
+            <h2 className="titulo mb-1 text-sm text-texto-2">Registro</h2>
+            <ol className="space-y-0.5 text-sm text-texto-2" aria-live="polite">
+              {registro.map((linha, i) => (
+                <li key={`${registro.length}-${i}`} className={i === registro.length - 1 ? "text-texto" : ""}>
+                  {linha}
+                </li>
+              ))}
+            </ol>
+          </section>
+        </div>
       </div>
     </main>
   );

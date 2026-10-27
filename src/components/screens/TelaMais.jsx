@@ -1,5 +1,6 @@
 import { useEstado, useAcoes } from "../../state/contextos";
 import Botao from "../common/Botao";
+import OpcoesAuto from "../battle/OpcoesAuto";
 import { temas } from "../../data/temas";
 import { progressoDaColecao } from "../../engine/colecao";
 
@@ -113,6 +114,13 @@ export default function TelaMais() {
             />
             <span>Menos movimento (sem tremidas e partículas nas batalhas)</span>
           </label>
+          <div>
+            <h3 className="titulo text-sm">Auto</h3>
+            <p className="text-sm text-texto-2">
+              Ligue o Auto na batalha: os heróis lutam sozinhos e o próximo encontro começa após cada vitória.
+            </p>
+            <OpcoesAuto />
+          </div>
         </div>
       </section>
 

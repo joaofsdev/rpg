@@ -1,8 +1,8 @@
 # MagiChill
 
 RPG de turnos relaxante com tema medieval/fantasia, inspirado no ritmo e na progressão do PokeChill.
-O jogador monta um grupo de até 4 heróis, escolhe cada ação manualmente em batalhas curtas e
-progride devagar com treino, expedições, culinária, coleção e equipamentos.
+O jogador monta um grupo de até 4 heróis, escolhe cada ação em batalhas curtas (ou liga o Auto
+opcional, SPEC §3.13) e progride devagar com treino, expedições, culinária, coleção e equipamentos.
 100% frontend: React 18 + Vite 5 + Tailwind CSS 4, save no localStorage.
 
 **O [SPEC.md](SPEC.md) é a fonte da verdade do design** (regras, fórmulas, modelo de dados,
@@ -76,7 +76,9 @@ Testes: `*.test.js` ao lado do código; auxiliares e fixtures em `__fixtures__/`
 - Sprites e sons: só assets originais ou com licença livre (CC0/CC-BY; ex.: Kenney, OpenGameArt,
   itch.io). Registrar origem, autor, link e licença de cada um em `CREDITS.md` no mesmo commit
   em que o asset entra.
-- O combate é sempre manual: nada de batalha automática nem repetição automática.
+- O combate é manual por padrão. O Auto (SPEC §3.13) é opcional, ligado pelo jogador e pode ser
+  parado a qualquer momento; a IA dos heróis só escolhe entre as ações legais do motor, sem
+  vantagem, recurso ou recompensa extra, e não existe progresso de batalha offline.
 - Não alterar o que não foi pedido na fase atual.
 - Ao final de cada fase, parar e esperar aprovação antes de seguir.
 
@@ -96,13 +98,17 @@ Testes: `*.test.js` ao lado do código; auxiliares e fixtures em `__fixtures__/`
 
 - Lógica de combate ou de regra de jogo dentro de componentes ou de `useEffect`.
 - Avançar turno com `setTimeout` na UI. O motor define o próximo estado; a UI só anima os
-  eventos que o motor devolveu.
+  eventos que o motor devolveu. Exceção: o agendador do Auto (`state/agendadorAuto.js`) usa um
+  temporizador só para o ritmo: ele pede a próxima ação ao reducer, que decide tudo pelo motor.
+  O Auto segue com a página oculta (sem pausar por foco ou visibilidade), no ritmo que o navegador
+  permitir e sem compensar o tempo em que ela ficou parada.
 - Aceitar ações do jogador enquanto uma animação está rodando.
 - Dados de jogo hardcoded em JSX.
 - `Math.random()` ou `Date.now()` direto no motor (receber RNG e tempo por parâmetro).
 - Ler ou gravar localStorage fora de `src/save/`, e efeitos colaterais dentro de reducers ou
   durante o render.
 - Mudar o formato do save sem versão e migração.
-- Cronômetro de turno, punição que apague progresso ou qualquer automação de combate.
+- Cronômetro de turno, punição que apague progresso ou automação de combate fora do Auto
+  opcional (nada que jogue sozinho sem o jogador ligar, nem batalhas com o jogo fechado).
 - Duplicar telas ou fórmulas: extrair para componente comum ou função do motor.
 - Instalar dependência sem justificativa aprovada.

@@ -9,6 +9,7 @@ import { PONTOS_POR_NIVEL } from "../../data/constants";
 import { descreverItens } from "../common/descricoes";
 import { classeRaridade } from "../common/cores";
 import Botao from "../common/Botao";
+import PainelAuto from "../battle/PainelAuto";
 import { tocarEfeito } from "../common/som";
 
 const TITULOS = {
@@ -47,7 +48,7 @@ function textos(r) {
 }
 
 export default function TelaResultado() {
-  const { resumoBatalha: r, save } = useEstado();
+  const { resumoBatalha: r, save, auto } = useEstado();
   const acoes = useAcoes();
   const resultado = r?.resultado;
   useEffect(() => {
@@ -56,7 +57,9 @@ export default function TelaResultado() {
   }, [resultado]);
   if (!r) return null;
 
-  const podeContinuar = r.origem?.tipo === "zona" && !r.origem.chefe && r.resultado !== "derrota";
+  // Com o Auto ativo, o próximo encontro começa sozinho (SPEC.md §3.13)
+  const podeContinuar =
+    r.origem?.tipo === "zona" && !r.origem.chefe && r.resultado !== "derrota" && auto.estado !== "ativo";
   const naMasmorra = Boolean(save.masmorraAtual);
   const { titulo, subtitulo } = textos(r);
   const itensGanhos = Object.entries(r.itens);
@@ -170,6 +173,9 @@ export default function TelaResultado() {
           </Botao>
         </div>
       </section>
+      <div className="mt-3">
+        <PainelAuto comControles />
+      </div>
     </main>
   );
 }

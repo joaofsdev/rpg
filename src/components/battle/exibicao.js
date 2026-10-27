@@ -7,31 +7,7 @@ import { status as dadosStatus } from "../../data/status";
 import { NOMES_ATRIBUTO, NOMES_ELEMENTO } from "../../data/textos";
 import { ELEMENTOS_FISICOS } from "../../data/constants";
 
-// Duração de cada evento em ms na velocidade 1×
-const DURACAO = {
-  rodadaIniciada: 250,
-  turnoIniciado: 120,
-  golpeUsado: 420,
-  dano: 380,
-  cura: 320,
-  errou: 320,
-  statusTick: 380,
-  statusAplicado: 220,
-  statusResistido: 220,
-  nocaute: 560,
-  defender: 300,
-  itemUsado: 320,
-  reviveu: 420,
-  turnoPerdido: 450,
-  afinidadeDescoberta: 200,
-  fimBatalha: 400,
-};
-
-export const PAUSA_ENTRE_ACOES_MS = 200;
-
-export function duracaoEvento(evento, velocidade = 1) {
-  return (DURACAO[evento.tipo] ?? 0) / velocidade;
-}
+export { PAUSA_ENTRE_ACOES_MS, duracaoEvento, duracaoDaFila } from "./duracoes";
 
 export function criarExibicao(batalha) {
   const combatentes = {};

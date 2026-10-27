@@ -8,6 +8,7 @@ import { ANDARES_MASMORRA, ANDARES_COM_FOGUEIRA } from "../../data/constants";
 import { corDaVida } from "../common/cores";
 import BarraValor from "../common/BarraValor";
 import Botao from "../common/Botao";
+import PainelAuto from "../battle/PainelAuto";
 import Modal from "../common/Modal";
 import Sprite from "../battle/Sprite";
 
@@ -129,6 +130,10 @@ export default function TelaMasmorra() {
           </Botao>
         </div>
       </section>
+
+      <div className="mt-3">
+        <PainelAuto comControles />
+      </div>
 
       {confirmarSaida && (
         <Modal

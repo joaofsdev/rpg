@@ -11,6 +11,15 @@ export function formatarDuracao(ms) {
   return m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, "0")}`;
 }
 
+// Cronômetro da sessão do Auto: "4:07", "1:02:09"
+export function formatarCronometro(ms) {
+  const total = Math.floor(Math.max(0, ms) / 1000);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = String(total % 60).padStart(2, "0");
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${s}` : `${m}:${s}`;
+}
+
 // Relógio para exibir tempos restantes. Só atualiza a tela; o jogo muda pelo reducer.
 export function useAgora(intervaloMs = 30000) {
   const [agora, setAgora] = useState(() => Date.now());

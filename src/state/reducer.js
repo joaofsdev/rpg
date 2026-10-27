@@ -33,6 +33,18 @@ import { forjar, aprimorar } from "../engine/ferraria";
 import { receitas } from "../data/receitas";
 import { coletarAtividade, cancelarAtividade, coletarTudo, atividadesConcluidas, concluidasDesde } from "../engine/coleta";
 import { muralEmDia, contratarRecruta } from "../engine/recrutamento";
+import { escolherAcaoAuto, decidirProximo, motivoVidaBaixa } from "../engine/autoBatalha";
+import {
+  AUTO_DESLIGADO,
+  ligarAuto,
+  pausarAuto,
+  encerrarAuto,
+  retomarAuto,
+  autoPausadoAoVoltar,
+  contabilizarBatalha,
+  contarEncontro,
+  resumirSessao,
+} from "./autoSessao";
 
 const CLASSES_SORTEADAS = 3;
 const TELAS_DE_JOGO = ["mapa", "grupo", "atividades", "inventario", "bestiario", "mais", "ferraria", "colecao"];
@@ -52,6 +64,7 @@ export function criarEstadoInicial() {
     resumoBatalha: null,
     retorno: null, // { tempoFora } enquanto o modal "Bem-vindo de volta" estiver aberto
     aviso: null,
+    auto: AUTO_DESLIGADO, // combate automático opcional (SPEC.md §3.13), fora do save
   };
 }
 
@@ -241,7 +254,7 @@ function voltouAoJogo(state, action) {
   return { ...state, save: registrarRelogio(save, agora), retorno };
 }
 
-export function reducer(state, action) {
+function reducerBase(state, action) {
   switch (action.type) {
     case "INICIADO":
       return {
@@ -524,7 +537,155 @@ export function reducer(state, action) {
     case "AVISO_LIMPO":
       return { ...state, aviso: null };
 
+    case "AUTO_LIGAR":
+    case "AUTO_PAUSAR":
+    case "AUTO_RETOMAR":
+    case "AUTO_PARAR":
+    case "AUTO_AGIR":
+    case "AUTO_PROXIMO":
+      return reduzirAuto(state, action);
+
     default:
       return state;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Auto (SPEC.md §3.13): só dispara os fluxos de sempre (agir, iniciar encontro, descer andar)
+// ---------------------------------------------------------------------------
+
+const TELAS_DO_AUTO = ["batalha", "resultado", "masmorra"];
+const MOTIVO_RECARREGOU = "A página foi recarregada. Confira a batalha e retome o Auto quando quiser.";
+
+// Em qual jogo o Auto estava ligado (config do aparelho), para pausar ao voltar depois de recarregar
+function marcaDoJogo(state) {
+  return { slot: state.slotAtivo, criadoEm: state.save.criadoEm };
+}
+
+function comMarca(state, marca) {
+  return { ...state, config: { ...state.config, autoRetomar: marca } };
+}
+
+function autoAgir(state) {
+  const { save, auto } = state;
+  if (auto.estado !== "ativo" || state.tela !== "batalha" || !save?.batalha) return state;
+  if (state.batalhaUi.eventos.length > 0 || save.batalha.fase !== "escolhaAcao") return state;
+
+  const vidaBaixa =
+    auto.vidaLiberadaNaBatalha === save.batalha.id ? null : motivoVidaBaixa(save.batalha, state.config.autoVidaMinima);
+  if (vidaBaixa) return { ...state, auto: pausarAuto(auto, vidaBaixa) };
+
+  let acao;
+  let depois;
+  try {
+    acao = escolherAcaoAuto(save.batalha);
+    depois = acao ? agir(state, acao) : null;
+  } catch {
+    acao = null; // erro do motor num estado que ele não esperava: para em vez de repetir
+  }
+  if (!acao || !depois) return { ...state, auto: encerrarAuto(auto, "Estado inesperado: o Auto não encontrou uma ação válida.") };
+  // Ação recusada: nada mudou no save; para em vez de tentar de novo
+  if (depois.save === save) return { ...depois, auto: encerrarAuto(auto, `O motor recusou a ação: ${depois.aviso}`) };
+  if (!depois.resumoBatalha || depois.resumoBatalha === state.resumoBatalha) return depois;
+
+  // A batalha acabou neste passo: as recompensas já estão no save (finalizarSeTerminou)
+  const sessao = contabilizarBatalha(auto.sessao, depois.resumoBatalha, depois.save.ouro - save.ouro);
+  const proximoAuto = { ...auto, sessao };
+  const derrota = depois.resumoBatalha.resultado === "derrota";
+  return { ...depois, auto: derrota ? encerrarAuto(proximoAuto, "Derrota: o grupo recuou.") : proximoAuto };
+}
+
+function autoProximo(state, { semente }) {
+  const { save, auto } = state;
+  if (auto.estado !== "ativo" || !save) return state;
+  if (state.tela === "masmorra" && save.batalha) return { ...state, tela: "batalha", batalhaUi: UI_BATALHA_VAZIA };
+  const noResultado = state.tela === "resultado";
+  if (!noResultado && !(state.tela === "masmorra" && save.masmorraAtual)) return state;
+
+  const sempreValem = { autoPararChefe: false, autoPararInventario: false, autoVidaMinima: 0, autoLimiteEncontros: 0 };
+  const decisao = decidirProximo(
+    save,
+    { resumo: noResultado ? state.resumoBatalha : null, encontrosNoTrecho: auto.sessao.concluidosNoTrecho },
+    auto.liberarProximo ? sempreValem : state.config,
+  );
+  if (decisao.motivo) {
+    return {
+      ...state,
+      auto: decisao.obrigatorio ? encerrarAuto(auto, decisao.motivo) : pausarAuto(auto, decisao.motivo, { opcional: true }),
+    };
+  }
+
+  const fechado = { ...state, resumoBatalha: null, tela: save.masmorraAtual ? "masmorra" : "mapa" };
+  const iniciado =
+    decisao.proximo.tipo === "andar"
+      ? descerAndar(fechado, { semente })
+      : iniciarEncontro(fechado, { zonaId: decisao.proximo.zonaId, semente });
+  if (iniciado.tela !== "batalha") {
+    return { ...state, auto: encerrarAuto(auto, `Não foi possível começar o próximo encontro: ${iniciado.aviso}`) };
+  }
+  return {
+    ...iniciado,
+    auto: { ...auto, sessao: contarEncontro(auto.sessao), vidaLiberadaNaBatalha: null, liberarProximo: false },
+  };
+}
+
+function reduzirAuto(state, action) {
+  const { auto } = state;
+  const naTelaDoAuto = Boolean(state.save) && TELAS_DO_AUTO.includes(state.tela);
+  switch (action.type) {
+    case "AUTO_LIGAR":
+      if (!naTelaDoAuto || auto.estado === "ativo" || auto.estado === "pausado") return state;
+      return { ...comMarca(state, marcaDoJogo(state)), auto: ligarAuto(auto, action.agora, Boolean(state.save.batalha)) };
+    case "AUTO_PAUSAR":
+      return { ...state, auto: pausarAuto(auto, action.motivo ?? "Pausado por você.") };
+    case "AUTO_RETOMAR":
+      if (!naTelaDoAuto || auto.estado !== "pausado") return state;
+      return {
+        ...comMarca(state, marcaDoJogo(state)),
+        auto: retomarAuto(auto, action.agora, {
+          batalhaId: state.tela === "batalha" ? state.save.batalha?.id ?? null : null,
+          comBatalha: Boolean(state.save.batalha),
+        }),
+      };
+    case "AUTO_PARAR": {
+      if (auto.estado === "desligado") return state;
+      const parado = { ...comMarca(state, null), auto: AUTO_DESLIGADO };
+      return auto.sessao ? comAviso(parado, `Auto parado: ${resumirSessao(auto.sessao)}.`) : parado;
+    }
+    case "AUTO_AGIR":
+      return autoAgir(state);
+    case "AUTO_PROXIMO":
+      return autoProximo(state, action);
+    default:
+      return state;
+  }
+}
+
+// Depois de cada ação: sair da batalha, do resultado e da masmorra desliga o Auto; voltar a essas
+// telas no jogo em que ele estava ligado antes de recarregar a página mostra o Auto pausado.
+// Fechar o slot apaga a marca: outro jogo nunca herda o Auto.
+function ajustarAuto(antes, depois, action) {
+  if (!depois.auto || !depois.config) return depois; // estados parciais (testes de outras telas)
+  if (action.type === "FECHAR_SLOT") return comMarca({ ...depois, auto: AUTO_DESLIGADO }, null);
+  const naTela = TELAS_DO_AUTO.includes(depois.tela);
+  if (depois.auto.estado !== "desligado" && (!naTela || !depois.save)) {
+    return { ...comMarca(depois, null), auto: AUTO_DESLIGADO };
+  }
+  const marca = depois.config.autoRetomar;
+  const entrou = naTela && !TELAS_DO_AUTO.includes(antes.tela);
+  if (
+    entrou &&
+    depois.auto.estado === "desligado" &&
+    marca &&
+    depois.save &&
+    marca.slot === depois.slotAtivo &&
+    marca.criadoEm === depois.save.criadoEm
+  ) {
+    return { ...depois, auto: autoPausadoAoVoltar(MOTIVO_RECARREGOU) };
+  }
+  return depois;
+}
+
+export function reducer(state, action) {
+  return ajustarAuto(state, reducerBase(state, action), action);
 }
